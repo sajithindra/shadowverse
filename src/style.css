@@ -1,0 +1,294 @@
+@import "tailwindcss";
+
+:root {
+  --font-sans: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'Fira Code', monospace;
+
+  /* Industrial Sovereign Palette with High Readability Contrast */
+  --bg: #0a0a0c;
+  --surface: #111113;
+  --surface-2: #161619;
+  --surface-3: #1e1e22;
+
+  --outline: #26262a;
+  --outline-bright: #3a3a40;
+  --outline-primary: #750d37;
+
+  --primary: #750d37;
+  --primary-hover: #8f1244;
+  --primary-active: #590928;
+  --primary-subtle: rgba(117, 13, 55, 0.15);
+
+  --accent-crimson: #9a1a4e;
+  --accent-red: #c44a4a;
+  --accent-blue: #4a7ebb;
+  --accent-amber: #c49a3c;
+  --accent-emerald: #3d8b5e;
+
+  /* High Readability Text Colors */
+  --text-main: #f0f0f4;
+  --text-muted: #c8c8cc;
+  --text-dim: #88888c;
+}
+
+body {
+  background-color: var(--bg);
+  color: var(--text-main);
+  font-family: var(--font-sans);
+  overflow-x: hidden;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0a0a0c;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #26262a;
+  border-radius: 0;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #750d37;
+}
+
+.mono-text {
+  font-family: var(--font-mono);
+}
+
+/* Industrial Card */
+.industrial-card {
+  position: relative;
+  background-color: var(--surface);
+  border: 1px solid var(--outline);
+  box-shadow: inset 0 0 0 1px var(--outline);
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.012) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.012) 1px, transparent 1px);
+  background-size: 20px 20px;
+  contain: content;
+}
+
+.industrial-card:hover {
+  background-color: var(--surface-2);
+  border-color: var(--outline-bright);
+  transform: translateY(-4px);
+  box-shadow:
+    inset 0 0 0 1px var(--outline-bright),
+    0 20px 40px rgba(0, 0, 0, 0.7),
+    0 0 30px rgba(117, 13, 55, 0.18);
+}
+
+/* Corner Square Arrow Markers (Top-Left & Bottom-Right) */
+.industrial-card::before {
+  content: '';
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 8px;
+  height: 8px;
+  border-top: 2px solid var(--primary);
+  border-left: 2px solid var(--primary);
+  opacity: 0.6;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease, border-color 0.25s ease;
+  transform-origin: top left;
+  pointer-events: none;
+}
+
+.industrial-card::after {
+  content: '';
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  width: 8px;
+  height: 8px;
+  border-bottom: 2px solid var(--primary);
+  border-right: 2px solid var(--primary);
+  opacity: 0.6;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease, border-color 0.25s ease;
+  transform-origin: bottom right;
+  pointer-events: none;
+}
+
+/* Expanding hover animation for opposite corners */
+.industrial-card:hover::before {
+  opacity: 1;
+  border-color: #9a1a4e;
+  transform: translate(-3px, -3px) scale(1.25);
+}
+
+.industrial-card:hover::after {
+  opacity: 1;
+  border-color: #9a1a4e;
+  transform: translate(3px, 3px) scale(1.25);
+}
+
+/* Industrial Buttons */
+.industrial-btn {
+  position: relative;
+  display: inline-flex;
+  items-center: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+  cursor: pointer;
+  user-select: none;
+}
+
+.industrial-btn:active {
+  transform: scale(0.97);
+}
+
+.industrial-btn-primary {
+  background-color: var(--primary);
+  color: #ffffff;
+  border: 1px solid var(--primary);
+  box-shadow: 0 0 15px rgba(117, 13, 55, 0.25);
+}
+
+.industrial-btn-primary:hover {
+  background-color: var(--primary-hover);
+  border-color: var(--primary-hover);
+  box-shadow: 0 0 25px rgba(117, 13, 55, 0.5);
+}
+
+.industrial-btn-outline {
+  background-color: transparent;
+  color: var(--text-main);
+  border: 1px solid var(--outline-bright);
+}
+
+.industrial-btn-outline:hover {
+  border-color: var(--primary);
+  color: #ffffff;
+  background-color: var(--primary-subtle);
+  box-shadow: 0 0 15px rgba(117, 13, 55, 0.2);
+}
+
+.industrial-btn-lg {
+  padding: 1rem 2rem;
+  font-size: 0.875rem;
+}
+
+/* Section Tag Header */
+.section-tag {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.25em;
+  color: var(--primary);
+  text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.section-tag::before {
+  content: '';
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  background-color: var(--primary);
+  box-shadow: 0 0 6px var(--primary);
+}
+
+/* Radar Sweep Line Animation */
+@keyframes radarSweep {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.radar-sweep {
+  transform-origin: center;
+  animation: radarSweep 4s linear infinite;
+  will-change: transform;
+}
+
+/* Realistic Cybernetic Eye Blink Animation */
+@keyframes eyeBlink {
+  0%, 34%, 44%, 52%, 100% {
+    transform: scaleY(1) scaleX(1);
+    opacity: 1;
+    filter: blur(0px);
+  }
+  38% {
+    transform: scaleY(0.04) scaleX(1.08);
+    opacity: 0.15;
+    filter: blur(1px);
+  }
+  41% {
+    transform: scaleY(0.95) scaleX(1);
+    opacity: 0.95;
+  }
+  47% {
+    transform: scaleY(0.08) scaleX(1.04);
+    opacity: 0.25;
+    filter: blur(1px);
+  }
+}
+
+.eye-blink-text {
+  display: inline-flex;
+  align-items: center;
+  transform-origin: center 55%;
+  animation: eyeBlink 3.6s cubic-bezier(0.25, 1, 0.5, 1) infinite;
+  will-change: transform, opacity, filter;
+}
+
+/* Industrial Expand Effect for Text */
+@keyframes expandPulse {
+  0% {
+    transform: scale(0.97);
+  }
+  50% {
+    transform: scale(1.03);
+  }
+  100% {
+    transform: scale(0.97);
+  }
+}
+
+.expand-effect {
+  animation: expandPulse 3s ease-in-out infinite;
+  will-change: transform;
+}
+
+/* Scanline Animation */
+@keyframes scanLaser {
+  0% { top: 0%; opacity: 0; }
+  15% { opacity: 0.8; }
+  85% { opacity: 0.8; }
+  100% { top: 100%; opacity: 0; }
+}
+
+.scan-line {
+  animation: scanLaser 3s linear infinite;
+  will-change: top, opacity;
+}
+
+/* Live indicator dot */
+.live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--accent-emerald);
+  display: inline-block;
+  animation: livePulse 2s ease-in-out infinite;
+  box-shadow: 0 0 8px var(--accent-emerald);
+}
+
+@keyframes livePulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.3); opacity: 0.6; }
+}
