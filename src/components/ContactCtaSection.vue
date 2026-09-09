@@ -1,13 +1,5 @@
 <script setup lang="ts">
-const WHATSAPP_NUMBER = '918921897800'
-const FOUNDER_EMAIL = 'founder@shadowverse.in'
-
-const whatsappHref = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
-  'Hi, I want to schedule a ShadowVerse sovereign private cloud demo.'
-)}`
-const mailHref = `mailto:${FOUNDER_EMAIL}?subject=${encodeURIComponent(
-  'ShadowVerse enterprise demo request'
-)}`
+import { FOUNDER_EMAIL, MAIL_HREF, WHATSAPP_DISPLAY, WHATSAPP_HREF } from '../utils/contact'
 </script>
 
 <template>
@@ -25,7 +17,7 @@ const mailHref = `mailto:${FOUNDER_EMAIL}?subject=${encodeURIComponent(
       <!-- Two direct lines to the founder: WhatsApp and email. Each shows exactly where it goes. -->
       <div class="grid sm:grid-cols-2 gap-3 md:gap-4 max-w-2xl mx-auto pt-2 md:pt-4 text-left">
         <a
-          :href="whatsappHref"
+          :href="WHATSAPP_HREF"
           target="_blank"
           rel="noopener noreferrer"
           class="contact-action group border-[#3d8b5e] hover:bg-[#3d8b5e]/10 focus-visible:ring-[#3d8b5e]"
@@ -35,12 +27,12 @@ const mailHref = `mailto:${FOUNDER_EMAIL}?subject=${encodeURIComponent(
           </svg>
           <span class="min-w-0">
             <span class="block text-sm sm:text-base font-black uppercase tracking-wide text-white">Chat on WhatsApp</span>
-            <span class="block text-xs sm:text-sm font-mono text-[#c8c8cc] group-hover:text-white transition-colors">+91 89218 97800</span>
+            <span class="block text-xs sm:text-sm font-mono text-[#c8c8cc] group-hover:text-white transition-colors">{{ WHATSAPP_DISPLAY }}</span>
           </span>
         </a>
 
         <a
-          :href="mailHref"
+          :href="MAIL_HREF"
           class="contact-action group border-[#750d37] hover:bg-[#750d37]/15 focus-visible:ring-[#750d37]"
         >
           <svg class="w-7 h-7 shrink-0 text-[#9a1a4e]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -54,6 +46,9 @@ const mailHref = `mailto:${FOUNDER_EMAIL}?subject=${encodeURIComponent(
         </a>
       </div>
 
+      <p class="text-[#88888c] text-xs sm:text-sm">
+        No forms, no sales queue. You reach the founder directly and hear back within one business day.
+      </p>
     </div>
   </section>
 </template>

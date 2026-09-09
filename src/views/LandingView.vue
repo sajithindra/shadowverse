@@ -12,6 +12,7 @@ import ShadowWatchFeeds from '../components/ShadowWatchFeeds.vue'
 import LogicLockSection from '../components/LogicLockSection.vue'
 import ScenariosSection from '../components/ScenariosSection.vue'
 import ContactCtaSection from '../components/ContactCtaSection.vue'
+import ContactBar from '../components/ContactBar.vue'
 import FooterSection from '../components/FooterSection.vue'
 import IndustrialToast from '../components/IndustrialToast.vue'
 
@@ -138,6 +139,8 @@ onMounted(() => {
 
     <!-- Enterprise Deployment Call to Action -->
     <ContactCtaSection />
+
+    <ContactBar />
 
     <!-- Footer with Credits & Legal Links -->
     <FooterSection
