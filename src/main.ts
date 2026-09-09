@@ -3,6 +3,7 @@ import { createPinia } from 'pinia'
 import './style.css'
 import './firebase'
 import { initAutomatedActivityTracking, trackEvent } from './utils/analytics'
+import { captureVisitor } from './utils/visitor'
 
 import App from './App.vue'
 import router from './router'
@@ -11,6 +12,9 @@ const app = createApp(App)
 
 // Initialize automated scroll depth and click activity monitoring for Google Ads / Analytics
 initAutomatedActivityTracking()
+
+// Log the visitor's network, location and campaign source once per session
+void captureVisitor()
 
 // Global Vue App Error Handler
 app.config.errorHandler = (err, instance, info) => {
