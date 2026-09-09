@@ -11,7 +11,9 @@ export function isValidEmail(email: string): boolean {
 export function isDomainAuthorized(email: string, domain: string): boolean {
   if (!email || !domain) return false
   const normalized = email.trim().toLowerCase()
-  return isValidEmail(normalized) && normalized.endsWith(domain.toLowerCase())
+  if (!isValidEmail(normalized)) return false
+  const emailDomain = normalized.slice(normalized.lastIndexOf('@') + 1)
+  return emailDomain === domain.toLowerCase().replace(/^@/, '')
 }
 
 export function isValidPhone(phone: string): boolean {
