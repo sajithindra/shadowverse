@@ -1,7 +1,7 @@
 import { setUserProperties } from 'firebase/analytics'
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore'
 import { analytics, db } from '../firebase'
-import { trackEvent } from './analytics'
+import { rememberAttribution, trackEvent } from './analytics'
 
 const CAMPAIGN_KEYS = [
   'utm_source',
@@ -51,7 +51,11 @@ export async function captureVisitor() {
   const network = clip(net.connection?.org || net.connection?.isp || 'unknown', 120)
   const city = clip(net.city || 'unknown', 80)
   const country = clip(net.country || 'unknown', 80)
-  const campaign = campaignFrom(window.location.search)
+  // Merge the remembered ad click in, so a visitor who landed on an ad days ago and
+  // converts today still carries the gclid needed for offline conversion import.
+  const remembered = rememberAttribution()
+  const campaign = { ...campaignFrom(window.location.search) }
+  if (remembered?.gclid && !campaign.gclid) campaign.gclid = remembered.gclid
 
   if (analytics) {
     // GA4 caps user-property values at 36 chars; longer values are dropped silently.
