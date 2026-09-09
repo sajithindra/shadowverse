@@ -1,4 +1,5 @@
 import { initializeApp } from 'firebase/app'
+import { initializeAppCheck, ReCaptchaEnterpriseProvider } from 'firebase/app-check'
 import { getAnalytics } from 'firebase/analytics'
 import { getAuth, GoogleAuthProvider } from 'firebase/auth'
 import { getFirestore } from 'firebase/firestore'
@@ -14,6 +15,19 @@ const firebaseConfig = {
 }
 
 export const app = initializeApp(firebaseConfig)
+
+// App Check: proves requests come from this site. Firestore enforces it server-side.
+// Site key is public by design; the domain allowlist lives in reCAPTCHA Enterprise.
+if (typeof window !== 'undefined' && import.meta.env.VITE_RECAPTCHA_SITE_KEY) {
+  if (import.meta.env.DEV) {
+    // Local dev gets a debug token printed to the console; register it once in the Firebase console.
+    ;(self as any).FIREBASE_APPCHECK_DEBUG_TOKEN = true
+  }
+  initializeAppCheck(app, {
+    provider: new ReCaptchaEnterpriseProvider(import.meta.env.VITE_RECAPTCHA_SITE_KEY),
+    isTokenAutoRefreshEnabled: true,
+  })
+}
 export const auth = getAuth(app)
 export const db = getFirestore(app, 'shadowdata')
 export const googleProvider = new GoogleAuthProvider()
