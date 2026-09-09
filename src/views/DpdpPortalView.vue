@@ -1,7 +1,9 @@
 <script setup lang="ts">
+import { defineAsyncComponent } from 'vue'
 import { useRouter } from 'vue-router'
-import DpdpPortalModal from '../components/DpdpPortalModal.vue'
 import IndustrialToast from '../components/IndustrialToast.vue'
+
+const DpdpPortalModal = defineAsyncComponent(() => import('../components/DpdpPortalModal.vue'))
 
 const router = useRouter()
 

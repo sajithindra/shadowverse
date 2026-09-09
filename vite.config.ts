@@ -18,12 +18,21 @@ export default defineConfig({
     },
   },
   build: {
-    chunkSizeWarningLimit: 600,
+    chunkSizeWarningLimit: 1000,
     rollupOptions: {
       output: {
         manualChunks(id) {
           if (id.includes('lottie-web')) {
             return 'lottie'
+          }
+          if (id.includes('firebase')) {
+            return 'firebase'
+          }
+          if (id.includes('vue') || id.includes('pinia')) {
+            return 'vue-core'
+          }
+          if (id.includes('lucide')) {
+            return 'icons'
           }
           if (id.includes('node_modules')) {
             return 'vendor'

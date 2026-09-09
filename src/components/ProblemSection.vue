@@ -1,91 +1,122 @@
 <script setup lang="ts">
-const emit = defineEmits(['triggerFallTest'])
+const emit = defineEmits(['openVideoSearch', 'openImpactModal'])
+
+const useCases = [
+  {
+    id: 'uc-1',
+    icon: 'groups',
+    title: 'EMPLOYEE SAFETY',
+    desc: 'Guards miss incidents. ShadowVision AI agents enforce workplace safety protocols and trigger emergency response the moment an incident occurs.',
+    tag: 'SAFETY COMPLIANCE ENFORCED',
+    accentColor: '#750d37',
+    socialImpact: {
+      headline: 'Enforce Workplace Safety Standards — Automatically',
+      metrics: [
+        { value: '24×7', label: 'AI Safety Watch' },
+        { value: '< 3 MIN', label: 'Emergency Response' },
+        { value: '100%', label: 'Incident Documented' }
+      ],
+      benefits: [
+        'ShadowVision AI detects safety incidents (falls, collapses, altercations) in real-time across all monitored zones.',
+        'Triggers automated emergency dispatch to internal security teams and external responders.',
+        'Every incident is auto-logged with video evidence — fully audit-ready for regulatory review.'
+      ]
+    }
+  },
+  {
+    id: 'uc-2',
+    icon: 'domain',
+    title: 'OPERATIONAL SECURITY',
+    desc: 'No more manual CCTV reviews. ShadowVision AI monitors every access point, server room, and perimeter — and acts the moment a breach occurs.',
+    tag: 'REAL-TIME BREACH RESPONSE',
+    accentColor: '#3d8b5e',
+    socialImpact: {
+      headline: 'Secure Operations — Zero Human Oversight Gaps',
+      metrics: [
+        { value: '< 50ms', label: 'Threat Detection' },
+        { value: '12,000+', label: 'Cameras Monitored' },
+        { value: '78%', label: 'Guard Cost Reduced' }
+      ],
+      benefits: [
+        'Monitors every entry gate, server room, and restricted zone without fatigue or shift changes.',
+        'On detecting unauthorised access, it locks doors, notifies security, and dispatches responders automatically.',
+        'ShadowWatch generates timestamped incident reports and forensic clips for compliance and legal purposes.'
+      ]
+    }
+  },
+  {
+    id: 'uc-3',
+    icon: 'inventory_2',
+    title: 'ASSET & PERIMETER CONTROL',
+    desc: 'Protect critical assets and enforce perimeter boundaries. ShadowVision AI distinguishes authorised personnel from intruders and takes immediate action.',
+    tag: 'PERIMETER COMPLIANCE AI',
+    accentColor: '#4a7ebb',
+    socialImpact: {
+      headline: 'Asset Protection & Perimeter Compliance — AI-Enforced',
+      metrics: [
+        { value: '99.4%', label: 'Detection Accuracy' },
+        { value: '< 50ms', label: 'Match Latency' },
+        { value: '100%', label: 'Sovereign On-Premise' }
+      ],
+      benefits: [
+        'Identifies blacklisted personnel and enforces no-entry zones across all camera feeds in real-time.',
+        'All processing runs on Shadowverse Private AI Cloud — zero data leaves your premises.',
+        'Tamper-proof perimeter logs provide defensible audit trails for insurance, legal, and compliance teams.'
+      ]
+    }
+  }
+]
 </script>
 
 <template>
-  <section id="problem" class="py-12 md:py-24 px-4 md:px-12 lg:px-20 border-t border-[#1e1e20] bg-[#0a0a0c] relative">
+  <section id="problem" class="py-10 md:py-20 px-4 md:px-12 lg:px-20 border-t border-[#1e1e20] bg-[#0a0a0c] relative">
     <div class="max-w-7xl mx-auto">
-      <div class="flex flex-col items-start mb-8 md:mb-16">
-        <div class="section-tag mb-3 md:mb-4">// THE CRITICAL PROBLEM</div>
-        <h2 class="text-xl md:text-5xl font-black uppercase tracking-tight leading-tight">
+      <div class="flex flex-col items-start mb-8 md:mb-10">
+        <div class="section-tag mb-3 text-xs sm:text-sm font-bold">// ENTERPRISE SAFETY & SECURITY USE CASES</div>
+        <h2 class="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black uppercase tracking-tight leading-[1.15]">
           HUMAN GUARDS BLINK 15,000 TIMES A DAY.<br/>
-          <span style="color: #750d37">OUR VISION AI AGENTS NEVER DO.</span>
+          <span style="color: #750d37">SHADOWVISION AI AGENTS NEVER DO.</span>
         </h2>
-        <p class="text-[#a0a0a4] text-xs md:text-lg max-w-3xl mt-3 md:mt-4">
-          Traditional video surveillance relies on exhausted human monitors or passive recording.
-          When critical emergencies occur in silence, human oversight fails.
+        <p class="text-[#c8c8cc] text-sm sm:text-base mt-2 leading-relaxed">
+          Deploy ShadowVision AI agents to enforce safety protocols, maintain compliance records, and secure your facilities — 24×7 without fatigue or oversight gaps.
         </p>
       </div>
 
-      <div class="grid md:grid-cols-3 gap-4 md:gap-8">
-        <div class="industrial-card p-4 md:p-8 flex flex-col justify-between h-full pulse-alert-card">
-          <div>
-            <div class="flex items-center justify-between mb-3 pb-2 border-b border-[#1e1e20]">
-              <span class="font-mono text-xs text-[#750d37] font-bold tracking-widest">// SCENARIO 01</span>
-              <span class="text-[9px] font-mono text-[#c44a4a] bg-[#c44a4a]/10 px-2 py-0.5 border border-[#c44a4a]/30">HIGH RISK</span>
+      <!-- Ultra-Minimal, Emotional Redesigned Cards -->
+      <div class="grid md:grid-cols-3 gap-5 md:gap-6">
+        <div
+          v-for="uc in useCases"
+          :key="uc.id"
+          @click="emit('openImpactModal', uc)"
+          class="industrial-card p-6 border-t-4 bg-[#111113] flex flex-col justify-between items-center text-center cursor-pointer hover:border-white transition-all group shadow-xl relative overflow-hidden"
+          :style="{ borderTopColor: uc.accentColor }"
+        >
+          <div class="flex flex-col items-center">
+            <!-- Icon Circle -->
+            <div
+              class="w-14 h-14 rounded-full border flex items-center justify-center mb-4 transition-transform group-hover:scale-110"
+              :style="{ backgroundColor: `${uc.accentColor}15`, borderColor: `${uc.accentColor}60` }"
+            >
+              <span class="material-symbols-outlined text-2xl" :style="{ color: uc.accentColor }">{{ uc.icon }}</span>
             </div>
-            <h3 class="text-base md:text-xl font-black uppercase text-white mb-3 md:mb-4">The Stubborn Parent & Alone at Home</h3>
-            <p class="text-[#a0a0a4] text-xs md:text-sm leading-relaxed mb-4 md:mb-6">
-              Your elderly parent refuses to wear a smartwatch and stays home alone.
-              They suffer a fall in the living room or washroom when nobody is around.
-            </p>
-            <div class="p-3 md:p-4 bg-[#0a0a0c] border border-[#1e1e20] mb-4 md:mb-6 space-y-1.5 md:space-y-2">
-              <div class="text-[11px] md:text-xs font-mono text-[#750d37] font-bold">SHADOWVISION AI INTERVENTION:</div>
-              <p class="text-[11px] md:text-xs text-[#e8e8ea] leading-relaxed">
-                If they fall and cannot rise within 3 minutes, or remain in the washroom past calculated thresholds,
-                the AI agent automatically triggers emergency voice calls, SMS, and notifies ambulance services wherever you are.
-              </p>
-            </div>
-          </div>
-          <button @click="emit('triggerFallTest')" class="industrial-btn industrial-btn-primary w-full text-xs">
-            TRIGGER EMERGENCY FALL TEST
-          </button>
-        </div>
 
-        <div class="industrial-card p-4 md:p-8 flex flex-col justify-between h-full">
-          <div>
-            <div class="flex items-center justify-between mb-3 pb-2 border-b border-[#1e1e20]">
-              <span class="font-mono text-xs text-[#750d37] font-bold tracking-widest">// SCENARIO 02</span>
-              <span class="text-[9px] font-mono text-[#c49a3c] bg-[#c49a3c]/10 px-2 py-0.5 border border-[#c49a3c]/30">UNAUTHORIZED</span>
-            </div>
-            <h3 class="text-base md:text-xl font-black uppercase text-white mb-3 md:mb-4">After-Hours Intruders & Domestic Breaches</h3>
-            <p class="text-[#a0a0a4] text-xs md:text-sm leading-relaxed mb-4 md:mb-6">
-              An unknown visitor approaches your home after 9:30 PM, or your staff/driver enters the master living room and opens the safe.
-            </p>
-            <div class="p-3 md:p-4 bg-[#0a0a0c] border border-[#1e1e20] mb-4 md:mb-6 space-y-1.5 md:space-y-2">
-              <div class="text-[11px] md:text-xs font-mono text-[#750d37] font-bold">SHADOWVISION AI INTERVENTION:</div>
-              <p class="text-[11px] md:text-xs text-[#e8e8ea] leading-relaxed">
-                Real-time facial vector profiling and spatial boundary monitoring detect unauthorized room access and locker opening instantly.
-                You receive an emergency alert on your phone then and there.
-              </p>
-            </div>
-          </div>
-          <div class="pt-3 border-t border-[#1e1e20] flex items-center justify-between font-mono text-[9px] md:text-[10px] text-[#555558]">
-            <span>AGENT: INTRUDER_&_LOCKER_AI</span>
-            <span class="text-[#3d8b5e]">24x7 ACTIVE</span>
-          </div>
-        </div>
+            <!-- Title -->
+            <h3 class="text-lg sm:text-xl font-black uppercase text-white tracking-tight mb-2 group-hover:text-[#9a1a4e] transition-colors">
+              {{ uc.title }}
+            </h3>
 
-        <div class="industrial-card p-4 md:p-8 flex flex-col justify-between h-full">
-          <div>
-            <div class="flex items-center justify-between mb-3 pb-2 border-b border-[#1e1e20]">
-              <span class="font-mono text-xs text-[#750d37] font-bold tracking-widest">// SCENARIO 03</span>
-              <span class="text-[9px] font-mono text-[#4a7ebb] bg-[#4a7ebb]/10 px-2 py-0.5 border border-[#4a7ebb]/30">MASS SCALE</span>
-            </div>
-            <h3 class="text-base md:text-xl font-black uppercase text-white mb-3 md:mb-4">12,000+ Camera Enterprise Blindspots</h3>
-            <p class="text-[#a0a0a4] text-xs md:text-sm leading-relaxed mb-4 md:mb-6">
-              Space centers, industrial complexes, and corporate campuses run thousands of feeds across multiple vendors, overwhelming control rooms.
+            <!-- 1-Sentence Emotional Description -->
+            <p class="text-[#c8c8cc] text-xs sm:text-sm font-normal leading-relaxed max-w-xs mb-4">
+              {{ uc.desc }}
             </p>
-            <div class="p-3 md:p-4 bg-[#0a0a0c] border border-[#1e1e20] mb-4 md:mb-6 space-y-1.5 md:space-y-2">
-              <div class="text-[11px] md:text-xs font-mono text-[#750d37] font-bold">SHADOWVISION AI INTERVENTION:</div>
-              <p class="text-[11px] md:text-xs text-[#e8e8ea] leading-relaxed">
-                ShadowWatch decodes up to 12,000 live RTSP streams per server with GPU acceleration, assigning dedicated vision AI agents to every single camera feed.
-              </p>
-            </div>
           </div>
-          <div class="pt-3 border-t border-[#1e1e20] flex items-center justify-between font-mono text-[9px] md:text-[10px] text-[#555558]">
-            <span>AGENT: SHADOWWATCH_CORE</span>
-            <span class="text-[#3d8b5e]">24x7 ACTIVE</span>
+
+          <!-- Bottom Status Pill -->
+          <div
+            class="px-3 py-1 border text-[10px] sm:text-xs font-mono font-bold uppercase tracking-wider rounded-xs w-full text-center"
+            :style="{ backgroundColor: `${uc.accentColor}20`, borderColor: uc.accentColor, color: '#ffffff' }"
+          >
+            {{ uc.tag }}
           </div>
         </div>
       </div>

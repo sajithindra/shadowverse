@@ -15,12 +15,14 @@ const firebaseConfig = {
 
 export const app = initializeApp(firebaseConfig)
 export const auth = getAuth(app)
-export const db = getFirestore(app)
+export const db = getFirestore(app, 'shadowdata')
 export const googleProvider = new GoogleAuthProvider()
+
+export let analytics: ReturnType<typeof getAnalytics> | null = null
 
 try {
   if (typeof window !== 'undefined' && import.meta.env.VITE_FIREBASE_MEASUREMENT_ID) {
-    getAnalytics(app)
+    analytics = getAnalytics(app)
   }
 } catch {
   // Ignore analytics init in SSR or mock env

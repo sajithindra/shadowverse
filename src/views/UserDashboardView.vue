@@ -55,23 +55,12 @@ function handleLogout() {
   router.push('/')
 }
 
+import { getLeadStatusStyle } from '../utils/statusBadges'
+import { formatDate } from '../utils/formatters'
+
 function statusBadgeClass(status: Lead['status']) {
-  switch (status) {
-    case 'NEW':
-      return 'bg-[#4a7ebb]/20 text-[#4a7ebb] border border-[#4a7ebb]/40'
-    case 'QUALIFIED':
-      return 'bg-[#3d8b5e]/20 text-[#3d8b5e] border border-[#3d8b5e]/40'
-    case 'CONTACTED':
-      return 'bg-[#c49a3c]/20 text-[#c49a3c] border border-[#c49a3c]/40'
-    case 'PROPOSAL_SENT':
-      return 'bg-[#9a1a4e]/20 text-[#9a1a4e] border border-[#9a1a4e]/40'
-    case 'DEPLOYED':
-      return 'bg-[#750d37] text-white border border-[#750d37]'
-    case 'REJECTED':
-      return 'bg-[#c44a4a]/20 text-[#c44a4a] border border-[#c44a4a]/40'
-    default:
-      return 'bg-[#0a0a0c] text-[#c8c8cc] border border-[#1e1e20]'
-  }
+  const style = getLeadStatusStyle(status)
+  return `${style.bgClass} ${style.textClass} ${style.borderClass}`
 }
 </script>
 
@@ -133,6 +122,31 @@ function statusBadgeClass(status: Lead['status']) {
         </button>
       </div>
     </header>
+
+    <!-- MOBILE DASHBOARD NAVIGATION BAR (< MD) -->
+    <div class="md:hidden bg-[#111113] border-b border-[#1e1e20] p-2 flex gap-1 font-mono text-[10px] overflow-x-auto">
+      <button
+        @click="activeTab = 'DIRECTORY'"
+        class="flex-1 px-2 py-2 border transition-all uppercase font-bold text-center shrink-0 cursor-pointer"
+        :class="activeTab === 'DIRECTORY' ? 'bg-[#750d37] border-[#750d37] text-white' : 'bg-[#0a0a0c] border-[#1e1e20] text-[#c8c8cc]'"
+      >
+        DIRECTORY ({{ leadStore.leads.length }})
+      </button>
+      <button
+        @click="activeTab = 'PIPELINE'"
+        class="flex-1 px-2 py-2 border transition-all uppercase font-bold text-center shrink-0 cursor-pointer"
+        :class="activeTab === 'PIPELINE' ? 'bg-[#750d37] border-[#750d37] text-white' : 'bg-[#0a0a0c] border-[#1e1e20] text-[#c8c8cc]'"
+      >
+        PIPELINE
+      </button>
+      <button
+        @click="activeTab = 'AUDIT'"
+        class="flex-1 px-2 py-2 border transition-all uppercase font-bold text-center shrink-0 cursor-pointer"
+        :class="activeTab === 'AUDIT' ? 'bg-[#750d37] border-[#750d37] text-white' : 'bg-[#0a0a0c] border-[#1e1e20] text-[#c8c8cc]'"
+      >
+        AUDIT LOGS
+      </button>
+    </div>
 
     <!-- MAIN DASHBOARD CONTENT: LEAD MANAGEMENT CENTER -->
     <main class="flex-1 p-4 md:p-8 lg:p-10 max-w-7xl mx-auto w-full space-y-8">
@@ -197,13 +211,27 @@ function statusBadgeClass(status: Lead['status']) {
         <!-- Search Bar & Status Filter Bar -->
         <div class="p-4 bg-[#111113] border border-[#1e1e20] font-mono text-xs flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
           <div class="flex items-center gap-2 flex-1">
-            <span class="text-[#750d37] font-bold uppercase">// SEARCH LEADS:</span>
-            <input
-              v-model="searchQuery"
-              type="text"
-              placeholder="Search by contact name, company, domain, or Lead ID..."
-              class="w-full bg-[#0a0a0c] border border-[#1e1e20] px-3 py-2 text-white font-mono text-xs focus:outline-none focus:border-[#750d37]"
-            />
+            <span class="text-[#750d37] font-bold uppercase shrink-0">// SEARCH LEADS:</span>
+            <div class="relative flex-1">
+              <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#750d37] pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+              </svg>
+              <input
+                v-model="searchQuery"
+                type="text"
+                placeholder="Search by contact name, company, domain, or Lead ID..."
+                class="industrial-input pl-9 pr-9 py-2 text-xs placeholder-[#555558]"
+                aria-label="Search leads by contact name, company, domain, or Lead ID"
+              />
+              <button
+                v-if="searchQuery"
+                @click="searchQuery = ''"
+                class="absolute right-3 top-1/2 -translate-y-1/2 text-[#88888c] hover:text-white text-xs font-mono font-bold cursor-pointer"
+                aria-label="Clear lead search query"
+              >
+                ✕
+              </button>
+            </div>
           </div>
 
           <div class="flex flex-wrap items-center gap-2">
@@ -283,8 +311,14 @@ function statusBadgeClass(status: Lead['status']) {
                   </td>
                 </tr>
                 <tr v-if="filteredLeads.length === 0">
-                  <td colspan="8" class="p-8 text-center text-[#88888c]">
-                    NO LEADS MATCHING SEARCH CRITERIA
+                  <td colspan="8" class="p-8 text-center text-[#88888c] space-y-3">
+                    <div>NO LEADS MATCHING SEARCH CRITERIA</div>
+                    <button
+                      @click="searchQuery = ''; selectedStatusFilter = 'ALL'"
+                      class="industrial-btn industrial-btn-outline text-[10px] px-3 py-1.5 text-white"
+                    >
+                      CLEAR FILTERS
+                    </button>
                   </td>
                 </tr>
               </tbody>
@@ -333,8 +367,53 @@ function statusBadgeClass(status: Lead['status']) {
         </div>
       </div>
 
-      <!-- TAB 3: ACTIVITY AUDIT LOGS -->
-      <div v-else-if="activeTab === 'AUDIT'" class="space-y-4 font-mono text-xs">
+      <!-- TAB 3: ACTIVITY AUDIT LOGS & UNAUTHORIZED LOGIN RECORDS -->
+      <div v-else-if="activeTab === 'AUDIT'" class="space-y-6 font-mono text-xs">
+        
+        <!-- Section 1: Unauthorized Login Security Audit Log (Saved to Firestore & Local Storage) -->
+        <div class="industrial-card p-6 space-y-4 border-[#c44a4a]/40">
+          <div class="flex items-center justify-between pb-3 border-b border-[#1e1e20]">
+            <div class="flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-[#c44a4a] animate-pulse"></span>
+              <span class="text-xs text-[#c44a4a] font-bold tracking-widest uppercase">// UNAUTHORIZED LOGIN SECURITY AUDIT LOGS</span>
+            </div>
+            <span class="text-[10px] text-[#c8c8cc] bg-[#c44a4a]/10 px-2 py-0.5 border border-[#c44a4a]/30 font-bold">
+              {{ authStore.unauthorizedAttempts.length }} DENIED ATTEMPTS LOGGED
+            </span>
+          </div>
+
+          <div class="space-y-2.5">
+            <div
+              v-for="unauth in authStore.unauthorizedAttempts"
+              :key="unauth.id"
+              class="p-3.5 bg-[#0a0a0c] border border-[#c44a4a]/30 space-y-2"
+            >
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#1e1e20] pb-2">
+                <div class="flex items-center gap-2">
+                  <span class="px-2 py-0.5 text-[9px] font-bold uppercase bg-[#c44a4a]/20 text-[#c44a4a] border border-[#c44a4a]/40">
+                    UNAUTHORIZED_LOGIN
+                  </span>
+                  <span class="text-white font-bold text-xs">{{ unauth.email }}</span>
+                  <span class="text-[#88888c] text-[10px]">({{ unauth.displayName }})</span>
+                </div>
+                <span class="text-[#c44a4a] text-[10px] font-bold">{{ unauth.status }}</span>
+              </div>
+
+              <div class="grid sm:grid-cols-2 gap-2 text-[10px] text-[#88888c]">
+                <div>TIMESTAMP: <strong class="text-white">{{ unauth.timestamp }}</strong></div>
+                <div>GOOGLE UID: <strong class="text-white">{{ unauth.uid }}</strong></div>
+                <div class="sm:col-span-2">REASON: <strong class="text-[#c44a4a]">{{ unauth.reason }}</strong></div>
+                <div class="sm:col-span-2 truncate">USER AGENT: <span class="text-[#c8c8cc]">{{ unauth.userAgent }}</span></div>
+              </div>
+            </div>
+
+            <div v-if="authStore.unauthorizedAttempts.length === 0" class="p-6 text-center text-[#88888c]">
+              NO UNAUTHORIZED LOGIN ATTEMPTS RECORDED.
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 2: Lead Activity Logs -->
         <div class="industrial-card p-6 space-y-4">
           <div class="flex items-center justify-between pb-3 border-b border-[#1e1e20]">
             <span class="text-xs text-[#750d37] font-bold tracking-widest uppercase">// LEAD MANAGEMENT ACTIVITY LOGS</span>
@@ -361,17 +440,25 @@ function statusBadgeClass(status: Lead['status']) {
             </div>
           </div>
         </div>
+
       </div>
 
     </main>
 
     <!-- DEDICATED DASHBOARD FOOTER -->
     <footer class="bg-[#111113] border-t border-[#1e1e20] py-6 px-4 md:px-10 font-mono text-[10px] text-[#88888c] flex flex-col sm:flex-row items-center justify-between gap-3 mt-auto">
-      <div>
+      <div class="flex flex-wrap items-center gap-3">
         <span>SHADOWVERSE SOVEREIGN PRIVATE CLOUD // LEAD MANAGEMENT DASHBOARD</span>
+        <a
+          href="/cctv-presentation/1"
+          class="px-2.5 py-1 bg-[#9a1a4e]/20 border border-[#e02870] text-[#e02870] font-mono text-[10px] font-bold hover:bg-[#9a1a4e] hover:text-white transition-all flex items-center gap-1 cursor-pointer"
+        >
+          <span class="material-symbols-outlined text-xs">visibility</span>
+          <span>CCTV PRESENTATION</span>
+        </a>
       </div>
       <div>
-        <span>IMAGINED BY <strong class="text-white">SAJITHINDRA</strong> · PROGRAMMED BY <strong class="text-[#9a1a4e]">SUVRMONX LLP</strong></span>
+        <span>IMAGINED BY <strong class="text-white">SAJITHINDRA</strong> · PROGRAMMED BY <strong class="text-[#9a1a4e]">SURVMONX LLP</strong></span>
       </div>
     </footer>
 

@@ -14,6 +14,7 @@ const applicantName = ref('')
 const applicantPhone = ref('')
 const applicantIdNo = ref('')
 const reqReason = ref('')
+const correctedDetails = ref('')
 
 // Nomination States
 const nomineeName = ref('')
@@ -38,10 +39,16 @@ function handleKeydown(e: KeyboardEvent) {
 
 onMounted(() => {
   window.addEventListener('keydown', handleKeydown)
+  if (typeof document !== 'undefined') {
+    document.body.style.overflow = 'hidden'
+  }
 })
 
 onBeforeUnmount(() => {
   window.removeEventListener('keydown', handleKeydown)
+  if (typeof document !== 'undefined') {
+    document.body.style.overflow = ''
+  }
 })
 
 function validateName(val: string): string | null {
@@ -83,8 +90,8 @@ function handleGenerateReport() {
       timestamp: new Date().toISOString(),
       principalName: applicantName.value,
       principalId: applicantIdNo.value,
-      dataFiduciary: 'SHADOWVERSE PRIVATE CLOUD / SUVRMONX LLP',
-      dpoAssigned: 'ARUN KUMAR PILLAI (coo@shadowverse.in)',
+      dataFiduciary: 'SHADOWVERSE PRIVATE CLOUD / SURVMONX LLP',
+      dpoAssigned: 'ARUN PRAKASH PILLAI (coo@shadowverse.in)',
       processedRecordsCount: 12,
       facialVectorHashes: ['0x8f9a2b4c7e1d3f5a', '0x1c3d5e7f9a2b4c6e'],
       retentionPeriodDays: 60,
@@ -137,9 +144,12 @@ function handleCorrectionRequest() {
   formErrors.value = {}
   const nameErr = validateName(applicantName.value)
   if (nameErr) formErrors.value.applicantName = nameErr
+  if (!correctedDetails.value || correctedDetails.value.trim().length < 3) {
+    formErrors.value.correctedDetails = 'Please specify the corrected details.'
+  }
 
   if (Object.keys(formErrors.value).length > 0) {
-    showToast({ title: 'VALIDATION ERROR', message: 'Please correct applicant name.', type: 'WARNING' })
+    showToast({ title: 'VALIDATION ERROR', message: 'Please correct highlighted form errors.', type: 'WARNING' })
     return
   }
 
@@ -156,6 +166,7 @@ function handleCorrectionRequest() {
       applicantName: applicantName.value,
       submittedAt: new Date().toISOString(),
       status: 'TRANSMITTED_TO_DPO',
+      details: { correctedDetails: correctedDetails.value }
     })
     showToast({ title: 'CORRECTION NOTICE SUBMITTED', message: `Ref #${generatedRefNo.value} transmitted to DPO.`, type: 'SUCCESS' })
   }, 500)
@@ -236,22 +247,30 @@ function copyDpoEmail() {
 </script>
 
 <template>
-  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md p-4 sm:p-6 select-none animate-fade-in">
-    <div class="industrial-card max-w-4xl w-full p-4 md:p-8 border-[#3d8b5e] space-y-4 md:space-y-6 max-h-[92vh] overflow-y-auto">
-      
-      <!-- Top Title Bar -->
-      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-4 border-b border-[#1e1e20]">
+  <div
+    class="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-2.5 sm:p-4 select-none animate-fade-in overflow-y-auto"
+    @click.self="emit('close')"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="dpdp-modal-title"
+  >
+    <div class="industrial-card max-w-4xl w-full border-[#750d37]/60 space-y-4 my-auto max-h-[92vh] sm:max-h-[88vh] flex flex-col p-3.5 sm:p-6 overflow-hidden relative shadow-[0_20px_50px_rgba(0,0,0,0.9)] bg-[#111113]">
+      <!-- 2px Brand Top Accent Line -->
+      <div class="absolute top-0 left-0 right-0 h-[2px] bg-[#750d37]"></div>
+
+      <!-- Top Header & Title -->
+      <div class="flex items-center justify-between pb-3 border-b border-[#1e1e20] shrink-0 pt-1">
         <div>
-          <span class="font-mono text-[10px] md:text-xs text-[#3d8b5e] font-bold tracking-widest uppercase">// STATUTORY DATA PRINCIPAL RIGHTS PORTAL</span>
-          <h3 class="text-base md:text-2xl font-black uppercase text-white">DPDP ACT 2023 DATA RIGHTS PORTAL</h3>
+          <span class="font-mono text-[10px] sm:text-xs text-[#3d8b5e] font-bold tracking-widest uppercase">// STATUTORY DATA PRINCIPAL RIGHTS PORTAL</span>
+          <h3 id="dpdp-modal-title" class="text-base sm:text-xl md:text-2xl font-black uppercase text-white">DPDP ACT 2023 DATA RIGHTS PORTAL</h3>
         </div>
-        <button @click="emit('close')" class="industrial-btn industrial-btn-outline text-[10px] md:text-xs">
+        <button @click="emit('close')" class="industrial-btn industrial-btn-outline text-[10px] sm:text-xs py-1.5 px-3 shrink-0">
           CLOSE [ESC]
         </button>
       </div>
 
       <!-- Legal Context Banner -->
-      <div class="p-3 bg-[#3d8b5e]/10 border border-[#3d8b5e]/40 font-mono text-[10px] md:text-xs text-[#e8e8ea] flex flex-col md:flex-row items-start md:items-center justify-between gap-2">
+      <div class="p-3 bg-[#3d8b5e]/10 border border-[#3d8b5e]/40 font-mono text-[10px] sm:text-xs text-[#e8e8ea] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 shrink-0">
         <div>
           <span class="text-[#3d8b5e] font-bold uppercase">// DATA PROTECTION OFFICER (DPO):</span>
           <span class="text-white font-bold"> ARUN KUMAR PILLAI </span>
@@ -263,16 +282,16 @@ function copyDpoEmail() {
       </div>
 
       <!-- Session History Counter if tickets exist -->
-      <div v-if="dpdpStore.tickets.length > 0" class="p-2.5 bg-[#0a0a0c] border border-[#1e1e20] font-mono text-[10px] text-[#a0a0a4] flex items-center justify-between">
+      <div v-if="dpdpStore.tickets.length > 0" class="p-2.5 bg-[#0a0a0c] border border-[#1e1e20] font-mono text-[10px] sm:text-xs text-[#a0a0a4] flex items-center justify-between shrink-0">
         <span>ACTIVE SESSION TICKETS: <strong class="text-white">{{ dpdpStore.tickets.length }} FILED</strong></span>
         <span class="text-[#3d8b5e]">LATEST: {{ dpdpStore.tickets[0]?.refNo }} ({{ dpdpStore.tickets[0]?.type }})</span>
       </div>
 
-      <!-- Rights Tabs -->
-      <div class="flex flex-wrap gap-1.5 font-mono text-[10px] md:text-xs border-b border-[#1e1e20] pb-3">
+      <!-- Horizontal Scrollable Rights Tabs -->
+      <div class="flex overflow-x-auto gap-2 font-mono text-[10px] sm:text-xs border-b border-[#1e1e20] pb-3 shrink-0 scrollbar-none whitespace-nowrap">
         <button
           @click="activeTab = 'POLICIES'; requestStatus = null; formErrors = {}"
-          class="px-3 py-1.5 border transition-all uppercase font-bold"
+          class="px-3 py-2 border transition-all uppercase font-bold shrink-0 cursor-pointer"
           :class="activeTab === 'POLICIES' ? 'bg-[#4a7ebb] border-[#4a7ebb] text-white' : 'bg-[#0a0a0c] border-[#1e1e20] text-[#a0a0a4] hover:text-white'"
         >
           POLICIES
@@ -280,7 +299,7 @@ function copyDpoEmail() {
 
         <button
           @click="activeTab = 'REPORT'; requestStatus = null; formErrors = {}"
-          class="px-3 py-1.5 border transition-all uppercase font-bold"
+          class="px-3 py-2 border transition-all uppercase font-bold shrink-0 cursor-pointer"
           :class="activeTab === 'REPORT' ? 'bg-[#3d8b5e] border-[#3d8b5e] text-white' : 'bg-[#0a0a0c] border-[#1e1e20] text-[#a0a0a4] hover:text-white'"
         >
           DATA REPORT (S.11)
@@ -288,36 +307,39 @@ function copyDpoEmail() {
 
         <button
           @click="activeTab = 'ERASURE'; requestStatus = null; formErrors = {}"
-          class="px-3 py-1.5 border transition-all uppercase font-bold"
+          class="px-3 py-2 border transition-all uppercase font-bold shrink-0 cursor-pointer"
           :class="activeTab === 'ERASURE' ? 'bg-[#c44a4a] border-[#c44a4a] text-white' : 'bg-[#0a0a0c] border-[#1e1e20] text-[#a0a0a4] hover:text-white'"
         >
-          2. DATA DELETION (SEC 12)
+          DATA DELETION (SEC 12)
         </button>
 
         <button
           @click="activeTab = 'CORRECTION'; requestStatus = null; formErrors = {}"
-          class="px-3 py-1.5 border transition-all uppercase font-bold"
+          class="px-3 py-2 border transition-all uppercase font-bold shrink-0 cursor-pointer"
           :class="activeTab === 'CORRECTION' ? 'bg-[#4a7ebb] border-[#4a7ebb] text-white' : 'bg-[#0a0a0c] border-[#1e1e20] text-[#a0a0a4] hover:text-white'"
         >
-          3. CORRECTION (SEC 12)
+          CORRECTION (SEC 12)
         </button>
 
         <button
           @click="activeTab = 'NOMINATION'; requestStatus = null; formErrors = {}"
-          class="px-3 py-1.5 border transition-all uppercase font-bold"
+          class="px-3 py-2 border transition-all uppercase font-bold shrink-0 cursor-pointer"
           :class="activeTab === 'NOMINATION' ? 'bg-[#c49a3c] border-[#c49a3c] text-white' : 'bg-[#0a0a0c] border-[#1e1e20] text-[#a0a0a4] hover:text-white'"
         >
-          4. NOMINATE (SEC 14)
+          NOMINATE (SEC 14)
         </button>
 
         <button
           @click="activeTab = 'GRIEVANCE'; requestStatus = null; formErrors = {}"
-          class="px-3 py-1.5 border transition-all uppercase font-bold"
+          class="px-3 py-2 border transition-all uppercase font-bold shrink-0 cursor-pointer"
           :class="activeTab === 'GRIEVANCE' ? 'bg-[#750d37] border-[#750d37] text-white' : 'bg-[#0a0a0c] border-[#1e1e20] text-[#a0a0a4] hover:text-white'"
         >
-          5. GRIEVANCE (SEC 13)
+          GRIEVANCE (SEC 13)
         </button>
       </div>
+
+      <!-- Tab Content Area with Smooth Vertical Scroll -->
+      <div class="flex-1 overflow-y-auto pr-1">
 
       <!-- TAB: POLICIES & LEGAL NOTICES -->
       <div v-if="activeTab === 'POLICIES'" class="space-y-5 font-mono text-xs text-[#a0a0a4] leading-relaxed">
@@ -376,26 +398,32 @@ function copyDpoEmail() {
 
         <div class="grid sm:grid-cols-2 gap-3">
           <div>
-            <label class="text-[#555558] block mb-1 uppercase text-[10px]">APPLICANT NAME / IDENTITY:</label>
+            <label for="dpdp-report-name" class="text-[#555558] block mb-1 uppercase text-[10px]">APPLICANT NAME / IDENTITY: *</label>
             <input
+              id="dpdp-report-name"
               v-model="applicantName"
+              @input="delete formErrors.applicantName"
               type="text"
               placeholder="e.g. ARJUN MEHTA"
-              class="w-full bg-[#0a0a0c] border px-3 py-2 text-white font-mono text-xs focus:border-[#3d8b5e] outline-none"
-              :class="formErrors.applicantName ? 'border-[#c44a4a]' : 'border-[#1e1e20]'"
+              class="industrial-input"
+              :aria-invalid="!!formErrors.applicantName"
+              aria-describedby="report-name-err"
             />
-            <span v-if="formErrors.applicantName" class="text-[#c44a4a] text-[10px] block mt-1">{{ formErrors.applicantName }}</span>
+            <span id="report-name-err" v-if="formErrors.applicantName" class="text-[#c44a4a] text-[10px] block mt-1">{{ formErrors.applicantName }}</span>
           </div>
           <div>
-            <label class="text-[#555558] block mb-1 uppercase text-[10px]">VISITOR / RESIDENT ID:</label>
+            <label for="dpdp-report-id" class="text-[#555558] block mb-1 uppercase text-[10px]">VISITOR / RESIDENT ID: *</label>
             <input
+              id="dpdp-report-id"
               v-model="applicantIdNo"
+              @input="delete formErrors.applicantIdNo"
               type="text"
               placeholder="e.g. VIS-9021"
-              class="w-full bg-[#0a0a0c] border px-3 py-2 text-white font-mono text-xs focus:border-[#3d8b5e] outline-none"
-              :class="formErrors.applicantIdNo ? 'border-[#c44a4a]' : 'border-[#1e1e20]'"
+              class="industrial-input"
+              :aria-invalid="!!formErrors.applicantIdNo"
+              aria-describedby="report-id-err"
             />
-            <span v-if="formErrors.applicantIdNo" class="text-[#c44a4a] text-[10px] block mt-1">{{ formErrors.applicantIdNo }}</span>
+            <span id="report-id-err" v-if="formErrors.applicantIdNo" class="text-[#c44a4a] text-[10px] block mt-1">{{ formErrors.applicantIdNo }}</span>
           </div>
         </div>
 
@@ -442,35 +470,42 @@ function copyDpoEmail() {
 
         <div class="grid sm:grid-cols-2 gap-3">
           <div>
-            <label class="text-[#555558] block mb-1 uppercase text-[10px]">FULL NAME:</label>
+            <label for="dpdp-erasure-name" class="text-[#555558] block mb-1 uppercase text-[10px]">FULL NAME: *</label>
             <input
+              id="dpdp-erasure-name"
               v-model="applicantName"
+              @input="delete formErrors.applicantName"
               type="text"
               placeholder="e.g. ARJUN MEHTA"
-              class="w-full bg-[#0a0a0c] border px-3 py-2 text-white font-mono text-xs focus:border-[#c44a4a] outline-none"
-              :class="formErrors.applicantName ? 'border-[#c44a4a]' : 'border-[#1e1e20]'"
+              class="industrial-input"
+              :aria-invalid="!!formErrors.applicantName"
+              aria-describedby="erasure-name-err"
             />
-            <span v-if="formErrors.applicantName" class="text-[#c44a4a] text-[10px] block mt-1">{{ formErrors.applicantName }}</span>
+            <span id="erasure-name-err" v-if="formErrors.applicantName" class="text-[#c44a4a] text-[10px] block mt-1">{{ formErrors.applicantName }}</span>
           </div>
           <div>
-            <label class="text-[#555558] block mb-1 uppercase text-[10px]">PHONE / IDENTITY NUMBER:</label>
+            <label for="dpdp-erasure-phone" class="text-[#555558] block mb-1 uppercase text-[10px]">PHONE / IDENTITY NUMBER: *</label>
             <input
+              id="dpdp-erasure-phone"
               v-model="applicantPhone"
+              @input="delete formErrors.applicantPhone"
               type="text"
               placeholder="+91 98765 43210"
-              class="w-full bg-[#0a0a0c] border px-3 py-2 text-white font-mono text-xs focus:border-[#c44a4a] outline-none"
-              :class="formErrors.applicantPhone ? 'border-[#c44a4a]' : 'border-[#1e1e20]'"
+              class="industrial-input"
+              :aria-invalid="!!formErrors.applicantPhone"
+              aria-describedby="erasure-phone-err"
             />
-            <span v-if="formErrors.applicantPhone" class="text-[#c44a4a] text-[10px] block mt-1">{{ formErrors.applicantPhone }}</span>
+            <span id="erasure-phone-err" v-if="formErrors.applicantPhone" class="text-[#c44a4a] text-[10px] block mt-1">{{ formErrors.applicantPhone }}</span>
           </div>
         </div>
 
         <div>
-          <label class="text-[#555558] block mb-1 uppercase text-[10px]">REASON FOR ERASURE REQUEST:</label>
+          <label for="dpdp-erasure-reason" class="text-[#555558] block mb-1 uppercase text-[10px]">REASON FOR ERASURE REQUEST:</label>
           <textarea
+            id="dpdp-erasure-reason"
             v-model="reqReason"
             rows="2"
-            class="w-full bg-[#0a0a0c] border border-[#1e1e20] p-2.5 text-white font-mono text-xs focus:border-[#c44a4a] outline-none"
+            class="industrial-input"
           ></textarea>
         </div>
 
@@ -503,19 +538,32 @@ function copyDpoEmail() {
 
         <div class="grid sm:grid-cols-2 gap-3">
           <div>
-            <label class="text-[#555558] block mb-1 uppercase text-[10px]">CURRENT RECORDED NAME:</label>
+            <label for="dpdp-corr-name" class="text-[#555558] block mb-1 uppercase text-[10px]">CURRENT RECORDED NAME: *</label>
             <input
+              id="dpdp-corr-name"
               v-model="applicantName"
+              @input="delete formErrors.applicantName"
               type="text"
               placeholder="e.g. ARJUN MEHTA"
-              class="w-full bg-[#0a0a0c] border px-3 py-2 text-white font-mono text-xs focus:border-[#4a7ebb] outline-none"
-              :class="formErrors.applicantName ? 'border-[#c44a4a]' : 'border-[#1e1e20]'"
+              class="industrial-input"
+              :aria-invalid="!!formErrors.applicantName"
+              aria-describedby="corr-name-err"
             />
-            <span v-if="formErrors.applicantName" class="text-[#c44a4a] text-[10px] block mt-1">{{ formErrors.applicantName }}</span>
+            <span id="corr-name-err" v-if="formErrors.applicantName" class="text-[#c44a4a] text-[10px] block mt-1">{{ formErrors.applicantName }}</span>
           </div>
           <div>
-            <label class="text-[#555558] block mb-1 uppercase text-[10px]">CORRECTED VALUE / DETAILS:</label>
-            <input type="text" placeholder="e.g. ARJUN MEHTA (AUTHORIZED ARCHITECT)" class="w-full bg-[#0a0a0c] border border-[#1e1e20] px-3 py-2 text-white font-mono text-xs focus:border-[#4a7ebb] outline-none" />
+            <label for="dpdp-corr-val" class="text-[#555558] block mb-1 uppercase text-[10px]">CORRECTED VALUE / DETAILS: *</label>
+            <input
+              id="dpdp-corr-val"
+              v-model="correctedDetails"
+              @input="delete formErrors.correctedDetails"
+              type="text"
+              placeholder="e.g. ARJUN MEHTA (AUTHORIZED ARCHITECT)"
+              class="industrial-input"
+              :aria-invalid="!!formErrors.correctedDetails"
+              aria-describedby="corr-val-err"
+            />
+            <span id="corr-val-err" v-if="formErrors.correctedDetails" class="text-[#c44a4a] text-[10px] block mt-1">{{ formErrors.correctedDetails }}</span>
           </div>
         </div>
 
@@ -541,26 +589,32 @@ function copyDpoEmail() {
 
         <div class="grid sm:grid-cols-2 gap-3">
           <div>
-            <label class="text-[#555558] block mb-1 uppercase text-[10px]">NOMINEE FULL NAME:</label>
+            <label for="dpdp-nom-name" class="text-[#555558] block mb-1 uppercase text-[10px]">NOMINEE FULL NAME: *</label>
             <input
+              id="dpdp-nom-name"
               v-model="nomineeName"
+              @input="delete formErrors.nomineeName"
               type="text"
               placeholder="e.g. ANANYA MEHTA"
-              class="w-full bg-[#0a0a0c] border px-3 py-2 text-white font-mono text-xs focus:border-[#c49a3c] outline-none"
-              :class="formErrors.nomineeName ? 'border-[#c44a4a]' : 'border-[#1e1e20]'"
+              class="industrial-input"
+              :aria-invalid="!!formErrors.nomineeName"
+              aria-describedby="nom-name-err"
             />
-            <span v-if="formErrors.nomineeName" class="text-[#c44a4a] text-[10px] block mt-1">{{ formErrors.nomineeName }}</span>
+            <span id="nom-name-err" v-if="formErrors.nomineeName" class="text-[#c44a4a] text-[10px] block mt-1">{{ formErrors.nomineeName }}</span>
           </div>
           <div>
-            <label class="text-[#555558] block mb-1 uppercase text-[10px]">NOMINEE CONTACT / RELATION:</label>
+            <label for="dpdp-nom-contact" class="text-[#555558] block mb-1 uppercase text-[10px]">NOMINEE CONTACT / RELATION: *</label>
             <input
+              id="dpdp-nom-contact"
               v-model="nomineeContact"
+              @input="delete formErrors.nomineeContact"
               type="text"
               placeholder="+91 98111 22233 (SPOUSE)"
-              class="w-full bg-[#0a0a0c] border px-3 py-2 text-white font-mono text-xs focus:border-[#c49a3c] outline-none"
-              :class="formErrors.nomineeContact ? 'border-[#c44a4a]' : 'border-[#1e1e20]'"
+              class="industrial-input"
+              :aria-invalid="!!formErrors.nomineeContact"
+              aria-describedby="nom-contact-err"
             />
-            <span v-if="formErrors.nomineeContact" class="text-[#c44a4a] text-[10px] block mt-1">{{ formErrors.nomineeContact }}</span>
+            <span id="nom-contact-err" v-if="formErrors.nomineeContact" class="text-[#c44a4a] text-[10px] block mt-1">{{ formErrors.nomineeContact }}</span>
           </div>
         </div>
 
@@ -595,15 +649,18 @@ function copyDpoEmail() {
         </div>
 
         <div>
-          <label class="text-[#555558] block mb-1 uppercase text-[10px]">STATUTORY GRIEVANCE DESCRIPTION:</label>
+          <label for="dpdp-grievance-desc" class="text-[#555558] block mb-1 uppercase text-[10px]">STATUTORY GRIEVANCE DESCRIPTION: *</label>
           <textarea
+            id="dpdp-grievance-desc"
             v-model="grievanceText"
+            @input="delete formErrors.grievanceText"
             rows="3"
             placeholder="Describe grievance under DPDP Act 2023 rules..."
-            class="w-full bg-[#0a0a0c] border p-2.5 text-white font-mono text-xs focus:border-[#750d37] outline-none"
-            :class="formErrors.grievanceText ? 'border-[#c44a4a]' : 'border-[#1e1e20]'"
+            class="industrial-input"
+            :aria-invalid="!!formErrors.grievanceText"
+            aria-describedby="grievance-err"
           ></textarea>
-          <span v-if="formErrors.grievanceText" class="text-[#c44a4a] text-[10px] block mt-1">{{ formErrors.grievanceText }}</span>
+          <span id="grievance-err" v-if="formErrors.grievanceText" class="text-[#c44a4a] text-[10px] block mt-1">{{ formErrors.grievanceText }}</span>
         </div>
 
         <button @click="handleGrievanceSubmit" :disabled="isProcessing" class="industrial-btn industrial-btn-primary w-full py-3 text-xs border-[#750d37] bg-[#750d37]">
@@ -622,4 +679,5 @@ function copyDpoEmail() {
 
     </div>
   </div>
+</div>
 </template>

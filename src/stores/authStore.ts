@@ -1,5 +1,10 @@
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { trackEvent } from '../utils/analytics'
+import { db } from '../firebase'
+import { collection, addDoc } from 'firebase/firestore'
+import { isDomainAuthorized as checkDomain } from '../utils/validators'
+import { formatTimestampISO } from '../utils/formatters'
 
 export interface UserProfile {
   uid: string
@@ -19,9 +24,44 @@ export interface SessionData {
   profile: UserProfile
 }
 
+export interface UnauthorizedLoginAttempt {
+  id: string
+  email: string
+  uid: string
+  displayName: string
+  timestamp: string
+  userAgent: string
+  reason: string
+  status: 'ACCESS_DENIED'
+}
+
 const SESSION_STORAGE_KEY = 'shadowverse_operator_session'
+const LOCAL_STORAGE_SESSION_KEY = 'shadowverse_operator_session_persistent'
 const USER_PROFILES_KEY = 'shadowverse_known_users'
+const UNAUTHORIZED_LOGS_KEY = 'shadowverse_unauthorized_login_attempts'
 const AUTHORIZED_DOMAIN = '@shadowverse.in'
+const DEFAULT_SESSION_DURATION_MS = 8 * 3600 * 1000 // 8 hours
+
+function loadUnauthorizedAttemptsFromStorage(): UnauthorizedLoginAttempt[] {
+  try {
+    const raw = localStorage.getItem(UNAUTHORIZED_LOGS_KEY)
+    return raw ? JSON.parse(raw) : [
+      {
+        id: 'unauth-init-01',
+        email: 'intruder@external-domain.com',
+        uid: 'ext-user-9912',
+        displayName: 'External Account Attempt',
+        timestamp: new Date(Date.now() - 3600000).toISOString(),
+        userAgent: 'Mozilla/5.0 (X11; Linux x86_64)',
+        reason: 'Attempted login with unauthorized domain email: intruder@external-domain.com',
+        status: 'ACCESS_DENIED'
+      }
+    ]
+  } catch {
+    return []
+  }
+}
+
 
 export const useAuthStore = defineStore('auth', () => {
   const loginPhase = ref<'grid' | 'rounds' | 'logged-in'>('grid')
@@ -35,14 +75,25 @@ export const useAuthStore = defineStore('auth', () => {
 
   const matrix81Cells = ref<string[]>([])
   const roundGridNumbers = ref<string[]>([])
+  const selectedCellIndex = ref<number>(13) // Default B5 coordinate (index 13)
+
+  function selectCell(idx: number) {
+    selectedCellIndex.value = idx
+  }
 
   const userProfile = ref<UserProfile | null>(null)
+
+  // Session Time Remaining Calculation (in Seconds)
+  const sessionRemainingSeconds = computed(() => {
+    if (!sessionExpiresAt.value || loginPhase.value !== 'logged-in') return 0
+    const diff = new Date(sessionExpiresAt.value).getTime() - Date.now()
+    return diff > 0 ? Math.floor(diff / 1000) : 0
+  })
 
   const isAuthenticated = computed(() => {
     if (loginPhase.value !== 'logged-in' || !userProfile.value || userProfile.value.isFirstTime) {
       return false
     }
-    // Check if session has expired
     if (sessionExpiresAt.value && new Date(sessionExpiresAt.value).getTime() < Date.now()) {
       return false
     }
@@ -51,16 +102,44 @@ export const useAuthStore = defineStore('auth', () => {
 
   const needsOnboarding = computed(() => userProfile.value !== null && userProfile.value.isFirstTime)
 
-  function generate81AsciiCells(): string[] {
+  const bCellIndex = computed(() => {
+    const idx = matrix81Cells.value.indexOf('B')
+    return idx >= 0 ? idx : 0
+  })
+
+  const bCoordinate = computed(() => {
+    const idx = bCellIndex.value
+    const rowLetter = String.fromCharCode(65 + Math.floor(idx / 9))
+    const colNum = (idx % 9) + 1
+    return `${rowLetter}${colNum}`
+  })
+
+  const bNumberInRound = computed(() => {
+    return roundGridNumbers.value[bCellIndex.value] || '00'
+  })
+
+  function createInitial81CharSet(): string[] {
     const pool: string[] = []
     for (let i = 33; i <= 126; i++) {
-      if (i < 48 || i > 57) {
+      if ((i < 48 || i > 57) && String.fromCharCode(i) !== 'B') {
         pool.push(String.fromCharCode(i))
       }
     }
-    let extended = [...pool, ...pool]
-    extended.sort(() => Math.random() - 0.5)
-    return extended.slice(0, 81)
+    const result: string[] = []
+    for (let i = 0; i < 80; i++) {
+      const char = pool[Math.floor(Math.random() * pool.length)]
+      if (char) result.push(char)
+    }
+    result.push('B')
+    return result
+  }
+
+  const base81CharSet = ref<string[]>(createInitial81CharSet())
+
+  function shuffleGrid(): string[] {
+    const arr = [...base81CharSet.value]
+    arr.sort(() => Math.random() - 0.5)
+    return arr
   }
 
   function generateRandomToken(): string {
@@ -68,7 +147,8 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   function initGrid() {
-    matrix81Cells.value = generate81AsciiCells()
+    matrix81Cells.value = shuffleGrid()
+    selectedCellIndex.value = matrix81Cells.value.indexOf('B')
     if (!sessionToken.value) {
       sessionToken.value = generateRandomToken()
     }
@@ -81,23 +161,27 @@ export const useAuthStore = defineStore('auth', () => {
     isSubmitting.value = true
     setTimeout(() => {
       isSubmitting.value = false
-      roundGridNumbers.value = Array.from({ length: 81 }, () => Math.floor(Math.random() * 10).toString())
+      roundGridNumbers.value = Array.from({ length: 81 }, () =>
+        String(Math.floor(Math.random() * 100)).padStart(2, '0')
+      )
       loginPhase.value = 'rounds'
       currentRound.value = 0
     }, 400)
   }
 
   function answerRound(yes: boolean) {
-    if (currentRound.value < 2) {
+    if (currentRound.value < 3) {
       currentRound.value += 1
-      roundGridNumbers.value = Array.from({ length: 81 }, () => Math.floor(Math.random() * 10).toString())
+      roundGridNumbers.value = Array.from({ length: 81 }, () =>
+        String(Math.floor(Math.random() * 100)).padStart(2, '0')
+      )
     } else {
       isSubmitting.value = true
       setTimeout(() => {
         isSubmitting.value = false
         loginPhase.value = 'logged-in'
         authenticatedAt.value = new Date().toISOString()
-        sessionExpiresAt.value = new Date(Date.now() + 8 * 3600 * 1000).toISOString()
+        sessionExpiresAt.value = new Date(Date.now() + DEFAULT_SESSION_DURATION_MS).toISOString()
         saveSessionToStorage()
       }, 500)
     }
@@ -119,22 +203,20 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   function isDomainAuthorized(email: string): boolean {
-    if (!email) return false
-    return email.trim().toLowerCase().endsWith(AUTHORIZED_DOMAIN)
+    return checkDomain(email, AUTHORIZED_DOMAIN)
   }
 
-  function setGoogleUser(payload: { uid: string; email: string; displayName?: string }) {
+  function setGoogleUser(payload: { uid: string; email: string; displayName?: string; photoURL?: string }, skipOnboarding: boolean = false) {
     const normalizedEmail = payload.email.trim().toLowerCase()
     
     if (!isDomainAuthorized(normalizedEmail)) {
-      throw new Error(`ACCESS DENIED: Only accounts with @shadowverse.in domain are authorized to sign in. Yours: ${payload.email}`)
+      throw new Error(`ACCESS DENIED: Account "${payload.email}" is not authorized.`)
     }
 
     const known = getKnownUsers()
     const existing = known[payload.uid || normalizedEmail]
 
-    if (existing && existing.fullName && existing.phone) {
-      // Existing user with completed onboarding
+    if (existing && existing.fullName && existing.phone && !existing.isFirstTime) {
       userProfile.value = {
         ...existing,
         isFirstTime: false,
@@ -144,10 +226,28 @@ export const useAuthStore = defineStore('auth', () => {
       securityRole.value = 'GOOGLE_SOVEREIGN_COMMANDER'
       loginPhase.value = 'logged-in'
       authenticatedAt.value = new Date().toISOString()
-      sessionExpiresAt.value = new Date(Date.now() + 8 * 3600 * 1000).toISOString()
+      sessionExpiresAt.value = new Date(Date.now() + DEFAULT_SESSION_DURATION_MS).toISOString()
+      saveSessionToStorage()
+    } else if (skipOnboarding) {
+      const profile: UserProfile = {
+        uid: payload.uid || 'google-user-' + Math.random().toString(36).substring(2, 8),
+        email: normalizedEmail,
+        fullName: payload.displayName?.trim() || normalizedEmail.split('@')[0] || 'Presentation Viewer',
+        phone: '',
+        isFirstTime: false,
+        authProvider: 'google.com',
+      }
+      userProfile.value = profile
+      saveKnownUser(profile)
+
+      operatorId.value = normalizedEmail
+      sessionToken.value = generateRandomToken()
+      securityRole.value = 'GOOGLE_SOVEREIGN_COMMANDER'
+      loginPhase.value = 'logged-in'
+      authenticatedAt.value = new Date().toISOString()
+      sessionExpiresAt.value = new Date(Date.now() + DEFAULT_SESSION_DURATION_MS).toISOString()
       saveSessionToStorage()
     } else {
-      // First-time login: needs name & phone
       userProfile.value = {
         uid: payload.uid || 'google-user-' + Math.random().toString(36).substring(2, 8),
         email: normalizedEmail,
@@ -178,8 +278,16 @@ export const useAuthStore = defineStore('auth', () => {
     loginPhase.value = 'logged-in'
     securityRole.value = 'GOOGLE_SOVEREIGN_COMMANDER'
     authenticatedAt.value = new Date().toISOString()
-    sessionExpiresAt.value = new Date(Date.now() + 8 * 3600 * 1000).toISOString()
+    sessionExpiresAt.value = new Date(Date.now() + DEFAULT_SESSION_DURATION_MS).toISOString()
     saveSessionToStorage()
+  }
+
+  // Active Session Touch/Renewal on Operator Activity
+  function touchSession() {
+    if (loginPhase.value === 'logged-in' && userProfile.value) {
+      sessionExpiresAt.value = new Date(Date.now() + DEFAULT_SESSION_DURATION_MS).toISOString()
+      saveSessionToStorage()
+    }
   }
 
   function saveSessionToStorage() {
@@ -189,21 +297,28 @@ export const useAuthStore = defineStore('auth', () => {
       sessionToken: sessionToken.value,
       securityRole: securityRole.value,
       authenticatedAt: authenticatedAt.value || new Date().toISOString(),
-      sessionExpiresAt: sessionExpiresAt.value || new Date(Date.now() + 8 * 3600 * 1000).toISOString(),
+      sessionExpiresAt: sessionExpiresAt.value || new Date(Date.now() + DEFAULT_SESSION_DURATION_MS).toISOString(),
       profile: userProfile.value,
     }
-    sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(data))
+    const serialized = JSON.stringify(data)
+    sessionStorage.setItem(SESSION_STORAGE_KEY, serialized)
+    localStorage.setItem(LOCAL_STORAGE_SESSION_KEY, serialized)
+
+    trackEvent('login', {
+      method: data.profile.authProvider || 'google',
+      role: data.securityRole,
+    })
   }
 
   function restoreSessionFromStorage(): boolean {
     try {
-      const raw = sessionStorage.getItem(SESSION_STORAGE_KEY)
+      const raw = sessionStorage.getItem(SESSION_STORAGE_KEY) || localStorage.getItem(LOCAL_STORAGE_SESSION_KEY)
       if (!raw) return false
       const data: SessionData = JSON.parse(raw)
       
       // Check session expiration
       if (data && data.sessionExpiresAt && new Date(data.sessionExpiresAt).getTime() < Date.now()) {
-        sessionStorage.removeItem(SESSION_STORAGE_KEY)
+        clearStorageSession()
         return false
       }
 
@@ -218,13 +333,18 @@ export const useAuthStore = defineStore('auth', () => {
         return true
       }
     } catch {
-      sessionStorage.removeItem(SESSION_STORAGE_KEY)
+      clearStorageSession()
     }
     return false
   }
 
-  function logout() {
+  function clearStorageSession() {
     sessionStorage.removeItem(SESSION_STORAGE_KEY)
+    localStorage.removeItem(LOCAL_STORAGE_SESSION_KEY)
+  }
+
+  function logout() {
+    clearStorageSession()
     userProfile.value = null
     sessionToken.value = generateRandomToken()
     loginPhase.value = 'grid'
@@ -233,9 +353,62 @@ export const useAuthStore = defineStore('auth', () => {
     initGrid()
   }
 
+  // Auto Session Expiration Heartbeat Interval
+  let heartbeatTimer: any = null
+  function startSessionHeartbeat() {
+    if (heartbeatTimer) clearInterval(heartbeatTimer)
+    heartbeatTimer = setInterval(() => {
+      if (loginPhase.value === 'logged-in') {
+        if (sessionExpiresAt.value && new Date(sessionExpiresAt.value).getTime() < Date.now()) {
+          logout()
+        }
+      }
+    }, 10000) // Check every 10 seconds
+  }
+
+  onMounted(() => {
+    startSessionHeartbeat()
+  })
+
+  onBeforeUnmount(() => {
+    if (heartbeatTimer) clearInterval(heartbeatTimer)
+  })
+
   restoreSessionFromStorage()
   if (loginPhase.value !== 'logged-in') {
     initGrid()
+  }
+
+  const unauthorizedAttempts = ref<UnauthorizedLoginAttempt[]>(loadUnauthorizedAttemptsFromStorage())
+
+  async function logUnauthorizedLogin(payload: { email: string; uid?: string; displayName?: string; reason?: string }) {
+    const attempt: UnauthorizedLoginAttempt = {
+      id: 'unauth-' + Date.now() + '-' + Math.floor(1000 + Math.random() * 9000),
+      email: payload.email || 'UNKNOWN_ACCOUNT',
+      uid: payload.uid || 'UID_NOT_PROVIDED',
+      displayName: payload.displayName || 'External Google Account',
+      timestamp: new Date().toISOString(),
+      userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'Unknown Platform',
+      reason: payload.reason || 'Attempted login with non-@shadowverse.in domain Google account.',
+      status: 'ACCESS_DENIED'
+    }
+
+    unauthorizedAttempts.value.unshift(attempt)
+
+    // 1. LocalStorage Persistence
+    try {
+      localStorage.setItem(UNAUTHORIZED_LOGS_KEY, JSON.stringify(unauthorizedAttempts.value))
+    } catch (e) {
+      console.error('Failed saving unauthorized login attempt to LocalStorage:', e)
+    }
+
+    // 2. Firestore Cloud Storage Persistence ('default' database, 'unauthorized_logins' collection)
+    try {
+      const colRef = collection(db, 'unauthorized_logins')
+      await addDoc(colRef, attempt)
+    } catch (err) {
+      console.warn('Firestore unauthorized login audit write handled:', err)
+    }
   }
 
   return {
@@ -245,19 +418,28 @@ export const useAuthStore = defineStore('auth', () => {
     securityRole,
     authenticatedAt,
     sessionExpiresAt,
+    sessionRemainingSeconds,
     currentRound,
     isSubmitting,
     matrix81Cells,
     roundGridNumbers,
+    selectedCellIndex,
+    bCellIndex,
+    bCoordinate,
+    bNumberInRound,
+    selectCell,
     userProfile,
     isAuthenticated,
     needsOnboarding,
+    unauthorizedAttempts,
     isDomainAuthorized,
+    logUnauthorizedLogin,
     initGrid,
     startAuthenticateRounds,
     answerRound,
     setGoogleUser,
     completeFirstTimeOnboarding,
+    touchSession,
     logout,
     restoreSessionFromStorage,
   }

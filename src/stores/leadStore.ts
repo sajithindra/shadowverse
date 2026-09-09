@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import { trackConversion } from '../utils/analytics'
 
 export interface Lead {
   id: string
@@ -77,7 +78,7 @@ export const useLeadStore = defineStore('lead', () => {
       intentScore: 99,
       dateAdded: '2026-08-01',
       notes: 'Successfully deployed MicroK8s & Ceph 100TB private cloud infrastructure.',
-      assignedAgent: 'SUVRMONX LLP',
+      assignedAgent: 'SURVMONX LLP',
     },
     {
       id: 'LEAD-905',
@@ -107,7 +108,7 @@ export const useLeadStore = defineStore('lead', () => {
       intentScore: 91,
       dateAdded: '2026-08-02',
       notes: 'Requires 48-hour auto-purge Ceph storage for biomedical facial vector data.',
-      assignedAgent: 'SUVRMONX LLP',
+      assignedAgent: 'SURVMONX LLP',
     },
   ])
 
@@ -132,6 +133,12 @@ export const useLeadStore = defineStore('lead', () => {
       intentScore: newLead.intentScore,
       notes: newLead.notes,
       assignedAgent: newLead.assignedAgent,
+    })
+
+    trackConversion('lead_submission', {
+      lead_id: id,
+      domain: newLead.domain,
+      source: newLead.source,
     })
   }
 

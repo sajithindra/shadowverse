@@ -11,10 +11,16 @@ function handleKeydown(e: KeyboardEvent) {
 
 onMounted(() => {
   window.addEventListener('keydown', handleKeydown)
+  if (typeof document !== 'undefined') {
+    document.body.style.overflow = 'hidden'
+  }
 })
 
 onBeforeUnmount(() => {
   window.removeEventListener('keydown', handleKeydown)
+  if (typeof document !== 'undefined') {
+    document.body.style.overflow = ''
+  }
 })
 
 const selectedPrivacyLang = ref<string>('en')
@@ -72,7 +78,7 @@ const privacyTexts: Record<string, PrivacyTextContent> = {
     p5Text: 'Data Principals possess enforceable statutory rights to: (i) obtain a summary of processed personal data, (ii) seek correction or complete erasure of inaccurate personal data, (iii) seek grievance redressal, and (iv) nominate another individual in the event of death or incapacity.',
     p6Header: 'ARTICLE VI — STATUTORY DESIGNATION OF DATA PROTECTION OFFICER (SECTION 10)',
     p6Text: 'In accordance with DPDP Act Section 10, ShadowVerse has designated a Data Protection Officer (DPO) to manage data principal requests and legal compliance.',
-    dpoName: 'Arun Kumar Pillai',
+    dpoName: 'Arun Prakash Pillai',
     dpoEmail: 'coo@shadowverse.in',
     dpoDesignation: 'Data Protection Officer & Chief Operating Officer (COO)',
   },
@@ -92,7 +98,7 @@ const privacyTexts: Record<string, PrivacyTextContent> = {
     p5Text: 'डेटा प्रिंसिपलों को अपने संसाधित डेटा की जानकारी प्राप्त करने, सुधार करने, हटाने और नामांकित व्यक्ति नियुक्त करने का कानूनी अधिकार है।',
     p6Header: 'अनुच्छेद VI — डेटा संरक्षण अधिकारी (DPO) का वैधानिक पद (धारा 10)',
     p6Text: 'डीपीडीपी अधिनियम की धारा 10 के अनुसार, डेटा संरक्षण अधिकारी (DPO) को वैधानिक रूप से नियुक्त किया गया है।',
-    dpoName: 'अरुण कुमार पिल्लई (Arun Kumar Pillai)',
+    dpoName: 'अरुण कुमार पिल्लई (Arun Prakash Pillai)',
     dpoEmail: 'coo@shadowverse.in',
     dpoDesignation: 'डेटा संरक्षण अधिकारी एवं मुख्य परिचालन अधिकारी (COO)',
   },
@@ -112,7 +118,7 @@ const privacyTexts: Record<string, PrivacyTextContent> = {
     p5Text: 'தனிநபர்கள் தங்கள் தரவை பார்வையிடவும், திருத்தவும், அழிக்கவும் உரிமை பெற்றுள்ளனர்.',
     p6Header: 'பிரிவு VI — தரவு பாதுகாப்பு அதிகாரி நியமனம் (பிரிவு 10)',
     p6Text: 'சட்டப்பிரிவு 10 இன் படி நியமிக்கப்பட்ட தரவு பாதுகாப்பு அதிகாரி விபரம்:',
-    dpoName: 'அருண் குமார் பிள்ளை (Arun Kumar Pillai)',
+    dpoName: 'அருண் குமார் பிள்ளை (Arun Prakash Pillai)',
     dpoEmail: 'coo@shadowverse.in',
     dpoDesignation: 'தரவு பாதுகாப்பு அதிகாரி & முதன்மை செயல் அதிகாரி (COO)',
   },
@@ -132,7 +138,7 @@ const privacyTexts: Record<string, PrivacyTextContent> = {
     p5Text: 'మీ డేటాను సమీక్షించడానికి, సరిచేయడానికి మరియు తొలగించమని కోరే చట్టబద్ధమైన హక్కు మీకు ఉంది.',
     p6Header: 'ఆర్టికల్ VI — డేటా ప్రొటెక్షన్ ఆఫీసర్ నియమకం (సెక్షన్ 10)',
     p6Text: 'సెక్షన్ 10 ప్రకారం నియమించబడిన డేటా ప్రొటెక్షన్ ఆఫీసర్ వివరాలు:',
-    dpoName: 'అరుణ్ కుమార్ పిళ్లై (Arun Kumar Pillai)',
+    dpoName: 'అరుణ్ కుమార్ పిళ్లై (Arun Prakash Pillai)',
     dpoEmail: 'coo@shadowverse.in',
     dpoDesignation: 'డేటా ప్రొటెక్షన్ ఆఫీసర్ & చీఫ్ ఆపరేటింగ్ ఆఫీసర్ (COO)',
   },
@@ -152,7 +158,7 @@ const privacyTexts: Record<string, PrivacyTextContent> = {
     p5Text: 'ನಿಮ್ಮ ಡೇಟಾವನ್ನು ವೀಕ್ಷಿಸಲು, ತಿದ್ದುಪಡಿ ಮಾಡಲು ಮತ್ತು ಅಳಿಸಲು ಕಾನೂನುಬದ್ಧ ಹಕ್ಕಿದೆ.',
     p6Header: 'ಲೇಖನ VI — ಡೇಟಾ ರಕ್ಷಣೆ ಅಧಿಕಾರಿ ನೇಮಕ (ವಿಭಾಗ 10)',
     p6Text: 'ವಿಭಾಗ 10 ರ ಪ್ರಕಾರ ನೇಮಕಗೊಂಡ ಡೇಟಾ ರಕ್ಷಣೆ ಅಧಿಕಾರಿ ವಿವರಗಳು:',
-    dpoName: 'ಅರುಣ್ ಕುಮಾರ್ ಪಿಳ್ಳೈ (Arun Kumar Pillai)',
+    dpoName: 'ಅರುಣ್ ಕುಮಾರ್ ಪಿಳ್ಳೈ (Arun Prakash Pillai)',
     dpoEmail: 'coo@shadowverse.in',
     dpoDesignation: 'ಡೇಟಾ ರಕ್ಷಣೆ ಅಧಿಕಾರಿ ಮತ್ತು ಮುಖ್ಯ ಕಾರ್ಯನಿರ್ವಹಣಾಧಿಕಾರಿ (COO)',
   },
@@ -172,7 +178,7 @@ const privacyTexts: Record<string, PrivacyTextContent> = {
     p5Text: 'നിങ്ങളുടെ ഡാറ്റ പരിശോധിക്കാനും തിരുത്താനും മായ്ക്കാനും അവകാശമുണ്ട്.',
     p6Header: 'ആർട്ടിക്കിൾ VI — ഡാറ്റാ സംരക്ഷണ ഓഫീസർ നിയമനം (സെക്ഷൻ 10)',
     p6Text: 'സെക്ഷൻ 10 അനുസരിച്ച് നിയമിക്കപ്പെട്ട ഡാറ്റാ പ്രൊട്ടക്ഷൻ ഓഫീസറുടെ വിവരങ്ങൾ:',
-    dpoName: 'അരുൺ കുമാർ പിള്ള (Arun Kumar Pillai)',
+    dpoName: 'അരുൺ കുമാർ പിള്ള (Arun Prakash Pillai)',
     dpoEmail: 'coo@shadowverse.in',
     dpoDesignation: 'ഡാറ്റാ പ്രൊട്ടക്ഷൻ ഓഫീസർ & ചീഫ് ഓപ്പറേറ്റിംഗ് ഓഫീസർ (COO)',
   },
@@ -192,7 +198,7 @@ const privacyTexts: Record<string, PrivacyTextContent> = {
     p5Text: 'आपला डेटा पाहण्याचा, दुरुस्त करण्याचा आणि हटवण्याचा पूर्ण अधिकार तुम्हाला आहे.',
     p6Header: 'अनुच्छेद VI — डेटा संरक्षण अधिकारी नियुक्ती (कलम 10)',
     p6Text: 'कलम 10 नुसार नियुक्त केलेले डेटा संरक्षण अधिकारी (DPO):',
-    dpoName: 'अरुण कुमार पिल्लाई (Arun Kumar Pillai)',
+    dpoName: 'अरुण कुमार पिल्लाई (Arun Prakash Pillai)',
     dpoEmail: 'coo@shadowverse.in',
     dpoDesignation: 'डेटा संरक्षण अधिकारी आणि मुख्य कार्यपालन अधिकारी (COO)',
   },
@@ -212,7 +218,7 @@ const privacyTexts: Record<string, PrivacyTextContent> = {
     p5Text: 'તમારા ડેટાને તપાસવા, સુધારવા અને દૂર કરાવવાનો અધિકાર તમારી પાસે છે.',
     p6Header: 'અનુચ્છેદ VI — ડેટા પ્રોટેક્શન ઓફિસર નિયુક્તિ (કલમ 10)',
     p6Text: 'કલમ 10 મુજબ નિયુક્ત ડેટા પ્રોટેક્શન ઓફિસર વિગતો:',
-    dpoName: 'અરુણ કુમાર પિલ્લાઈ (Arun Kumar Pillai)',
+    dpoName: 'અરુણ કુમાર પિલ્લાઈ (Arun Prakash Pillai)',
     dpoEmail: 'coo@shadowverse.in',
     dpoDesignation: 'ડેટા પ્રોટેક્શન ઓફિસર અને ચીફ ઓપરેટિંગ ઓફિસર (COO)',
   },
@@ -232,7 +238,7 @@ const privacyTexts: Record<string, PrivacyTextContent> = {
     p5Text: 'আপনার ডেটা দেখার, সংশোধন করার এবং মুছে ফেলার বিধিবদ্ধ অধিকার রয়েছে।',
     p6Header: 'অনুচ্ছেদ VI — ডেটা সুরক্ষা কর্মকর্তা নিয়োগ (ধারা 10)',
     p6Text: 'ধারা ১০ অনুসারে নিযুক্ত ডেটা সুরক্ষা কর্মকর্তা (DPO):',
-    dpoName: 'অরুণ কুমার পিল্লাই (Arun Kumar Pillai)',
+    dpoName: 'অরুণ কুমার পিল্লাই (Arun Prakash Pillai)',
     dpoEmail: 'coo@shadowverse.in',
     dpoDesignation: 'ডেটা সুরক্ষা কর্মকর্তা এবং প্রধান পরিচালন কর্মকর্তা (COO)',
   },
@@ -252,7 +258,7 @@ const privacyTexts: Record<string, PrivacyTextContent> = {
     p5Text: 'ਤੁਹਾਨੂੰ ਆਪਣੇ ਡਾਟੇ ਦੀ ਸਮੀਖਿਆ ਕਰਨ, ਸੋਧਣ ਅਤੇ ਹਟਾਉਣ ਦਾ ਕਾਨੂੰਨੀ ਅਧਿਕਾਰ ਹੈ।',
     p6Header: 'ਆਰਟੀਕਲ VI — ਡਾਟਾ ਪ੍ਰੋਟੈਕਸ਼ਨ ਅਫਸਰ ਨਿਯੁਕਤੀ (ਧਾਰਾ 10)',
     p6Text: 'ਧਾਰਾ 10 ਅਨੁਸਾਰ ਨਿਯੁਕਤ ਡਾਟਾ ਪ੍ਰੋਟੈਕਸ਼ਨ ਅਫਸਰ (DPO):',
-    dpoName: 'ਅਰੁਣ ਕੁਮਾਰ ਪਿਲਈ (Arun Kumar Pillai)',
+    dpoName: 'ਅਰੁਣ ਕੁਮਾਰ ਪਿਲਈ (Arun Prakash Pillai)',
     dpoEmail: 'coo@shadowverse.in',
     dpoDesignation: 'ਡਾਟਾ ਪ੍ਰੋਟੈਕਸ਼ਨ ਅਫਸਰ ਅਤੇ ਚੀਫ ਆਪਰੇਟਿੰਗ ਅਫਸਰ (COO)',
   },
@@ -272,7 +278,7 @@ const privacyTexts: Record<string, PrivacyTextContent> = {
     p5Text: 'ଆପଣଙ୍କ ଡାଟା ଦେଖିବା, ସଂଶୋଧନ କରିବା ଏବଂ ହଟାଇବା ଅଧିକାର ଆପଣଙ୍କର ଅଛି।',
     p6Header: 'ଅନୁଚ୍ଛେଦ VI — ଡାଟା ସୁରକ୍ଷା ଅଧିକାରୀ ନିଯୁକ୍ତି (ଧାରା 10)',
     p6Text: 'ଧାରା 10 ଅନୁଯାୟୀ ନିଯୁକ୍ତ ଡାଟା ସୁରକ୍ଷା ଅଧିକାରୀ (DPO):',
-    dpoName: 'ଅରୁଣ କୁମାର ପିଲ୍ଲାଇ (Arun Kumar Pillai)',
+    dpoName: 'ଅରୁଣ କୁମାର ପିଲ୍ଲାଇ (Arun Prakash Pillai)',
     dpoEmail: 'coo@shadowverse.in',
     dpoDesignation: 'ଡାଟା ସୁରକ୍ଷା ଅଧିକାରୀ ଏବଂ ମୁଖ୍ୟ ପରିଚାଳନା ଅଧିକାରୀ (COO)',
   },
@@ -292,7 +298,7 @@ const privacyTexts: Record<string, PrivacyTextContent> = {
     p5Text: 'আপোনাৰ তথ্য পৰীক্ষা, সংশোধন আৰু মোহাৰি পেলোৱাৰ অধিকাৰ আছে।',
     p6Header: 'অনুচ্ছেদ VI — তথ্য সুৰক্ষা বিষয়া নিযুক্তি (ধাৰা 10)',
     p6Text: 'ধাৰা ১০ অনুসৰি নিযুক্ত তথ্য সুৰક્ષા বিষয়া (DPO):',
-    dpoName: 'অৰুণ কুমাৰ পিল্লাই (Arun Kumar Pillai)',
+    dpoName: 'অৰুণ কুমাৰ পিল্লাই (Arun Prakash Pillai)',
     dpoEmail: 'coo@shadowverse.in',
     dpoDesignation: 'তথ্য সুৰক্ষা বিষয়া আৰু মুখ্য পৰিচালনা বিষয়া (COO)',
   },
@@ -304,34 +310,44 @@ const currentPrivacyText = computed<PrivacyTextContent>(() => {
 </script>
 
 <template>
-  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md p-4 sm:p-6 select-none animate-fade-in">
-    <div class="industrial-card max-w-3xl w-full p-4 md:p-8 border-[#750d37] space-y-4 md:space-y-6 max-h-[90vh] overflow-y-auto">
+  <div
+    class="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-2.5 sm:p-4 select-none animate-fade-in overflow-y-auto"
+    @click.self="emit('close')"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="privacy-modal-title"
+  >
+    <div class="industrial-card max-w-3xl w-full border-[#750d37]/60 space-y-4 my-auto max-h-[92vh] sm:max-h-[88vh] flex flex-col p-3.5 sm:p-6 overflow-hidden relative shadow-[0_20px_50px_rgba(0,0,0,0.9)] bg-[#111113]">
+      <!-- 2px Brand Top Accent Line -->
+      <div class="absolute top-0 left-0 right-0 h-[2px] bg-[#750d37]"></div>
+
       <!-- Top bar with Indian language dropdown -->
-      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-4 border-b border-[#1e1e20]">
-        <div class="space-y-1">
-          <span class="font-mono text-[10px] md:text-xs text-[#750d37] font-bold tracking-widest">// STATUTORY LEGAL INSTRUMENT // DPDP ACT 2023</span>
-          <h3 class="text-base md:text-xl font-black uppercase text-white">{{ currentPrivacyText.title }}</h3>
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-3 border-b border-[#1e1e20] shrink-0 pt-1">
+        <div class="space-y-1 min-w-0">
+          <span class="font-mono text-[10px] sm:text-xs text-[#750d37] font-bold tracking-widest block uppercase">// STATUTORY LEGAL INSTRUMENT // DPDP ACT 2023</span>
+          <h3 id="privacy-modal-title" class="text-base sm:text-lg font-black uppercase text-white truncate">{{ currentPrivacyText.title }}</h3>
         </div>
         
-        <div class="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end">
+        <div class="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end shrink-0">
           <select
             v-model="selectedPrivacyLang"
-            class="bg-[#0a0a0c] border border-[#750d37] px-3 py-1.5 text-white font-mono text-xs focus:outline-none uppercase font-bold cursor-pointer"
+            class="bg-[#0a0a0c] border border-[#750d37] px-2.5 py-1.5 text-white font-mono text-xs focus:outline-none uppercase font-bold cursor-pointer"
           >
             <option v-for="lang in privacyLanguages" :key="lang.code" :value="lang.code">
               {{ lang.name }}
             </option>
           </select>
 
-          <button @click="emit('close')" class="industrial-btn industrial-btn-outline text-[10px] md:text-xs">
+          <button @click="emit('close')" class="industrial-btn industrial-btn-outline text-[10px] sm:text-xs py-1.5 px-3 shrink-0">
             CLOSE [ESC]
           </button>
         </div>
       </div>
 
-      <div class="font-mono text-[10px] md:text-xs text-[#a0a0a4] bg-[#0a0a0c] p-2.5 border border-[#1e1e20] text-center font-bold text-[#3d8b5e]">
-        {{ currentPrivacyText.subtitle }}
-      </div>
+      <div class="overflow-y-auto space-y-4 pr-1 flex-1">
+        <div class="font-mono text-xs text-[#a0a0a4] bg-[#0a0a0c] p-3 border border-[#1e1e20] text-center font-bold text-[#3d8b5e]">
+          {{ currentPrivacyText.subtitle }}
+        </div>
 
       <div class="p-3 bg-[#750d37]/10 border border-[#750d37]/40 font-mono text-[10px] md:text-xs text-[#e8e8ea] leading-relaxed">
         <span class="text-[#750d37] font-bold block mb-1 uppercase">// STATUTORY PREAMBLE & APPLICABILITY:</span>
@@ -381,10 +397,11 @@ const currentPrivacyText = computed<PrivacyTextContent>(() => {
           </div>
         </div>
       </div>
+      </div>
 
-      <div class="pt-3 border-t border-[#1e1e20] flex items-center justify-between font-mono text-[10px] text-[#555558]">
+      <div class="pt-3 border-t border-[#1e1e20] flex flex-col sm:flex-row items-start sm:items-center justify-between font-mono text-[10px] text-[#555558] shrink-0 gap-1">
         <span>STATUTORY FRAMEWORK: DPDP ACT 2023 (ACT 22 OF 2023)</span>
-        <span class="text-[#3d8b5e]">SUVRMONX LLP LEGAL COMPLIANT</span>
+        <span class="text-[#3d8b5e]">SURVMONX LLP LEGAL COMPLIANT</span>
       </div>
     </div>
   </div>

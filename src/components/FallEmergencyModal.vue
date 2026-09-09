@@ -37,7 +37,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md p-4 sm:p-6 select-none animate-fade-in">
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4 sm:p-6 select-none animate-fade-in">
     <div class="industrial-card max-w-xl w-full p-4 md:p-8 border-[#c44a4a] space-y-4 md:space-y-6">
       <div class="flex items-center justify-between pb-3 border-b border-[#c44a4a]">
         <div>

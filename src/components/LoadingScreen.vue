@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount } from 'vue'
-import lottie from 'lottie-web'
+import lottie from 'lottie-web/build/player/lottie_light'
 import logoData from '../assets/logo.json'
 
 const emit = defineEmits(['loaded'])
@@ -37,12 +37,13 @@ onMounted(() => {
   setTimeout(() => { showBranding.value = true }, 200)
 
   const startTime = Date.now()
-  const progressDuration = 3200
+  const progressDuration = 3000
   progressInterval = setInterval(() => {
-    const pct = Math.min((Date.now() - startTime) / progressDuration, 1)
-    progress.value = Math.round(pct * 98)
+    const elapsed = Date.now() - startTime
+    const pct = Math.min(elapsed / progressDuration, 1)
+    progress.value = Math.round(pct * 99)
     if (pct >= 1) clearInterval(progressInterval)
-  }, 35)
+  }, 25)
 
   statusInterval = setInterval(() => {
     statusIndex.value = (statusIndex.value + 1) % statusMessages.length
@@ -50,8 +51,8 @@ onMounted(() => {
 
   timer = setTimeout(() => {
     progress.value = 100
-    setTimeout(() => emit('loaded'), 200)
-  }, 3300)
+    setTimeout(() => emit('loaded'), 300)
+  }, 3200)
 })
 
 onBeforeUnmount(() => {
@@ -70,17 +71,7 @@ onBeforeUnmount(() => {
     <div class="absolute bottom-6 left-6 w-8 h-8 border-b-2 border-l-2 border-[#750d37]"></div>
     <div class="absolute bottom-6 right-6 w-8 h-8 border-b-2 border-r-2 border-[#750d37]"></div>
 
-    <!-- Background cyber grid & central glow -->
-    <div
-      class="absolute inset-0 pointer-events-none opacity-50"
-      style="background-image: linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px); background-size: 32px 32px;"
-    ></div>
-    <div
-      class="absolute w-[600px] h-[600px] rounded-full pointer-events-none opacity-20"
-      style="background: radial-gradient(circle, rgba(117,13,55,0.4) 0%, transparent 70%);"
-    ></div>
-
-    <!-- Main Container: Expanded max-width on desktop to guarantee no line wrap on second line -->
+    <!-- Main Container -->
     <div class="flex flex-col items-center gap-6 sm:gap-8 relative z-10 w-full max-w-sm sm:max-w-xl md:max-w-2xl text-center">
       
       <!-- Animated Lottie Logo with Radar Orbit HUD -->
@@ -111,24 +102,24 @@ onBeforeUnmount(() => {
             <span class="w-12 sm:w-16 h-px bg-[#750d37]"></span>
           </div>
 
-          <!-- SECOND LINE: Single line on Web/Desktop (sm:whitespace-nowrap), allowed to wrap on Mobile -->
+          <!-- SECOND LINE -->
           <p class="expand-effect inline-block text-[10px] sm:text-xs md:text-sm font-mono font-bold tracking-[2px] sm:tracking-[3px] md:tracking-[4px] text-[#9a1a4e] uppercase whitespace-normal sm:whitespace-nowrap px-2">
             [ SOVEREIGN PRIVATE AI CLOUD & SURVEILLANCE ECOSYSTEM ]
           </p>
         </div>
 
         <!-- Progress Bar & Realtime Telemetry -->
-        <div class="flex flex-col items-center gap-2.5 w-full max-w-xs sm:max-w-md mt-2">
+        <div class="flex flex-col items-center gap-3 w-full max-w-xs sm:max-w-md mt-2">
           <div class="flex justify-between items-center w-full font-mono text-[10px] sm:text-xs">
             <span class="text-[#a0a0a4] font-bold tracking-wider">// SYSTEM INITIALIZATION</span>
-            <span class="text-[#3d8b5e] font-bold">{{ progress }}%</span>
+            <span class="text-[#3d8b5e] font-bold font-mono">{{ progress }}%</span>
           </div>
 
-          <!-- Industrial Progress Bar -->
-          <div class="w-full h-1.5 bg-[#111113] border border-[#1e1e20] overflow-hidden p-0.5">
+          <!-- Solid Single-Color Brand Progress Bar -->
+          <div class="w-full h-3 bg-[#111113] border border-[#750d37]/50 relative overflow-hidden p-0.5">
             <div
-              class="h-full bg-gradient-to-r from-[#750d37] via-[#9a1a4e] to-[#3d8b5e] transition-all duration-100 ease-out"
-              :style="{ width: progress + '%' }"
+              class="h-full bg-[#750d37] transition-all duration-75 ease-out rounded-xs"
+              :style="{ width: `${progress}%`, boxShadow: '0 0 12px rgba(117, 13, 55, 0.9)' }"
             ></div>
           </div>
 
@@ -138,7 +129,7 @@ onBeforeUnmount(() => {
           </p>
 
           <!-- Centered System Boot Indicator Badge -->
-          <div class="mt-1 text-[9px] sm:text-[10px] font-mono tracking-[2px] text-[#555558] flex items-center justify-center gap-2 bg-[#111113] px-3 py-1 border border-[#1e1e20]">
+          <div class="mt-1 text-[9px] sm:text-[10px] font-mono tracking-[2px] text-[#88888c] flex items-center justify-center gap-2 bg-[#111113] px-3 py-1 border border-[#1e1e20]">
             <span class="w-2 h-2 rounded-full bg-[#3d8b5e] animate-pulse"></span>
             <span>SOVEREIGN CLOUD ENGINE v2.4 // READY</span>
           </div>

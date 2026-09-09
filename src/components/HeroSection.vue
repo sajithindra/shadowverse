@@ -1,127 +1,112 @@
 <script setup lang="ts">
-import { useCameraStore } from '../stores/cameraStore'
+import ThreeSecurityOrb from './ThreeSecurityOrb.vue'
 
-const emit = defineEmits(['triggerFallTest'])
-const cameraStore = useCameraStore()
+const emit = defineEmits(['triggerFallTest', 'openVideoSearch'])
+
+const whatsappHref = `https://wa.me/918921897800?text=${encodeURIComponent(
+  'Hi, I want to schedule a ShadowVerse sovereign private cloud demo.'
+)}`
+const mailHref = `mailto:founder@shadowverse.in?subject=${encodeURIComponent(
+  'ShadowVerse enterprise demo request'
+)}`
 </script>
 
 <template>
-  <section class="relative pt-20 pb-12 md:pt-36 md:pb-24 px-4 md:px-12 lg:px-20 overflow-hidden">
-    <!-- Hero Background Radial Glow -->
-    <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[500px] pointer-events-none"
-      style="background: radial-gradient(ellipse at 50% 0%, rgba(117,13,55,0.22) 0%, transparent 70%)">
-    </div>
+  <section class="pt-20 pb-12 sm:pt-28 md:pt-32 md:pb-24 px-4 md:px-12 lg:px-20 border-b border-[#1e1e20] bg-transparent relative overflow-hidden">
+    <div class="max-w-7xl mx-auto relative z-10">
+      <!-- Hero Content Layout with 3D WebGL Orb -->
+      <div class="grid lg:grid-cols-12 gap-8 items-center">
+        <div class="lg:col-span-7">
+          <div class="section-tag mb-3 md:mb-6 text-xs sm:text-sm font-bold">// ENTERPRISE SAFETY, SECURITY & COMPLIANCE PLATFORM</div>
 
-    <div class="max-w-7xl mx-auto grid lg:grid-cols-12 gap-8 lg:gap-12 items-stretch relative z-10">
-      <!-- Hero Content -->
-      <div class="lg:col-span-7 flex flex-col justify-between items-start">
-        <div>
-          <div class="section-tag mb-3 md:mb-6">// SOVEREIGN PRIVATE CLOUD & VISION AI</div>
-
-          <h1 class="text-2xl sm:text-4xl md:text-6xl lg:text-7xl font-black tracking-tight uppercase leading-[1.1] md:leading-[0.95] mb-4 md:mb-6">
-            <!-- STATIC TEXT WITHOUT ANY EFFECTS -->
-            THE EYE THAT<br/>
-            <!-- IMPROVED REALISTIC EYE BLINKING ANIMATION -->
-            <span class="eye-blink-text inline-block" style="color: #750d37">NEVER BLINKS.</span>
+          <h1 class="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-tight uppercase leading-[1.08] md:leading-[0.95] mb-4 md:mb-6">
+            THE <span class="eye-blink-text inline-block" style="color: #750d37">EYE</span> THAT<br/>
+            NEVER BLINKS.
           </h1>
 
-          <p class="text-[#c8c8cc] text-xs sm:text-base md:text-xl font-normal leading-relaxed max-w-2xl mb-6 md:mb-8">
-            While you sleep. While you work. While you're away —<br/>
-            <span class="text-white font-semibold">ShadowVision AI agents watch 24×7×365 without rest, without error.</span>
-            Deployed on-premise on your own private cloud.
+          <p class="text-[#c8c8cc] text-sm sm:text-base md:text-lg font-normal leading-relaxed max-w-2xl mb-6 md:mb-8">
+            Shadowverse is the enterprise-grade AI surveillance platform built for <strong class="text-white">safety compliance, operational security, and regulatory accountability</strong>. <strong class="text-white">ShadowWatch</strong> centralises 12,000+ camera feeds in one auditable platform, while <strong class="text-white">ShadowVision AI</strong> agents detect threats, enforce safety protocols, and generate tamper-proof incident logs — all on 100% on-premise sovereign infrastructure.
           </p>
 
-          <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 md:gap-4 mb-8 md:mb-10 w-full">
-            <a href="#shadowwatch" class="industrial-btn industrial-btn-primary industrial-btn-lg text-center w-full sm:w-auto">
-              EXPLORE SHADOWWATCH (12,000+ STREAMS)
+          <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 md:gap-4 mb-4 w-full">
+            <a
+              :href="whatsappHref"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="industrial-btn industrial-btn-primary industrial-btn-lg !bg-[#3d8b5e] !border-[#3d8b5e] hover:!bg-[#2f6e4a] w-full sm:w-auto py-3.5 px-6 text-sm font-bold shadow-lg gap-2.5"
+            >
+              <svg class="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M17.5 14.4c-.3-.1-1.8-.9-2-1-.3-.1-.5-.1-.7.1-.2.3-.8 1-1 1.2-.2.2-.3.2-.6.1-.3-.1-1.3-.5-2.4-1.5-.9-.8-1.5-1.8-1.7-2.1-.2-.3 0-.5.1-.6l.5-.5c.1-.2.2-.3.3-.5.1-.2 0-.4 0-.5l-.9-2.2c-.2-.6-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.4-.3.3-1 1-1 2.5s1.1 2.9 1.2 3.1c.1.2 2.1 3.2 5.1 4.5 2.5 1 3 .8 3.6.8.6-.1 1.8-.7 2-1.4.2-.7.2-1.3.2-1.4-.1-.2-.3-.3-.6-.4zM12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2c-1.5 0-3-.4-4.3-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2z"/>
+              </svg>
+              WHATSAPP +91 89218 97800
             </a>
-            <button @click="emit('triggerFallTest')" class="industrial-btn industrial-btn-outline industrial-btn-lg border-[#750d37] text-white w-full sm:w-auto">
-              TEST ELDER FALL SIMULATION
-            </button>
+            <a
+              :href="mailHref"
+              class="industrial-btn industrial-btn-outline industrial-btn-lg border-[#750d37] text-white w-full sm:w-auto py-3.5 px-6 text-sm font-bold gap-2.5"
+            >
+              <svg class="w-5 h-5 shrink-0 text-[#9a1a4e]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="3" y="5" width="18" height="14"/>
+                <path d="M3 7l9 6 9-6"/>
+              </svg>
+              EMAIL THE FOUNDER
+            </a>
           </div>
+          <button
+            @click="emit('openVideoSearch')"
+            class="text-[#c8c8cc] hover:text-white text-xs sm:text-sm font-bold underline underline-offset-4 decoration-[#750d37] hover:decoration-white transition-colors cursor-pointer mb-4 md:mb-6"
+          >
+            See capability overview
+          </button>
         </div>
 
-        <!-- Tailored 4x Metrics Grid Leveled with Right Box -->
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 md:gap-4 w-full pt-6 border-t border-[#1e1e20] mt-auto">
-          <div class="industrial-card p-3 text-center">
-            <div class="text-lg md:text-2xl font-black text-white">12,000+</div>
-            <div class="text-[8px] md:text-[9px] font-mono text-[#88888c] uppercase tracking-wider mt-0.5">STREAMS / SERVER</div>
+        <!-- 3D WebGL Security Orb Visualizer -->
+        <div class="lg:col-span-5 w-full">
+          <ThreeSecurityOrb />
+        </div>
+      </div>
+    </div>
+
+    <!-- FULL WIDTH Key Metric Banner across full width of Hero Section -->
+    <div class="max-w-7xl mx-auto pt-8 md:pt-12 relative z-10">
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 md:gap-6 w-full">
+        <div class="industrial-card p-4 md:p-6 text-center border-t-2 border-t-[#3d8b5e] hover:border-[#3d8b5e] transition-[transform,border-color,box-shadow] duration-300 ease-out bg-[#0a0a0c]">
+          <div class="flex justify-center mb-1.5">
+            <span class="material-symbols-outlined text-xl sm:text-2xl text-[#3d8b5e]">videocam</span>
           </div>
-          <div class="industrial-card p-3 text-center">
-            <div class="text-lg md:text-2xl font-black text-[#3d8b5e]">100%</div>
-            <div class="text-[8px] md:text-[9px] font-mono text-[#88888c] uppercase tracking-wider mt-0.5">ON-PREMISE SOVEREIGN</div>
+          <div class="text-xl sm:text-3xl md:text-4xl font-black text-white uppercase tracking-tight">ANY BRAND</div>
+          <div class="text-xs sm:text-sm font-mono text-[#3d8b5e] font-bold uppercase tracking-wider mt-1.5">CAMERA COMPATIBLE</div>
+        </div>
+        <div class="industrial-card p-4 md:p-6 text-center border-t-2 border-t-[#3d8b5e] hover:border-[#3d8b5e] transition-[transform,border-color,box-shadow] duration-300 ease-out bg-[#0a0a0c]">
+          <div class="flex justify-center mb-1.5">
+            <span class="material-symbols-outlined text-xl sm:text-2xl text-[#3d8b5e]">security</span>
           </div>
-          <div class="industrial-card p-3 text-center">
-            <div class="text-lg md:text-2xl font-black text-white">&lt;3 MIN</div>
-            <div class="text-[8px] md:text-[9px] font-mono text-[#88888c] uppercase tracking-wider mt-0.5">FALL & ALERT</div>
+          <div class="text-xl sm:text-3xl md:text-4xl font-black text-[#3d8b5e] tracking-tight">100%</div>
+          <div class="text-xs sm:text-sm font-mono text-white font-bold uppercase tracking-wider mt-1.5">PRIVATE & LOCAL</div>
+        </div>
+        <div class="industrial-card p-4 md:p-6 text-center border-t-2 border-t-[#4a7ebb] hover:border-[#4a7ebb] transition-[transform,border-color,box-shadow] duration-300 ease-out bg-[#0a0a0c]">
+          <div class="flex justify-center mb-1.5">
+            <span class="material-symbols-outlined text-xl sm:text-2xl text-[#4a7ebb]">dns</span>
           </div>
-          <div class="industrial-card p-3 text-center">
-            <div class="text-lg md:text-2xl font-black text-[#750d37]">&lt;50ms</div>
-            <div class="text-[8px] md:text-[9px] font-mono text-[#88888c] uppercase tracking-wider mt-0.5">INFERENCE LATENCY</div>
+          <div class="text-xl sm:text-3xl md:text-4xl font-black text-white tracking-tight">12,000+</div>
+          <div class="text-xs sm:text-sm font-mono text-[#4a7ebb] font-bold uppercase tracking-wider mt-1.5">CAMERAS IN 1 PLATFORM</div>
+        </div>
+        <div class="industrial-card p-4 md:p-6 text-center border-t-2 border-t-[#750d37] hover:border-[#750d37] transition-[transform,border-color,box-shadow] duration-300 ease-out bg-[#0a0a0c]">
+          <div class="flex justify-center mb-1.5">
+            <span class="material-symbols-outlined text-xl sm:text-2xl text-[#750d37]">verified_user</span>
           </div>
+          <div class="text-xl sm:text-3xl md:text-4xl font-black text-[#750d37] tracking-tight">DPDP</div>
+          <div class="text-xs sm:text-sm font-mono text-white font-bold uppercase tracking-wider mt-1.5">ACT 2023 COMPLIANT</div>
         </div>
       </div>
 
-      <!-- Hero Terminal Console (Height Leveled with Left Column) -->
-      <div class="lg:col-span-5 w-full flex flex-col">
-        <div class="industrial-card p-0 overflow-hidden shadow-2xl flex-1 flex flex-col justify-between">
-          <div>
-            <div class="flex items-center justify-between px-3.5 md:px-5 py-3 border-b border-[#1e1e20] bg-[#0a0a0c]">
-              <div class="flex items-center gap-2.5">
-                <div class="live-dot"></div>
-                <span class="font-mono text-[10px] md:text-xs text-white font-bold tracking-widest uppercase">SHADOWVISION_AI // LOG_STREAM</span>
-              </div>
-              <span class="font-mono text-[9px] md:text-[10px] text-[#9a1a4e] font-bold tracking-widest">REALTIME</span>
-            </div>
-
-            <div class="h-24 md:h-28 bg-[#0a0a0c] border-b border-[#1e1e20] relative flex items-center justify-center overflow-hidden">
-              <div class="w-20 h-20 md:w-24 md:h-24 rounded-full border border-[#750d37]/40 relative flex items-center justify-center">
-                <div class="w-12 h-12 md:w-16 md:h-16 rounded-full border border-[#750d37]/30"></div>
-                <div class="w-6 h-6 md:w-8 md:h-8 rounded-full border border-[#750d37]/20"></div>
-                <div class="absolute w-full h-px bg-[#750d37]/30"></div>
-                <div class="absolute h-full w-px bg-[#750d37]/30"></div>
-                <div class="absolute top-0 left-1/2 w-1/2 h-1/2 bg-gradient-to-br from-[#750d37]/60 to-transparent origin-bottom-left radar-sweep"></div>
-              </div>
-              <div class="absolute bottom-2 left-3 md:left-4 font-mono text-[8px] md:text-[9px] text-[#88888c]">RADAR_ACTIVE: 12,000 STREAMS</div>
-              <div class="absolute bottom-2 right-3 md:right-4 font-mono text-[8px] md:text-[9px] text-[#3d8b5e]">ZERO_FRAME_LOSS</div>
-            </div>
-
-            <div class="p-3 md:p-4 bg-[#0a0a0c] space-y-2 font-mono text-xs max-h-[280px] md:max-h-[330px] overflow-y-auto">
-              <div
-                v-for="(ev, idx) in cameraStore.eventLogs"
-                :key="idx"
-                class="p-2 md:p-2.5 bg-[#111113] border border-[#1e1e20] flex flex-col gap-1 transition-all hover:border-[#750d37]"
-              >
-                <div class="flex items-center justify-between">
-                  <span class="text-[#88888c] text-[9px] md:text-[10px]">{{ ev.time }}</span>
-                  <span
-                    class="px-1.5 py-0.5 text-[8px] md:text-[9px] font-bold tracking-wider uppercase"
-                    :class="{
-                      'bg-[#c44a4a]/20 text-[#c44a4a] border border-[#c44a4a]/40': ev.tag === 'CRITICAL' || ev.tag === 'ALERT',
-                      'bg-[#c49a3c]/20 text-[#c49a3c] border border-[#c49a3c]/40': ev.tag === 'WARNING',
-                      'bg-[#3d8b5e]/20 text-[#3d8b5e] border border-[#3d8b5e]/40': ev.tag === 'INFO',
-                    }"
-                  >
-                    {{ ev.tag }}
-                  </span>
-                </div>
-                <div class="text-[10px] md:text-[11px] font-semibold text-[#9a1a4e] mt-0.5">AGENT: {{ ev.agent }}</div>
-                <div class="text-[11px] md:text-xs text-[#e8e8ea] leading-snug">{{ ev.msg }}</div>
-              </div>
-            </div>
+      <!-- Pure Visual Scroll Indicator (Zero Text attached) -->
+      <div class="flex items-center justify-center pt-6">
+        <a href="#at-a-glance" aria-label="Scroll Down" class="flex flex-col items-center gap-1.5 cursor-pointer group">
+          <div class="w-5 h-8 rounded-full border-2 border-[#3d8b5e] group-hover:border-white p-1 flex justify-center transition-colors">
+            <div class="w-1 h-2 bg-[#3d8b5e] group-hover:bg-white rounded-full animate-bounce"></div>
           </div>
-
-          <div>
-            <div class="px-3.5 md:px-5 py-2.5 border-t border-[#1e1e20] bg-[#0a0a0c] flex flex-col sm:flex-row items-center justify-between gap-1 font-mono text-[9px] md:text-[10px] text-[#88888c]">
-              <span>WORKLOAD: 12,000 FEEDS</span>
-              <span class="text-[#3d8b5e]">GPU ACCELERATED (NVDEC)</span>
-            </div>
-            <div class="px-3.5 md:px-5 py-1.5 border-t border-[#1e1e20]/60 bg-[#0a0a0c] flex items-center justify-between font-mono text-[8px] md:text-[9px] text-[#555558]">
-              <span>IMAGINED BY <strong class="text-white font-bold">SAJITHINDRA</strong></span>
-              <span>PROGRAMMED BY <strong class="text-[#9a1a4e] font-bold">SUVRMONX LLP</strong></span>
-            </div>
-          </div>
-        </div>
+          <span class="material-symbols-outlined text-sm text-[#3d8b5e] group-hover:text-white animate-pulse">keyboard_arrow_down</span>
+        </a>
       </div>
     </div>
   </section>
