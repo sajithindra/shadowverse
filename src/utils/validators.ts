@@ -8,9 +8,10 @@ export function isValidEmail(email: string): boolean {
   return emailRegex.test(email.trim())
 }
 
-export function isDomainAuthorized(email: string, domain?: string): boolean {
-  if (!email) return false
-  return isValidEmail(email)
+export function isDomainAuthorized(email: string, domain: string): boolean {
+  if (!email || !domain) return false
+  const normalized = email.trim().toLowerCase()
+  return isValidEmail(normalized) && normalized.endsWith(domain.toLowerCase())
 }
 
 export function isValidPhone(phone: string): boolean {

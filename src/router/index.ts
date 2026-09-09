@@ -44,8 +44,9 @@ const router = createRouter({
   },
 })
 
-router.beforeEach((to) => {
+router.beforeEach(async (to) => {
   const authStore = useAuthStore()
+  if (to.meta.requiresAuth) await authStore.authReady
   const authed = authStore.isAuthenticated
 
   // Only protect dashboard route requiring auth

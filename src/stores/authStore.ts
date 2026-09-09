@@ -1,7 +1,8 @@
 import { defineStore } from 'pinia'
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { trackEvent } from '../utils/analytics'
-import { db } from '../firebase'
+import { auth, db } from '../firebase'
+import { onAuthStateChanged, signOut, type User } from 'firebase/auth'
 import { collection, addDoc } from 'firebase/firestore'
 import { isDomainAuthorized as checkDomain } from '../utils/validators'
 import { formatTimestampISO } from '../utils/formatters'
@@ -83,6 +84,15 @@ export const useAuthStore = defineStore('auth', () => {
 
   const userProfile = ref<UserProfile | null>(null)
 
+  // Firebase Auth is the only trusted identity. Local session data drives UI state
+  // (timers, profile display) but cannot grant access on its own.
+  const firebaseUser = ref<User | null>(auth.currentUser)
+  const authReady = auth.authStateReady()
+  onAuthStateChanged(auth, (user) => {
+    firebaseUser.value = user
+    if (!user && loginPhase.value === 'logged-in') logout()
+  })
+
   // Session Time Remaining Calculation (in Seconds)
   const sessionRemainingSeconds = computed(() => {
     if (!sessionExpiresAt.value || loginPhase.value !== 'logged-in') return 0
@@ -92,6 +102,10 @@ export const useAuthStore = defineStore('auth', () => {
 
   const isAuthenticated = computed(() => {
     if (loginPhase.value !== 'logged-in' || !userProfile.value || userProfile.value.isFirstTime) {
+      return false
+    }
+    const fbEmail = firebaseUser.value?.email || ''
+    if (!isDomainAuthorized(fbEmail) || fbEmail.toLowerCase() !== userProfile.value.email.toLowerCase()) {
       return false
     }
     if (sessionExpiresAt.value && new Date(sessionExpiresAt.value).getTime() < Date.now()) {
@@ -325,7 +339,7 @@ export const useAuthStore = defineStore('auth', () => {
       if (data && data.sessionToken && data.profile && isDomainAuthorized(data.profile.email)) {
         operatorId.value = data.operatorId
         sessionToken.value = data.sessionToken
-        securityRole.value = data.securityRole
+        securityRole.value = 'GOOGLE_SOVEREIGN_COMMANDER' // never trust a role read from storage
         authenticatedAt.value = data.authenticatedAt
         sessionExpiresAt.value = data.sessionExpiresAt
         userProfile.value = data.profile
@@ -345,6 +359,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   function logout() {
     clearStorageSession()
+    if (auth.currentUser) signOut(auth).catch(() => {})
     userProfile.value = null
     sessionToken.value = generateRandomToken()
     loginPhase.value = 'grid'
@@ -429,6 +444,8 @@ export const useAuthStore = defineStore('auth', () => {
     bNumberInRound,
     selectCell,
     userProfile,
+    firebaseUser,
+    authReady,
     isAuthenticated,
     needsOnboarding,
     unauthorizedAttempts,
