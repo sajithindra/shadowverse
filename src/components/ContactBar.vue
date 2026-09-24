@@ -24,7 +24,7 @@ onUnmounted(() => window.removeEventListener('scroll', update))
   <Transition name="bar">
     <div
       v-if="visible"
-      class="lg:hidden fixed bottom-0 inset-x-0 z-40 grid grid-cols-2 gap-px bg-[#1e1e20] border-t border-[#1e1e20] pb-[env(safe-area-inset-bottom)]"
+      class="xl:hidden fixed bottom-0 inset-x-0 z-40 grid grid-cols-2 gap-px bg-[#1e1e20] border-t border-[#1e1e20] pb-[env(safe-area-inset-bottom)]"
       role="region"
       aria-label="Contact the founder"
     >

@@ -28,7 +28,7 @@ const PrivacyPolicyModal = defineAsyncComponent(() => import('../components/Priv
 const TermsModal = defineAsyncComponent(() => import('../components/TermsModal.vue'))
 const DpdpPortalModal = defineAsyncComponent(() => import('../components/DpdpPortalModal.vue'))
 const GoogleSignInModal = defineAsyncComponent(() => import('../components/GoogleSignInModal.vue'))
-const CctvPresentationModal = defineAsyncComponent(() => import('../components/CctvPresentationModal.vue'))
+const ScalabilityModal = defineAsyncComponent(() => import('../components/ScalabilityModal.vue'))
 
 const route = useRoute()
 const router = useRouter()
@@ -43,17 +43,17 @@ const activeUseCase = ref<any>(null)
 const showPrivacyModal = ref(false)
 const showTermsModal = ref(false)
 const showDpdpPortalModal = ref(false)
-const showCctvPresentationModal = ref(false)
-const activeCctvSlide = ref(1)
+const showScalabilityModal = ref(false)
+const activeScalabilitySlide = ref(1)
 const isPresentationAuthMode = ref(false)
 
 function checkCctvRoute() {
-  if (route.name === 'cctv-presentation' || route.path.startsWith('/cctv-presentation')) {
+  if (route.name === 'scalability' || route.path.startsWith('/scalability')) {
     const slideNum = parseInt(route.params.slide as string, 10)
-    activeCctvSlide.value = isNaN(slideNum) || slideNum < 1 || slideNum > 5 ? 1 : slideNum
-    showCctvPresentationModal.value = true
+    activeScalabilitySlide.value = isNaN(slideNum) || slideNum < 1 || slideNum > 6 ? 1 : slideNum
+    showScalabilityModal.value = true
   } else {
-    showCctvPresentationModal.value = false
+    showScalabilityModal.value = false
   }
 }
 
@@ -65,8 +65,8 @@ watch(
   { immediate: true }
 )
 
-function handleOpenCctvPresentation() {
-  router.push('/cctv-presentation/1')
+function handleOpenScalability() {
+  router.push('/scalability/1')
 }
 
 function handleOpenSiteSignIn() {
@@ -74,9 +74,9 @@ function handleOpenSiteSignIn() {
   showSignInModal.value = true
 }
 
-function handleCloseCctvPresentation() {
-  showCctvPresentationModal.value = false
-  if (route.name === 'cctv-presentation' || route.path.startsWith('/cctv-presentation')) {
+function handleCloseScalability() {
+  showScalabilityModal.value = false
+  if (route.name === 'scalability' || route.path.startsWith('/scalability')) {
     router.push('/')
   }
 }
@@ -147,7 +147,7 @@ onMounted(() => {
       @openPrivacy="showPrivacyModal = true"
       @openTerms="showTermsModal = true"
       @openDpdpPortal="showDpdpPortalModal = true"
-      @openCctvPresentation="handleOpenCctvPresentation"
+      @openScalability="handleOpenScalability"
     />
 
     <!-- Modals (Async Lazy Loaded) -->
@@ -191,10 +191,10 @@ onMounted(() => {
       @close="showDpdpPortalModal = false"
     />
 
-    <CctvPresentationModal
-      v-if="showCctvPresentationModal"
-      :initialSlide="activeCctvSlide"
-      @close="handleCloseCctvPresentation"
+    <ScalabilityModal
+      v-if="showScalabilityModal"
+      :initialSlide="activeScalabilitySlide"
+      @close="handleCloseScalability"
     />
 
     <!-- Global Toast Notification Layer -->

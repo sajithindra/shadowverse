@@ -1,5 +1,5 @@
 <script setup lang="ts">
-const emit = defineEmits(['openPrivacy', 'openTerms', 'openDpdpPortal', 'openCctvPresentation'])
+const emit = defineEmits(['openPrivacy', 'openTerms', 'openDpdpPortal', 'openScalability'])
 </script>
 
 <template>
@@ -39,51 +39,51 @@ const emit = defineEmits(['openPrivacy', 'openTerms', 'openDpdpPortal', 'openCct
           <div class="text-xs text-[#750d37] font-bold uppercase tracking-widest pb-1 border-b border-[#1e1e20]">
             // ECOSYSTEM NAVIGATION
           </div>
-          <ul class="space-y-2 text-xs font-semibold">
+          <ul class="space-y-0.5 text-xs font-semibold">
             <li>
-              <a href="/#problem" class="text-[#a0a0a4] hover:text-white transition-colors flex items-center gap-1.5">
+              <a href="/#problem" class="text-[#a0a0a4] hover:text-white transition-colors flex items-center gap-1.5 py-1.5 -my-0.5">
                 <span class="text-[#750d37] font-bold">01.</span>
                 <span>PROBLEM & BLINDSPOTS</span>
               </a>
             </li>
             <li>
-              <a href="/#facts" class="text-[#a0a0a4] hover:text-white transition-colors flex items-center gap-1.5">
+              <a href="/#facts" class="text-[#a0a0a4] hover:text-white transition-colors flex items-center gap-1.5 py-1.5 -my-0.5">
                 <span class="text-[#3d8b5e] font-bold">02.</span>
                 <span>HUMAN VS VISION AI</span>
               </a>
             </li>
             <li>
-              <a href="/#architecture" class="text-[#a0a0a4] hover:text-white transition-colors flex items-center gap-1.5">
+              <a href="/#architecture" class="text-[#a0a0a4] hover:text-white transition-colors flex items-center gap-1.5 py-1.5 -my-0.5">
                 <span class="text-[#4a7ebb] font-bold">03.</span>
                 <span>4-LAYER ECOSYSTEM</span>
               </a>
             </li>
             <li>
-              <a href="/#shadowwatch" class="text-[#a0a0a4] hover:text-white transition-colors flex items-center gap-1.5">
+              <a href="/#shadowwatch" class="text-[#a0a0a4] hover:text-white transition-colors flex items-center gap-1.5 py-1.5 -my-0.5">
                 <span class="text-[#750d37] font-bold">04.</span>
                 <span>SHADOWWATCH FEEDS</span>
               </a>
             </li>
             <li>
-              <a href="/#logiclock" class="text-[#a0a0a4] hover:text-white transition-colors flex items-center gap-1.5">
+              <a href="/#logiclock" class="text-[#a0a0a4] hover:text-white transition-colors flex items-center gap-1.5 py-1.5 -my-0.5">
                 <span class="text-[#4a7ebb] font-bold">05.</span>
                 <span>LOGIC LOCK AUTHENTICATION</span>
               </a>
             </li>
             <li>
-              <a href="/#scenarios" class="text-[#a0a0a4] hover:text-white transition-colors flex items-center gap-1.5">
+              <a href="/#scenarios" class="text-[#a0a0a4] hover:text-white transition-colors flex items-center gap-1.5 py-1.5 -my-0.5">
                 <span class="text-[#3d8b5e] font-bold">06.</span>
                 <span>SHADOWVISION AI AGENTS</span>
               </a>
             </li>
             <li>
               <a
-                href="/cctv-presentation/1"
-                @click.prevent="emit('openCctvPresentation')"
-                class="text-[#e02870] hover:text-white transition-colors flex items-center gap-1.5 font-bold"
+                href="/scalability/1"
+                @click.prevent="emit('openScalability')"
+                class="text-[#e02870] hover:text-white transition-colors flex items-center gap-1.5 font-bold py-1.5 -my-0.5"
               >
                 <span class="text-[#e02870] font-bold">07.</span>
-                <span>VISIONSCAN CCTV PRESENTATION</span>
+                <span>SCALABILITY</span>
               </a>
             </li>
           </ul>
@@ -96,15 +96,15 @@ const emit = defineEmits(['openPrivacy', 'openTerms', 'openDpdpPortal', 'openCct
           </div>
           <div class="space-y-2.5 text-xs">
             <a
-              href="/cctv-presentation/1"
-              @click.prevent="emit('openCctvPresentation')"
+              href="/scalability/1"
+              @click.prevent="emit('openScalability')"
               class="w-full text-left p-2.5 bg-[#9a1a4e]/20 border border-[#e02870] text-white hover:bg-[#9a1a4e]/40 transition-[background-color,border-color] duration-200 ease-out block font-mono text-[11px] cursor-pointer shadow-md"
             >
               <div class="font-black text-[#e02870] uppercase flex items-center gap-1.5">
                 <span class="material-symbols-outlined text-base text-[#e02870]">visibility</span>
-                <span>CCTV PRESENTATION</span>
+                <span>SCALABILITY</span>
               </div>
-              <div class="text-[9px] text-[#c8c8cc] mt-0.5 font-sans">VISIONSCAN KANAD SHIELD 2026</div>
+              <div class="text-[9px] text-[#c8c8cc] mt-0.5 font-sans">SIX STATIONS · TOPOLOGY TO COST</div>
             </a>
 
             <button
@@ -145,7 +145,7 @@ const emit = defineEmits(['openPrivacy', 'openTerms', 'openDpdpPortal', 'openCct
                 href="https://wa.me/918921897800"
                 target="_blank"
                 rel="noopener noreferrer"
-                class="text-[#3d8b5e] hover:text-white font-bold transition-colors block text-[11px] truncate"
+                class="text-[#3d8b5e] hover:text-white font-bold transition-colors block text-[11px] truncate py-1.5"
               >
                 +91 89218 97800
               </a>
@@ -154,7 +154,7 @@ const emit = defineEmits(['openPrivacy', 'openTerms', 'openDpdpPortal', 'openCct
               <span class="text-[9px] text-[#88888c] block uppercase">EMAIL:</span>
               <a
                 href="mailto:founder@shadowverse.in"
-                class="text-[#4a7ebb] hover:text-white font-bold transition-colors block text-[11px] truncate"
+                class="text-[#4a7ebb] hover:text-white font-bold transition-colors block text-[11px] truncate py-1.5"
               >
                 founder@shadowverse.in
               </a>

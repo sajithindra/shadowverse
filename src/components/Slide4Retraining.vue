@@ -86,14 +86,14 @@ const corePillars = [
         <div>
           <div class="text-[#e02870] font-black text-xs sm:text-sm uppercase flex items-center gap-2">
             <span class="w-2.5 h-2.5 rounded-full bg-[#e02870]"></span>
-            <span>STATION 04 // CONTINUOUS FLYWHEEL</span>
+            <span>STATION 05 // CONTINUOUS FLYWHEEL</span>
           </div>
           <h2 class="text-xl sm:text-3xl font-black text-white font-mono mt-0.5">Continuous City Ground-Truth Retraining</h2>
         </div>
       </div>
 
       <div class="hidden sm:flex items-center gap-2 text-xs sm:text-sm text-zinc-300 font-bold bg-[#121216] border border-[#27272a] px-3.5 py-1.5 shadow-md">
-        <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+        <span class="w-2.5 h-2.5 rounded-full bg-[#3d8b5e] animate-pulse"></span>
         <span>24-Hour Autonomous Feedback Loop</span>
       </div>
     </div>
@@ -173,37 +173,37 @@ const corePillars = [
         <div>
           <div class="flex items-center justify-between border-b border-[#27272a] pb-2 mb-2.5">
             <span class="text-xs sm:text-sm font-black text-white uppercase">Ahmedabad Accuracy Timeline</span>
-            <span class="text-sm font-black text-emerald-400">96.4% PEAK</span>
+            <span class="text-sm font-black text-[#3d8b5e]">96.4% PEAK</span>
           </div>
 
           <div class="space-y-2.5 text-xs sm:text-sm">
             <div>
               <div class="flex justify-between mb-1 text-zinc-300 font-bold">
                 <span>Day 01: Generic Baseline</span>
-                <span class="text-amber-400 font-black">70.0%</span>
+                <span class="text-[#c49a3c] font-black">70.0%</span>
               </div>
               <div class="h-3 bg-[#1a1a22] border border-[#27272a] overflow-hidden">
-                <div class="h-full bg-amber-500 w-[70%]"></div>
+                <div class="h-full bg-[#c49a3c] w-[70%]"></div>
               </div>
             </div>
 
             <div>
               <div class="flex justify-between mb-1 text-zinc-300 font-bold">
                 <span>Day 30: Local CCTV Ingest</span>
-                <span class="text-blue-400 font-black">88.5%</span>
+                <span class="text-[#4a90d9] font-black">88.5%</span>
               </div>
               <div class="h-3 bg-[#1a1a22] border border-[#27272a] overflow-hidden">
-                <div class="h-full bg-blue-500 w-[88.5%]"></div>
+                <div class="h-full bg-[#4a90d9] w-[88.5%]"></div>
               </div>
             </div>
 
             <div>
               <div class="flex justify-between mb-1 text-zinc-300 font-bold">
                 <span>Day 90+: Full Swarm Peak</span>
-                <span class="text-emerald-400 font-black">96.4%</span>
+                <span class="text-[#3d8b5e] font-black">96.4%</span>
               </div>
               <div class="h-3 bg-[#1a1a22] border border-[#27272a] overflow-hidden">
-                <div class="h-full bg-emerald-500 w-[96.4%]"></div>
+                <div class="h-full bg-[#3d8b5e] w-[96.4%]"></div>
               </div>
             </div>
           </div>
@@ -219,12 +219,12 @@ const corePillars = [
     <!-- FOOTER SUMMARY STRIP -->
     <div class="flex flex-wrap items-center justify-between border-t border-[#27272a] pt-2.5 text-xs text-zinc-300 shrink-0 gap-2">
       <div class="flex items-center gap-4">
-        <span class="text-emerald-400 font-black flex items-center gap-1.5">
-          <span class="w-2.5 h-2.5 bg-emerald-400"></span>
+        <span class="text-[#3d8b5e] font-black flex items-center gap-1.5">
+          <span class="w-2.5 h-2.5 bg-[#3d8b5e]"></span>
           <span>HARD-NEGATIVE MINING</span>
         </span>
-        <span class="text-blue-400 font-black flex items-center gap-1.5">
-          <span class="w-2.5 h-2.5 bg-blue-400"></span>
+        <span class="text-[#4a90d9] font-black flex items-center gap-1.5">
+          <span class="w-2.5 h-2.5 bg-[#4a90d9]"></span>
           <span>OFFICER HUMAN-IN-THE-LOOP</span>
         </span>
         <span class="text-[#e02870] font-black flex items-center gap-1.5">

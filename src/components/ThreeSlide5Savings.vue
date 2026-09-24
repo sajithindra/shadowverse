@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import * as THREE from 'three'
+import { createStage } from '../three/stage'
+import { createBladeServerTower } from '../three/hardware'
 
 const props = withDefaults(
   defineProps<{
@@ -91,26 +93,24 @@ const isFullscreen = ref(false)
 
 // Active Card Index: 0 to 3, or -1 for All Cards Grid View
 const activeIndex = ref(0)
-const isGridView = ref(false)
+const isGridView = ref(true)
+/** Detail is revealed by clicking a cabinet, not shown up front. */
+const hasSelection = ref(false)
 const activeCard = computed(() => cards[activeIndex.value] ?? cards[0]!)
-
-// Auto-Play Sequencer State
-const autoPlay = ref(true)
-const autoPlayDuration = 4500 // 4.5s per card
-const autoPlayProgress = ref(0)
-let autoPlayInterval: ReturnType<typeof setInterval> | null = null
 
 // Three.js State
 let scene: THREE.Scene
 let camera: THREE.PerspectiveCamera
 let renderer: THREE.WebGLRenderer
+let stage: ReturnType<typeof createStage> | null = null
 let animId: number | null = null
 
 let stageGroup: THREE.Group
 let podMeshes: THREE.Group[] = []
+/** Cabinet drive LEDs across every pod. */
+const podLeds: THREE.Mesh[] = []
 let coreReactor: THREE.Mesh
 let pulseRings: THREE.Mesh[] = []
-let particleSystem: THREE.Points
 
 // Camera Target for smooth lerping
 const targetCameraPos = new THREE.Vector3(0, 10, 32)
@@ -160,25 +160,19 @@ function initThree() {
   const width = mountRef.value.clientWidth
   const height = mountRef.value.clientHeight
 
-  scene = new THREE.Scene()
-  scene.fog = new THREE.FogExp2(0x09090b, 0.022)
-
-  camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000)
+  // Shared render setup, so this plane is lit like the rest of the deck.
+  stage = createStage(mountRef.value, { fov: 45, fogDensity: 0.018, exposure: 1.2 })
+  scene = stage.scene
+  camera = stage.camera
+  renderer = stage.renderer
   camera.position.set(0, 12, 34)
   camera.lookAt(0, 0, 0)
-
-  renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true })
-  renderer.setSize(width, height)
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
-  renderer.toneMapping = THREE.ACESFilmicToneMapping
-  renderer.toneMappingExposure = 1.3
-  mountRef.value.appendChild(renderer.domElement)
 
   stageGroup = new THREE.Group()
   scene.add(stageGroup)
 
   // 1. Cyber Grid Floor
-  const gridHelper = new THREE.GridHelper(60, 40, 0x750d37, 0x1f1f26)
+  const gridHelper = new THREE.GridHelper(60, 40, 0x750d37, 0x27272a)
   gridHelper.position.y = -3
   stageGroup.add(gridHelper)
 
@@ -230,71 +224,30 @@ function initThree() {
     podGroup.position.copy(pos)
     podGroup.userData = { id: idx, card }
 
-    // Pedestal Base
-    const baseGeo = new THREE.CylinderGeometry(2.0, 2.4, 0.6, 24)
-    const baseMat = new THREE.MeshStandardMaterial({
-      color: 0x111116,
-      roughness: 0.3,
-      metalness: 0.8,
-    })
-    const baseMesh = new THREE.Mesh(baseGeo, baseMat)
-    baseMesh.position.y = -2.7
-    podGroup.add(baseMesh)
+    // Deck hardware: the same blade cabinet used by the topology planes, on a
+    // plinth, rather than an abstract floating tower with an orb.
+    const plinth = new THREE.Mesh(
+      new THREE.CylinderGeometry(2.0, 2.4, 0.6, 24),
+      new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.3, metalness: 0.85 }),
+    )
+    plinth.position.y = -2.7
+    plinth.receiveShadow = true
+    podGroup.add(plinth)
 
-    // Base Glowing Border Ring
-    const baseRingGeo = new THREE.TorusGeometry(2.1, 0.08, 12, 32)
-    const baseRingMat = new THREE.MeshBasicMaterial({ color: card.hexColor })
-    const baseRing = new THREE.Mesh(baseRingGeo, baseRingMat)
+    // Accent ring, matching the coloured outline the cabinets carry.
+    const baseRing = new THREE.Mesh(
+      new THREE.TorusGeometry(2.1, 0.08, 12, 32),
+      new THREE.MeshBasicMaterial({ color: card.hexColor }),
+    )
     baseRing.rotation.x = Math.PI / 2
     baseRing.position.y = -2.4
     podGroup.add(baseRing)
 
-    // Floating Cyber Tower Geometry
-    const towerGeo = new THREE.BoxGeometry(1.6, 2.8, 1.6)
-    const towerMat = new THREE.MeshStandardMaterial({
-      color: 0x14141c,
-      roughness: 0.2,
-      metalness: 0.9,
-    })
-    const towerMesh = new THREE.Mesh(towerGeo, towerMat)
-    towerMesh.position.y = -0.6
-    podGroup.add(towerMesh)
-
-    // Glowing Wireframe Outer Cage
-    const cageGeo = new THREE.BoxGeometry(1.8, 3.0, 1.8)
-    const cageMat = new THREE.MeshBasicMaterial({
-      color: card.hexColor,
-      wireframe: true,
-      transparent: true,
-      opacity: 0.7,
-    })
-    const cageMesh = new THREE.Mesh(cageGeo, cageMat)
-    cageMesh.position.y = -0.6
-    podGroup.add(cageMesh)
-
-    // Floating Glowing Orb on Top
-    const orbGeo = new THREE.SphereGeometry(0.7, 16, 16)
-    const orbMat = new THREE.MeshBasicMaterial({
-      color: card.hexColor,
-      transparent: true,
-      opacity: 0.9,
-    })
-    const orbMesh = new THREE.Mesh(orbGeo, orbMat)
-    orbMesh.position.y = 1.6
-    podGroup.add(orbMesh)
-
-    // Floating Holographic Ring around Orb
-    const haloGeo = new THREE.RingGeometry(0.9, 1.1, 32)
-    const haloMat = new THREE.MeshBasicMaterial({
-      color: card.hexColor,
-      side: THREE.DoubleSide,
-      transparent: true,
-      opacity: 0.8,
-    })
-    const haloMesh = new THREE.Mesh(haloGeo, haloMat)
-    haloMesh.rotation.x = Math.PI / 2
-    haloMesh.position.y = 1.6
-    podGroup.add(haloMesh)
+    const cabinet = createBladeServerTower(new THREE.Color(card.hexColor).getHex(), 0)
+    cabinet.group.position.y = -2.4
+    cabinet.group.name = 'cabinet'
+    podGroup.add(cabinet.group)
+    podLeds.push(...cabinet.leds)
 
     // Energy Laser Line connecting to Core
     const laserPoints = [
@@ -326,50 +279,7 @@ function initThree() {
   })
 
   // 5. Floating Ambient Particle Matrix
-  const particleCount = 200
-  const pPositions = new Float32Array(particleCount * 3)
-  const pColors = new Float32Array(particleCount * 3)
-  const pColorList = [
-    new THREE.Color(0xf59e0b),
-    new THREE.Color(0x10b981),
-    new THREE.Color(0x3b82f6),
-    new THREE.Color(0xe02870),
-  ]
-
-  for (let i = 0; i < particleCount; i++) {
-    pPositions[i * 3] = (Math.random() - 0.5) * 40
-    pPositions[i * 3 + 1] = (Math.random() - 0.5) * 18 + 2
-    pPositions[i * 3 + 2] = (Math.random() - 0.5) * 30
-
-    const c = pColorList[i % pColorList.length] ?? new THREE.Color(0xffffff)
-    pColors[i * 3] = c.r
-    pColors[i * 3 + 1] = c.g
-    pColors[i * 3 + 2] = c.b
-  }
-
-  const pGeo = new THREE.BufferGeometry()
-  pGeo.setAttribute('position', new THREE.BufferAttribute(pPositions, 3))
-  pGeo.setAttribute('color', new THREE.BufferAttribute(pColors, 3))
-
-  const pMat = new THREE.PointsMaterial({
-    size: 0.28,
-    vertexColors: true,
-    transparent: true,
-    opacity: 0.75,
-  })
-  particleSystem = new THREE.Points(pGeo, pMat)
-  stageGroup.add(particleSystem)
-
-  // Ambient & Directional Lights
-  const ambientLight = new THREE.AmbientLight(0xffffff, 0.9)
-  scene.add(ambientLight)
-
-  const dirLight = new THREE.DirectionalLight(0xffffff, 1.5)
-  dirLight.position.set(10, 20, 15)
-  scene.add(dirLight)
-
   updateCameraForActiveCard()
-  startAutoPlayTimer()
   animate()
 }
 
@@ -439,36 +349,23 @@ function animate() {
 
   // 3. Pod animations
   podMeshes.forEach((pod, idx) => {
-    const isCurrent = activeIndex.value === idx && !isGridView.value
+    const isCurrent = activeIndex.value === idx
 
-    // Floating orb bobbing
-    const orb = pod.children[4]
-    const halo = pod.children[5]
-    if (orb && halo) {
-      orb.position.y = 1.6 + Math.sin(time * 2.5 + idx) * 0.18
-      halo.position.y = orb.position.y
-      halo.rotation.z = time * (isCurrent ? 2.5 : 1.0)
-    }
-
-    // Cage wireframe rotation
-    const cage = pod.children[3]
-    if (cage) {
-      cage.rotation.y = time * (isCurrent ? 1.2 : 0.4)
-    }
+    // Cabinets are equipment, so they stay put; the active one turns slowly to
+    // show its face rather than bobbing.
 
     // Highlight active pod with scale pulse
-    if (isCurrent) {
-      const activeScale = 1.08 + Math.sin(time * 4) * 0.04
-      pod.scale.lerp(new THREE.Vector3(activeScale, activeScale, activeScale), 0.1)
-    } else {
-      pod.scale.lerp(new THREE.Vector3(1, 1, 1), 0.1)
-    }
+    const target = isCurrent ? 1.12 : 1
+    pod.scale.lerp(new THREE.Vector3(target, target, target), 0.15)
   })
 
-  // 4. Particle float
-  if (particleSystem) {
-    particleSystem.rotation.y = time * 0.05
-  }
+  // 4. Cabinet drive activity
+  podLeds.forEach((mesh) => {
+    const mat = mesh.material as THREE.MeshStandardMaterial
+    if (!mat) return
+    const pulse = Math.sin(time * 5 + mesh.position.y * 10 + mesh.position.x * 20)
+    mat.emissiveIntensity = pulse > 0.3 ? 0.95 : 0.15
+  })
 
   // 5. Smooth camera lerp
   if (camera) {
@@ -486,10 +383,10 @@ function animate() {
 
 // Sequencing Controls
 function selectCard(idx: number) {
+  // Selecting shows that pod's detail; the camera deliberately stays where it
+  // is, so the whole set remains visible and nothing moves under the pointer.
   activeIndex.value = idx
-  isGridView.value = false
-  updateCameraForActiveCard()
-  resetAutoPlayProgress()
+  hasSelection.value = true
 }
 
 function setGridView() {
@@ -505,7 +402,6 @@ function nextCard() {
     activeIndex.value = (activeIndex.value + 1) % cards.length
   }
   updateCameraForActiveCard()
-  resetAutoPlayProgress()
 }
 
 function prevCard() {
@@ -516,44 +412,6 @@ function prevCard() {
     activeIndex.value = (activeIndex.value - 1 + cards.length) % cards.length
   }
   updateCameraForActiveCard()
-  resetAutoPlayProgress()
-}
-
-function toggleAutoPlay() {
-  autoPlay.value = !autoPlay.value
-  if (autoPlay.value) {
-    startAutoPlayTimer()
-  } else {
-    stopAutoPlayTimer()
-  }
-}
-
-function startAutoPlayTimer() {
-  stopAutoPlayTimer()
-  if (!autoPlay.value) return
-
-  const stepMs = 50
-  const increment = (stepMs / autoPlayDuration) * 100
-
-  autoPlayInterval = setInterval(() => {
-    if (autoPlayProgress.value < 100) {
-      autoPlayProgress.value += increment
-    } else {
-      autoPlayProgress.value = 0
-      nextCard()
-    }
-  }, stepMs)
-}
-
-function resetAutoPlayProgress() {
-  autoPlayProgress.value = 0
-}
-
-function stopAutoPlayTimer() {
-  if (autoPlayInterval) {
-    clearInterval(autoPlayInterval)
-    autoPlayInterval = null
-  }
 }
 
 // Pointer & Click Raycasting
@@ -646,9 +504,9 @@ onBeforeUnmount(() => {
     resizeObserver.disconnect()
     resizeObserver = null
   }
-  stopAutoPlayTimer()
   if (animId) cancelAnimationFrame(animId)
   window.removeEventListener('resize', onResize)
+  stage?.dispose()
   if (renderer && renderer.domElement) {
     renderer.domElement.remove()
   }
@@ -697,15 +555,6 @@ watch(activeIndex, () => {
       <div class="flex items-center gap-1.5 sm:gap-2">
         
         <!-- AUTO-PLAY TOGGLE -->
-        <button
-          @click="toggleAutoPlay"
-          class="px-2.5 py-1 text-[11px] font-mono font-bold uppercase border transition-all flex items-center gap-1 cursor-pointer shadow-md"
-          :class="autoPlay ? 'bg-[#750d37] border-[#e02870] text-white' : 'bg-[#16161d] border-[#27272a] text-zinc-300 hover:border-zinc-500'"
-          :title="autoPlay ? 'Pause auto-cycling' : 'Play card sequence'"
-        >
-          <span class="material-symbols-outlined text-xs" :class="{ 'animate-spin': autoPlay }">{{ autoPlay ? 'pause' : 'play_arrow' }}</span>
-          <span class="hidden sm:inline">{{ autoPlay ? 'AUTO' : 'MANUAL' }}</span>
-        </button>
 
         <!-- PREV / NEXT CARD STEPPERS -->
         <button
@@ -744,12 +593,6 @@ watch(activeIndex, () => {
     </div>
 
     <!-- AUTO-PLAY SEQUENCE PROGRESS BAR -->
-    <div v-if="!props.minimal && autoPlay && !isGridView" class="w-full h-0.5 bg-[#1f1f26] shrink-0">
-      <div
-        class="h-full bg-[#e02870] transition-all duration-75"
-        :style="{ width: `${autoPlayProgress}%` }"
-      ></div>
-    </div>
 
     <!-- 3D WEBGL STAGE & CARD OVERLAY VIEWPORT -->
     <div
@@ -861,15 +704,22 @@ watch(activeIndex, () => {
 
       <!-- ALL 4 CARDS GRID OVERLAY (WHEN IN GRID VIEW) -->
       <div
-        v-if="isGridView"
-        class="absolute inset-3 sm:inset-6 z-30 overflow-y-auto pr-1 pointer-events-auto animate-fade-in"
+        v-if="!hasSelection"
+        class="absolute bottom-14 left-1/2 -translate-x-1/2 z-30 pointer-events-none font-mono text-[11px] text-zinc-400 bg-[#0a0a0e]/90 border border-white/10 px-3 py-1.5"
       >
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 h-full items-stretch">
+        Click a cabinet to see what it saves
+      </div>
+
+      <div
+        v-if="hasSelection"
+        class="absolute inset-3 sm:inset-6 z-30 pointer-events-none animate-fade-in"
+      >
+        <div class="flex items-start justify-end h-full pt-10">
           <div
             v-for="(card, idx) in cards"
+            v-show="idx === activeIndex"
             :key="card.id"
-            @click="selectCard(idx)"
-            class="p-3.5 flex flex-col justify-between shadow-2xl cursor-pointer transition-all hover:scale-[1.02]"
+            class="p-3.5 flex flex-col justify-between shadow-2xl w-full max-w-sm pointer-events-auto"
             :class="card.cardClass"
           >
             <div>
@@ -883,9 +733,18 @@ watch(activeIndex, () => {
                     <span>{{ card.metricTitle }}</span>
                   </div>
                 </div>
-                <span class="font-mono text-[9px] px-1.5 py-0.5 bg-black/60 border border-zinc-700 text-zinc-300 font-bold">
-                  0{{ idx + 1 }}
-                </span>
+                <div class="flex items-center gap-2 shrink-0">
+                  <span class="font-mono text-[9px] px-1.5 py-0.5 bg-black/60 border border-zinc-700 text-zinc-300 font-bold">
+                    0{{ idx + 1 }}
+                  </span>
+                  <button
+                    @click="hasSelection = false"
+                    class="text-zinc-400 hover:text-white cursor-pointer flex items-center"
+                    title="Close"
+                  >
+                    <span class="material-symbols-outlined text-base">close</span>
+                  </button>
+                </div>
               </div>
 
               <!-- Problem snippet -->

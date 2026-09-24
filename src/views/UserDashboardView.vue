@@ -450,11 +450,11 @@ function statusBadgeClass(status: Lead['status']) {
       <div class="flex flex-wrap items-center gap-3">
         <span>SHADOWVERSE SOVEREIGN PRIVATE CLOUD // LEAD MANAGEMENT DASHBOARD</span>
         <a
-          href="/cctv-presentation/1"
+          href="/scalability/1"
           class="px-2.5 py-1 bg-[#9a1a4e]/20 border border-[#e02870] text-[#e02870] font-mono text-[10px] font-bold hover:bg-[#9a1a4e] hover:text-white transition-all flex items-center gap-1 cursor-pointer"
         >
           <span class="material-symbols-outlined text-xs">visibility</span>
-          <span>CCTV PRESENTATION</span>
+          <span>SCALABILITY</span>
         </a>
       </div>
       <div>

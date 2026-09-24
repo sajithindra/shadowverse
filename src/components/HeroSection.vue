@@ -50,7 +50,7 @@ import { MAIL_HREF, WHATSAPP_HREF } from '../utils/contact'
             You reach the founder directly. Replies within one business day.
             <button
               @click="emit('openVideoSearch')"
-              class="text-[#c8c8cc] hover:text-white font-bold underline underline-offset-4 decoration-[#750d37] hover:decoration-white transition-colors cursor-pointer ml-1"
+              class="text-[#c8c8cc] hover:text-white font-bold underline underline-offset-4 decoration-[#750d37] hover:decoration-white transition-colors cursor-pointer ml-1 inline-block py-2"
             >
               See capability overview
             </button>
