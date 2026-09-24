@@ -11,12 +11,39 @@ const route = useRoute()
 const authStore = useAuthStore()
 
 const scrolled = ref(false)
+
+/** Nav destinations. The accent is the existing per-section colour. */
+const navLinks = [
+  { id: 'problem', label: '// PROBLEM', accent: '#750d37' },
+  { id: 'facts', label: '// HUMAN VS AI', accent: '#3d8b5e' },
+  { id: 'architecture', label: '// ECOSYSTEM', accent: '#4a7ebb' },
+  { id: 'shadowwatch', label: '// SHADOWWATCH', accent: '#750d37' },
+  { id: 'logiclock', label: '// LOGIC LOCK', accent: '#4a7ebb' },
+  { id: 'scenarios', label: '// AI SAFETY', accent: '#3d8b5e' },
+]
+
+/** Section currently under the header, for the nav's you-are-here state. */
+const activeSection = ref<string>('')
+let sectionObserver: IntersectionObserver | null = null
+
+/** How far the page has been scrolled, 0-100, for the progress rule. */
+const scrollProgress = ref(0)
+const showBackToTop = ref(false)
 const mobileMenuOpen = ref(false)
 const navLogoRef = ref<HTMLElement | null>(null)
 let navLogoAnim: any = null
 
 function onScroll() {
   scrolled.value = window.scrollY > 15
+
+  const doc = document.documentElement
+  const scrollable = doc.scrollHeight - doc.clientHeight
+  scrollProgress.value = scrollable > 0 ? (window.scrollY / scrollable) * 100 : 0
+  showBackToTop.value = window.scrollY > window.innerHeight
+}
+
+function scrollToTop() {
+  window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
 function toggleMobileMenu() {
@@ -34,7 +61,7 @@ watch(mobileMenuOpen, (isOpen) => {
   }
 })
 
-function handleMobileNav(hash: string) {
+function handleNav(hash: string) {
   closeMobileMenu()
   const sectionId = hash.replace('/#', '').replace('#', '')
   if (route.path === '/' || route.path === '') {
@@ -59,11 +86,28 @@ function handleDashboard() {
 
 function handlePresentation() {
   closeMobileMenu()
-  router.push('/cctv-presentation/1')
+  router.push('/scalability/1')
 }
 
 onMounted(() => {
   window.addEventListener('scroll', onScroll, { passive: true })
+  onScroll()
+
+  // You-are-here state. The root margin discounts the fixed header at the top
+  // and most of the viewport at the bottom, so a section becomes "current" as
+  // it reaches the top of the readable area rather than when it first appears.
+  sectionObserver = new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries) {
+        if (entry.isIntersecting) activeSection.value = entry.target.id
+      }
+    },
+    { rootMargin: '-96px 0px -65% 0px', threshold: 0 },
+  )
+  for (const link of navLinks) {
+    const el = document.getElementById(link.id)
+    if (el) sectionObserver.observe(el)
+  }
   if (navLogoRef.value) {
     navLogoAnim = lottie.loadAnimation({
       container: navLogoRef.value,
@@ -78,6 +122,7 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   window.removeEventListener('scroll', onScroll)
+  sectionObserver?.disconnect()
   if (navLogoAnim) navLogoAnim.destroy()
   if (typeof document !== 'undefined') {
     document.body.style.overflow = ''
@@ -125,13 +170,17 @@ onBeforeUnmount(() => {
     </div>
 
     <!-- Desktop Navigation Links -->
-    <nav class="hidden lg:flex items-center gap-5 xl:gap-8 font-mono text-[11px] tracking-[1.5px] uppercase">
-      <a href="/#problem" class="text-[#a0a0a4] hover:text-white pb-1 border-b-2 border-transparent hover:border-[#750d37] transition-[color,border-color] duration-200">// PROBLEM</a>
-      <a href="/#facts" class="text-[#a0a0a4] hover:text-white pb-1 border-b-2 border-transparent hover:border-[#3d8b5e] transition-[color,border-color] duration-200">// HUMAN VS AI</a>
-      <a href="/#architecture" class="text-[#a0a0a4] hover:text-white pb-1 border-b-2 border-transparent hover:border-[#4a7ebb] transition-[color,border-color] duration-200">// ECOSYSTEM</a>
-      <a href="/#shadowwatch" class="text-[#a0a0a4] hover:text-white pb-1 border-b-2 border-transparent hover:border-[#750d37] transition-[color,border-color] duration-200">// SHADOWWATCH</a>
-      <a href="/#logiclock" class="text-[#a0a0a4] hover:text-white pb-1 border-b-2 border-transparent hover:border-[#4a7ebb] transition-[color,border-color] duration-200">// LOGIC LOCK</a>
-      <a href="/#scenarios" class="text-[#a0a0a4] hover:text-white pb-1 border-b-2 border-transparent hover:border-[#3d8b5e] transition-[color,border-color] duration-200">// AI SAFETY</a>
+    <nav class="hidden xl:flex items-center gap-4 2xl:gap-7 whitespace-nowrap font-mono text-[11px] tracking-[1.5px] uppercase">
+      <a
+        v-for="link in navLinks"
+        :key="link.id"
+        :href="`/#${link.id}`"
+        @click.prevent="handleNav(`/#${link.id}`)"
+        class="pb-1 border-b-2 transition-[color,border-color] duration-200"
+        :class="activeSection === link.id ? 'text-white' : 'text-[#a0a0a4] hover:text-white'"
+        :style="{ borderBottomColor: activeSection === link.id ? link.accent : 'transparent' }"
+        :aria-current="activeSection === link.id ? 'true' : undefined"
+      >{{ link.label }}</a>
     </nav>
 
     <!-- Action Buttons & Mobile Hamburger Button -->
@@ -166,7 +215,7 @@ onBeforeUnmount(() => {
       <!-- Touch-Friendly Mobile Menu Toggle Button -->
       <button
         @click="toggleMobileMenu"
-        class="lg:hidden p-2 text-white border border-[#1e1e20] bg-[#111113] hover:border-[#750d37] transition-[border-color,transform] duration-200 cursor-pointer focus:outline-none flex items-center justify-center min-w-[38px] min-h-[38px] active:scale-95"
+        class="xl:hidden p-2 text-white border border-[#1e1e20] bg-[#111113] hover:border-[#750d37] transition-[border-color,transform] duration-200 cursor-pointer focus:outline-none flex items-center justify-center min-w-[38px] min-h-[38px] active:scale-95"
         aria-label="Toggle Navigation Menu"
       >
         <span v-if="!mobileMenuOpen" class="material-symbols-outlined text-xl text-white">menu</span>
@@ -185,7 +234,7 @@ onBeforeUnmount(() => {
     >
       <div
         v-if="mobileMenuOpen"
-        class="lg:hidden fixed inset-0 bg-black/80 z-40 top-16 md:top-20"
+        class="xl:hidden fixed inset-0 bg-black/80 z-40 top-16 md:top-20"
         @click="closeMobileMenu"
       ></div>
     </transition>
@@ -201,7 +250,7 @@ onBeforeUnmount(() => {
     >
       <div
         v-if="mobileMenuOpen"
-        class="lg:hidden absolute top-full left-0 right-0 z-50 bg-[#0a0a0c] border-b border-[#750d37]/40 shadow-2xl px-4 sm:px-6 py-5 flex flex-col gap-3.5 font-mono text-xs max-h-[calc(100vh-4.5rem)] overflow-y-auto"
+        class="xl:hidden absolute top-full left-0 right-0 z-50 bg-[#0a0a0c] border-b border-[#750d37]/40 shadow-2xl px-4 sm:px-6 py-5 flex flex-col gap-3.5 font-mono text-xs max-h-[calc(100vh-4.5rem)] overflow-y-auto"
       >
         <div class="flex items-center justify-between pb-2.5 border-b border-[#1e1e20]">
           <span class="text-[10px] text-[#750d37] font-bold tracking-widest">// NAVIGATION MENU</span>
@@ -210,7 +259,7 @@ onBeforeUnmount(() => {
 
         <nav class="flex flex-col gap-2 uppercase tracking-wider">
           <a
-            @click="handleMobileNav('/#problem')"
+            @click="handleNav('/#problem')"
             class="p-3 bg-[#111113] border border-[#1e1e20] text-[#c8c8cc] hover:text-white hover:border-[#750d37] transition-all flex items-center justify-between cursor-pointer active:bg-[#750d37]/10"
           >
             <span class="font-bold">// 01. PROBLEM</span>
@@ -218,7 +267,7 @@ onBeforeUnmount(() => {
           </a>
 
           <a
-            @click="handleMobileNav('/#facts')"
+            @click="handleNav('/#facts')"
             class="p-3 bg-[#111113] border border-[#1e1e20] text-[#c8c8cc] hover:text-white hover:border-[#3d8b5e] transition-all flex items-center justify-between cursor-pointer active:bg-[#3d8b5e]/10"
           >
             <span class="font-bold">// 02. HUMAN VS AI</span>
@@ -226,7 +275,7 @@ onBeforeUnmount(() => {
           </a>
 
           <a
-            @click="handleMobileNav('/#architecture')"
+            @click="handleNav('/#architecture')"
             class="p-3 bg-[#111113] border border-[#1e1e20] text-[#c8c8cc] hover:text-white hover:border-[#4a7ebb] transition-all flex items-center justify-between cursor-pointer active:bg-[#4a7ebb]/10"
           >
             <span class="font-bold">// 03. ECOSYSTEM</span>
@@ -234,7 +283,7 @@ onBeforeUnmount(() => {
           </a>
 
           <a
-            @click="handleMobileNav('/#shadowwatch')"
+            @click="handleNav('/#shadowwatch')"
             class="p-3 bg-[#111113] border border-[#1e1e20] text-[#c8c8cc] hover:text-white hover:border-[#750d37] transition-all flex items-center justify-between cursor-pointer active:bg-[#750d37]/10"
           >
             <span class="font-bold">// 04. SHADOWWATCH</span>
@@ -242,7 +291,7 @@ onBeforeUnmount(() => {
           </a>
 
           <a
-            @click="handleMobileNav('/#logiclock')"
+            @click="handleNav('/#logiclock')"
             class="p-3 bg-[#111113] border border-[#1e1e20] text-[#c8c8cc] hover:text-white hover:border-[#4a7ebb] transition-all flex items-center justify-between cursor-pointer active:bg-[#4a7ebb]/10"
           >
             <span class="font-bold">// 05. LOGIC LOCK</span>
@@ -250,7 +299,7 @@ onBeforeUnmount(() => {
           </a>
 
           <a
-            @click="handleMobileNav('/#scenarios')"
+            @click="handleNav('/#scenarios')"
             class="p-3 bg-[#111113] border border-[#1e1e20] text-[#c8c8cc] hover:text-white hover:border-[#3d8b5e] transition-all flex items-center justify-between cursor-pointer active:bg-[#3d8b5e]/10"
           >
             <span class="font-bold">// 06. AI SAFETY</span>
@@ -277,7 +326,7 @@ onBeforeUnmount(() => {
               @click="handlePresentation"
               class="industrial-btn industrial-btn-outline w-full py-2.5 text-center text-xs font-bold border-[#750d37] text-white cursor-pointer"
             >
-              CCTV PRESENTATION
+              SCALABILITY
             </button>
           </template>
 
@@ -290,6 +339,25 @@ onBeforeUnmount(() => {
         </div>
       </div>
     </transition>
+    <!-- Reading progress. A long single-page site gives no other sense of how
+         much is left; this is a 2px rule, not a decoration. -->
+    <div class="absolute left-0 right-0 bottom-0 h-0.5 bg-transparent" aria-hidden="true">
+      <div
+        class="h-full bg-[#750d37] transition-[width] duration-150 ease-out"
+        :style="{ width: `${scrollProgress}%` }"
+      ></div>
+    </div>
   </header>
+
+  <!-- Back to top. The page runs to roughly nine screens. -->
+  <button
+    v-show="showBackToTop"
+    @click="scrollToTop"
+    class="fixed bottom-16 xl:bottom-5 right-4 xl:right-5 z-30 w-11 h-11 flex items-center justify-center bg-[#0e0e12] border border-[#27272a] text-[#a0a0a4] hover:text-white hover:border-[#750d37] transition-colors shadow-xl cursor-pointer"
+    title="Back to top"
+    aria-label="Back to top"
+  >
+    <span class="material-symbols-outlined text-xl">arrow_upward</span>
+  </button>
 </template>
 

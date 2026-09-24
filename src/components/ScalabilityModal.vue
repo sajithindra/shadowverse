@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import ThreeSlide2Topology from './ThreeSlide2Topology.vue'
 import ThreeSlide3Pipeline from './ThreeSlide3Pipeline.vue'
 import ThreeSlide5Savings from './ThreeSlide5Savings.vue'
+import ThreeSlide6Cascade from './ThreeSlide6Cascade.vue'
 import Slide4Retraining from './Slide4Retraining.vue'
 
 const props = withDefaults(
@@ -19,27 +20,37 @@ const emit = defineEmits(['close'])
 const router = useRouter()
 
 // Current slide: 0 = Overview Grid Plane, 1..5 = Specific Stations
-const currentSlide = ref(props.initialSlide >= 0 && props.initialSlide <= 5 ? props.initialSlide : 0)
-const totalSlides = 5
+const currentSlide = ref(props.initialSlide >= 0 && props.initialSlide <= 6 ? props.initialSlide : 0)
+const totalSlides = 6
 
 // 2D/2.5D X-Y Zigzag Coordinates across the Spatial Grid Plane
-const defaultCoord = { x: 0, y: 350, scale: 0.28 }
+const OVERVIEW_SCALE = 0.5
+const defaultCoord = { x: 0, y: 0, scale: OVERVIEW_SCALE }
 const slideCoordinates: Record<number, { x: number; y: number; scale: number }> = {
-  0: { x: 0, y: 350, scale: 0.28 }, // Overview fits all 5 zigzag nodes
-  1: { x: -1300, y: -750, scale: 1 }, // Top-Left
-  2: { x: 1300, y: -300, scale: 1 },  // Top-Right
-  3: { x: -1300, y: 250, scale: 1 },  // Mid-Left
-  4: { x: 1300, y: 800, scale: 1 },   // Lower-Right
-  5: { x: 0, y: 1450, scale: 1 },     // Bottom-Center
+  0: { x: 0, y: 0, scale: OVERVIEW_SCALE }, // Overview frames all six waypoints
+  1: { x: -1000, y: -560, scale: 1 }, // Top-left
+  2: { x: 0, y: -560, scale: 1 },     // Top-centre
+  3: { x: 1000, y: -560, scale: 1 },  // Top-right
+  4: { x: 1000, y: 560, scale: 1 },   // Bottom-right
+  5: { x: 0, y: 560, scale: 1 },      // Bottom-centre
+  6: { x: -1000, y: 560, scale: 1 },  // Bottom-left
 }
+
+// Waypoint badges live inside the scaled world, so in overview they are scaled
+// back up to render at their natural, readable size.
+const overviewBadgeStyle = { transform: `scale(${1 / OVERVIEW_SCALE})` }
 
 const stationMeta = [
   { id: 1, icon: 'hub', title: 'Distributed Data Center Topology', subtitle: 'Edge Data Centers & Macro Swarm Network' },
   { id: 2, icon: 'memory', title: 'Edge Data Center Internal Pipeline', subtitle: 'L1-L3 Inference Stack & 20-GPU Clusters' },
-  { id: 3, icon: 'local_police', title: 'SHADOWWATCH "Palantir for Policing"', subtitle: 'Police Control Console & AI Agent Stream' },
-  { id: 4, icon: 'model_training', title: 'Continuous Ground-Truth Retraining', subtitle: 'Ahmedabad City Fine-Tuning & 95%+ Accuracy' },
-  { id: 5, icon: 'insights', title: 'ShadowVerse = Flock AI + Palantir', subtitle: '3D Holographic Savings Matrix Pods' },
+  { id: 3, icon: 'account_tree', title: 'Cascaded Inference Topology', subtitle: 'Five GPU Tiers & Early-Exit Routing' },
+  { id: 4, icon: 'local_police', title: 'SHADOWWATCH "Palantir for Policing"', subtitle: 'Police Control Console & AI Agent Stream' },
+  { id: 5, icon: 'model_training', title: 'Continuous Ground-Truth Retraining', subtitle: 'Ahmedabad City Fine-Tuning & 95%+ Accuracy' },
+  { id: 6, icon: 'insights', title: 'ShadowVerse = Flock AI + Palantir', subtitle: '3D Holographic Savings Matrix Pods' },
 ]
+
+/** Station currently in view, for the control bar and the accessible name. */
+const currentStation = computed(() => stationMeta[currentSlide.value - 1])
 
 // Smooth X-Y translation & scaling matrix
 const worldTransformStyle = computed(() => {
@@ -74,7 +85,7 @@ watch(
   currentSlide,
   (newVal) => {
     if (newVal > 0) {
-      router.replace({ name: 'cctv-presentation', params: { slide: newVal.toString() } })
+      router.replace({ name: 'scalability', params: { slide: newVal.toString() } })
     }
     resetAutoPlayTimer()
   },
@@ -186,7 +197,7 @@ function handleKeydown(e: KeyboardEvent) {
     prevSlide()
   } else if (e.key === '0' || e.key === 'm' || e.key === 'M') {
     goToSlide(0)
-  } else if (e.key >= '1' && e.key <= '5') {
+  } else if (e.key >= '1' && e.key <= '6') {
     goToSlide(parseInt(e.key, 10))
   } else if (e.key === 'Home') {
     goToSlide(1)
@@ -223,8 +234,12 @@ onBeforeUnmount(() => {
     @touchend="handleTouchEnd"
     role="dialog"
     aria-modal="true"
-    aria-labelledby="cctv-spatial-title"
+    aria-labelledby="scalability-title"
   >
+    <h2 id="scalability-title" class="sr-only">
+      Shadowverse scalability architecture{{ currentStation ? `: ${currentStation.title}` : '' }}
+    </h2>
+
     <!-- MINIMAL CORNER CONTROLS (ONLY CLOSE & FULLSCREEN, NO TOP BARS) -->
     <div class="absolute top-4 right-4 sm:top-6 sm:right-6 flex items-center gap-2 z-50 pointer-events-auto">
       <button
@@ -257,6 +272,55 @@ onBeforeUnmount(() => {
     <!-- ════════════════ INFINITE GRIDLINE PLANE VIEWPORT ════════════════ -->
     <div class="w-full h-full relative overflow-hidden flex items-center justify-center grid-plane-bg">
       
+      <!-- OVERVIEW TITLE, sitting in the centre of the station circuit -->
+      <div
+        v-if="currentSlide === 0"
+        class="absolute inset-0 hidden lg:flex flex-col items-center justify-center pointer-events-none z-0 px-6 text-center"
+      >
+        <div class="font-mono text-[11px] tracking-[0.3em] text-[#e02870] uppercase">Shadowverse</div>
+        <h1 class="mt-2 font-mono text-2xl sm:text-3xl font-black text-white tracking-tight">
+          Scalability Architecture
+        </h1>
+        <p class="mt-3 max-w-md text-xs sm:text-sm text-zinc-400 leading-relaxed">
+          How the platform scales, in six stations — from the national edge topology down to the GPU cost of running it.
+          Pick one, or press <span class="text-zinc-200 font-bold">Space</span> to walk the circuit.
+        </p>
+      </div>
+
+      <!-- MOBILE OVERVIEW — a list, because the spatial circuit needs width -->
+      <div
+        v-if="currentSlide === 0"
+        class="lg:hidden absolute inset-0 z-30 overflow-y-auto px-4 pt-16 pb-16"
+      >
+        <div class="text-center mb-5">
+          <div class="font-mono text-[10px] tracking-[0.3em] text-[#e02870] uppercase">Shadowverse</div>
+          <h1 class="mt-1.5 font-mono text-2xl font-black text-white tracking-tight">Scalability Architecture</h1>
+          <p class="mt-2 text-xs text-zinc-400 leading-relaxed">
+            How the platform scales, in six stations — from the national edge topology down to the GPU cost of running it.
+          </p>
+        </div>
+
+        <ul class="space-y-2">
+          <li v-for="station in stationMeta" :key="station.id">
+            <button
+              @click="goToSlide(station.id)"
+              class="w-full text-left px-3 py-3 bg-[#0a0a0e] border border-[#27272a] hover:border-[#e02870] transition-colors cursor-pointer flex items-center gap-3 font-mono"
+            >
+              <span class="w-9 h-9 shrink-0 bg-[#750d37] border border-[#e02870] flex items-center justify-center text-white">
+                <span class="material-symbols-outlined text-lg">{{ station.icon }}</span>
+              </span>
+              <span class="min-w-0 flex-1">
+                <span class="block text-[#e02870] font-black text-[10px] uppercase tracking-wider">
+                  {{ String(station.id).padStart(2, '0') }} // {{ station.subtitle }}
+                </span>
+                <span class="block text-white font-bold text-sm mt-0.5">{{ station.title }}</span>
+              </span>
+              <span class="material-symbols-outlined text-zinc-500 text-base shrink-0">arrow_forward</span>
+            </button>
+          </li>
+        </ul>
+      </div>
+
       <!-- 2D/2.5D MOVING COORDINATE CANVAS -->
       <div
         class="absolute w-0 h-0 flex items-center justify-center"
@@ -266,7 +330,7 @@ onBeforeUnmount(() => {
         <svg class="absolute pointer-events-none overflow-visible z-0" style="left: 0; top: 0;">
           <!-- MAIN ZIGZAG LINE -->
           <path
-            d="M -1300 -750 L 1300 -300 L -1300 250 L 1300 800 L 0 1450"
+            d="M -1000 -560 L 0 -560 L 1000 -560 L 1000 560 L 0 560 L -1000 560"
             fill="none"
             stroke="#750d37"
             stroke-width="6"
@@ -275,7 +339,7 @@ onBeforeUnmount(() => {
           />
           <!-- PULSING TRAVEL HEAD -->
           <circle
-            v-if="currentSlide >= 1 && currentSlide <= 5 && slideCoordinates[currentSlide]"
+            v-if="currentSlide >= 1 && currentSlide <= totalSlides && slideCoordinates[currentSlide]"
             :cx="slideCoordinates[currentSlide]?.x ?? 0"
             :cy="slideCoordinates[currentSlide]?.y ?? 0"
             r="16"
@@ -284,27 +348,28 @@ onBeforeUnmount(() => {
           />
         </svg>
 
-        <!-- ════════ STATION 1 (X: -1300, Y: -750) ════════ -->
+        <!-- ════════ STATION 1 (X: -1000, Y: -560) ════════ -->
         <div
           class="absolute transition-opacity duration-300 flex items-center justify-center"
           :class="currentSlide === 1 ? 'w-screen h-screen opacity-100 pointer-events-auto z-30' : (currentSlide === 0 ? 'w-auto h-auto opacity-100 pointer-events-auto z-20 cursor-pointer' : 'w-screen h-screen opacity-0 pointer-events-none z-0')"
-          style="left: -1300px; top: -750px; transform: translate(-50%, -50%);"
+          style="left: -1000px; top: -560px; transform: translate(-50%, -50%);"
           @click="currentSlide === 0 && goToSlide(1)"
         >
           <!-- OVERVIEW WAYPOINT BADGE (Only in mode 0) -->
           <div
             v-if="currentSlide === 0"
-            class="px-6 py-3.5 bg-[#0a0a0e] border-2 border-[#e02870] font-mono shadow-2xl flex items-center gap-3.5 cursor-pointer transition-transform hover:scale-105"
+            class="px-4 py-2.5 bg-[#0a0a0e] border-2 border-[#e02870] font-mono shadow-2xl hidden lg:flex items-center gap-3.5 cursor-pointer transition-colors hover:bg-[#15151c]"
+            :style="overviewBadgeStyle"
           >
-            <div class="w-11 h-11 bg-[#750d37] border-2 border-[#e02870] flex items-center justify-center text-white font-black text-xl shadow-lg">
-              <span class="material-symbols-outlined text-xl">hub</span>
+            <div class="w-9 h-9 bg-[#750d37] border-2 border-[#e02870] flex items-center justify-center text-white font-black text-xl shadow-lg">
+              <span class="material-symbols-outlined text-lg">hub</span>
             </div>
             <div>
-              <div class="text-[#e02870] font-black text-xs uppercase flex items-center gap-1.5">
+              <div class="text-[#e02870] font-black text-xs uppercase flex items-center gap-1.5 whitespace-nowrap">
                 <span class="w-2.5 h-2.5 rounded-full bg-[#e02870]"></span>
                 <span>01 // TOPOLOGY</span>
               </div>
-              <div class="text-white font-black text-sm sm:text-base">Distributed Data Center Topology</div>
+              <div class="text-white font-black text-sm whitespace-nowrap">Distributed Data Center Topology</div>
             </div>
             <span class="material-symbols-outlined text-zinc-300 text-base ml-2">arrow_forward</span>
           </div>
@@ -315,27 +380,28 @@ onBeforeUnmount(() => {
           </div>
         </div>
 
-        <!-- ════════ STATION 2 (X: 1300, Y: -300) ════════ -->
+        <!-- ════════ STATION 2 (X: 0, Y: -560) ════════ -->
         <div
           class="absolute transition-opacity duration-300 flex items-center justify-center"
           :class="currentSlide === 2 ? 'w-screen h-screen opacity-100 pointer-events-auto z-30' : (currentSlide === 0 ? 'w-auto h-auto opacity-100 pointer-events-auto z-20 cursor-pointer' : 'w-screen h-screen opacity-0 pointer-events-none z-0')"
-          style="left: 1300px; top: -300px; transform: translate(-50%, -50%);"
+          style="left: 0px; top: -560px; transform: translate(-50%, -50%);"
           @click="currentSlide === 0 && goToSlide(2)"
         >
           <!-- OVERVIEW WAYPOINT BADGE (Only in mode 0) -->
           <div
             v-if="currentSlide === 0"
-            class="px-6 py-3.5 bg-[#0a0a0e] border-2 border-[#e02870] font-mono shadow-2xl flex items-center gap-3.5 cursor-pointer transition-transform hover:scale-105"
+            class="px-4 py-2.5 bg-[#0a0a0e] border-2 border-[#e02870] font-mono shadow-2xl hidden lg:flex items-center gap-3.5 cursor-pointer transition-colors hover:bg-[#15151c]"
+            :style="overviewBadgeStyle"
           >
-            <div class="w-11 h-11 bg-[#750d37] border-2 border-[#e02870] flex items-center justify-center text-white font-black text-xl shadow-lg">
-              <span class="material-symbols-outlined text-xl">memory</span>
+            <div class="w-9 h-9 bg-[#750d37] border-2 border-[#e02870] flex items-center justify-center text-white font-black text-xl shadow-lg">
+              <span class="material-symbols-outlined text-lg">memory</span>
             </div>
             <div>
-              <div class="text-[#e02870] font-black text-xs uppercase flex items-center gap-1.5">
+              <div class="text-[#e02870] font-black text-xs uppercase flex items-center gap-1.5 whitespace-nowrap">
                 <span class="w-2.5 h-2.5 rounded-full bg-[#e02870]"></span>
                 <span>02 // PIPELINE</span>
               </div>
-              <div class="text-white font-black text-sm sm:text-base">Edge Data Center Internal Pipeline</div>
+              <div class="text-white font-black text-sm whitespace-nowrap">Edge Data Center Internal Pipeline</div>
             </div>
             <span class="material-symbols-outlined text-zinc-300 text-base ml-2">arrow_forward</span>
           </div>
@@ -346,50 +412,82 @@ onBeforeUnmount(() => {
           </div>
         </div>
 
-        <!-- ════════ STATION 3 (X: -1300, Y: 250) ════════ -->
+        <!-- ════════ STATION 3 (X: 1000, Y: -560) ════════ -->
         <div
           class="absolute transition-opacity duration-300 flex items-center justify-center"
-          :class="currentSlide === 3 ? 'w-[1300px] h-[820px] opacity-100 pointer-events-auto z-30' : (currentSlide === 0 ? 'w-auto h-auto opacity-100 pointer-events-auto z-20 cursor-pointer' : 'w-[1300px] h-[820px] opacity-0 pointer-events-none z-0')"
-          style="left: -1300px; top: 250px; transform: translate(-50%, -50%);"
+          :class="currentSlide === 3 ? 'w-screen h-screen opacity-100 pointer-events-auto z-30' : (currentSlide === 0 ? 'w-auto h-auto opacity-100 pointer-events-auto z-20 cursor-pointer' : 'w-screen h-screen opacity-0 pointer-events-none z-0')"
+          style="left: 1000px; top: -560px; transform: translate(-50%, -50%);"
           @click="currentSlide === 0 && goToSlide(3)"
         >
           <!-- OVERVIEW WAYPOINT BADGE (Only in mode 0) -->
           <div
             v-if="currentSlide === 0"
-            class="px-6 py-3.5 bg-[#0a0a0e] border-2 border-blue-500 font-mono shadow-2xl flex items-center gap-3.5 cursor-pointer transition-transform hover:scale-105"
+            class="px-4 py-2.5 bg-[#0a0a0e] border-2 border-[#4a90d9] font-mono shadow-2xl hidden lg:flex items-center gap-3.5 cursor-pointer transition-colors hover:bg-[#15151c]"
+            :style="overviewBadgeStyle"
           >
-            <div class="w-11 h-11 bg-blue-600 border-2 border-blue-400 flex items-center justify-center text-white font-black text-xl shadow-lg">
-              <span class="material-symbols-outlined text-xl">local_police</span>
+            <div class="w-9 h-9 bg-[#1e4d78] border-2 border-[#4a90d9] flex items-center justify-center text-white font-black text-xl shadow-lg">
+              <span class="material-symbols-outlined text-lg">account_tree</span>
             </div>
             <div>
-              <div class="text-blue-400 font-black text-xs uppercase flex items-center gap-1.5">
-                <span class="w-2.5 h-2.5 rounded-full bg-blue-400"></span>
-                <span>03 // ARCHITECTURE</span>
+              <div class="text-[#4a90d9] font-black text-xs uppercase flex items-center gap-1.5 whitespace-nowrap">
+                <span class="w-2.5 h-2.5 rounded-full bg-[#4a90d9]"></span>
+                <span>03 // CASCADE</span>
               </div>
-              <div class="text-white font-black text-sm sm:text-base">SHADOWWATCH Palantir Architecture</div>
+              <div class="text-white font-black text-sm whitespace-nowrap">Cascaded Inference Topology</div>
+            </div>
+            <span class="material-symbols-outlined text-zinc-300 text-base ml-2">arrow_forward</span>
+          </div>
+
+          <!-- FULL-SCREEN 3D CASCADE CANVAS (NO CHROME / NO BOXES) -->
+          <div v-else-if="currentSlide === 3" class="w-full h-full">
+            <ThreeSlide6Cascade :minimal="true" />
+          </div>
+        </div>
+        <!-- ════════ STATION 4 (X: 1000, Y: 560) ════════ -->
+        <div
+          class="absolute transition-opacity duration-300 flex items-center justify-center"
+          :class="currentSlide === 4 ? 'w-[1300px] h-[620px] opacity-100 pointer-events-auto z-30' : (currentSlide === 0 ? 'w-auto h-auto opacity-100 pointer-events-auto z-20 cursor-pointer' : 'w-[1300px] h-[620px] opacity-0 pointer-events-none z-0')"
+          style="left: 1000px; top: 560px; transform: translate(-50%, -50%);"
+          @click="currentSlide === 0 && goToSlide(4)"
+        >
+          <!-- OVERVIEW WAYPOINT BADGE (Only in mode 0) -->
+          <div
+            v-if="currentSlide === 0"
+            class="px-4 py-2.5 bg-[#0a0a0e] border-2 border-[#4a90d9] font-mono shadow-2xl hidden lg:flex items-center gap-3.5 cursor-pointer transition-colors hover:bg-[#15151c]"
+            :style="overviewBadgeStyle"
+          >
+            <div class="w-9 h-9 bg-[#4a90d9] border-2 border-[#4a90d9] flex items-center justify-center text-white font-black text-xl shadow-lg">
+              <span class="material-symbols-outlined text-lg">local_police</span>
+            </div>
+            <div>
+              <div class="text-[#4a90d9] font-black text-xs uppercase flex items-center gap-1.5 whitespace-nowrap">
+                <span class="w-2.5 h-2.5 rounded-full bg-[#4a90d9]"></span>
+                <span>04 // ARCHITECTURE</span>
+              </div>
+              <div class="text-white font-black text-sm whitespace-nowrap">SHADOWWATCH Palantir Architecture</div>
             </div>
             <span class="material-symbols-outlined text-zinc-300 text-base ml-2">arrow_forward</span>
           </div>
 
           <!-- STATION 3 ARCHITECTURE DIAGRAM -->
-          <div v-else-if="currentSlide === 3" class="w-full h-full flex flex-col justify-between p-4 sm:p-7 font-mono select-none overflow-hidden bg-[#09090c] border-2 border-[#27272a] shadow-2xl">
+          <div v-else-if="currentSlide === 4" class="w-full h-full flex flex-col justify-between p-4 sm:p-7 font-mono select-none overflow-hidden bg-[#09090c] border-2 border-[#27272a] shadow-2xl">
             <!-- IN-SPACE TITLE -->
             <div class="w-full flex items-center justify-between pb-3.5 border-b border-[#27272a] shrink-0">
               <div class="flex items-center gap-3.5">
-                <div class="w-12 h-12 bg-blue-600 border-2 border-blue-400 flex items-center justify-center text-white font-black text-2xl shadow-xl">
+                <div class="w-12 h-12 bg-[#4a90d9] border-2 border-[#4a90d9] flex items-center justify-center text-white font-black text-2xl shadow-xl">
                   <span class="material-symbols-outlined text-2xl">local_police</span>
                 </div>
                 <div>
-                  <div class="text-blue-400 font-black text-xs sm:text-sm uppercase flex items-center gap-2">
-                    <span class="w-2.5 h-2.5 rounded-full bg-blue-400"></span>
-                    <span>STATION 03 // FULL-STACK POLICING</span>
+                  <div class="text-[#4a90d9] font-black text-xs sm:text-sm uppercase flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-[#4a90d9]"></span>
+                    <span>STATION 04 // FULL-STACK POLICING</span>
                   </div>
                   <h2 class="text-xl sm:text-3xl font-black text-white font-mono mt-0.5">SHADOWWATCH "Palantir for Policing" Architecture</h2>
                 </div>
               </div>
 
               <div class="hidden sm:flex items-center gap-2 text-xs sm:text-sm text-zinc-300 font-bold bg-[#121216] border border-[#27272a] px-3.5 py-1.5 shadow-md">
-                <span class="w-2.5 h-2.5 rounded-full bg-blue-400"></span>
+                <span class="w-2.5 h-2.5 rounded-full bg-[#4a90d9]"></span>
                 <span>Decoupled UI · AI Swarm · Private Cloud</span>
               </div>
             </div>
@@ -398,30 +496,30 @@ onBeforeUnmount(() => {
               <div class="grid grid-cols-12 gap-3.5 items-stretch flex-1">
                 <!-- POLICE CONSOLE -->
                 <div class="col-span-5 flex flex-col gap-2.5">
-                  <div class="bg-[#121216] border-2 border-blue-500 p-3.5 shadow-xl flex items-center justify-between">
+                  <div class="bg-[#121216] border-2 border-[#4a90d9] p-3.5 shadow-xl flex items-center justify-between">
                     <div class="flex items-center gap-3">
-                      <div class="w-9 h-9 bg-blue-600 border border-blue-400 flex items-center justify-center font-black">
+                      <div class="w-9 h-9 bg-[#4a90d9] border border-[#4a90d9] flex items-center justify-center font-black">
                         <span class="material-symbols-outlined text-white text-xl">local_police</span>
                       </div>
                       <div>
-                        <div class="font-mono text-xs sm:text-sm text-blue-400 font-black uppercase">POLICE INVESTIGATORS</div>
+                        <div class="font-mono text-xs sm:text-sm text-[#4a90d9] font-black uppercase">POLICE INVESTIGATORS</div>
                         <div class="text-white font-bold text-xs sm:text-sm">Natural Language & Photo Search</div>
                       </div>
                     </div>
                   </div>
 
-                  <div class="bg-[#121216] border-2 border-blue-500 p-4 flex-1 flex flex-col justify-between shadow-xl">
+                  <div class="bg-[#121216] border-2 border-[#4a90d9] p-4 flex-1 flex flex-col justify-between shadow-xl">
                     <div>
                       <div class="flex justify-between items-center mb-1.5">
-                        <span class="font-mono text-xs sm:text-sm text-blue-400 font-black uppercase">POLICE CONSOLE UI</span>
-                        <span class="font-mono text-xs bg-blue-950 border border-blue-500 text-blue-300 px-2.5 py-0.5 font-bold">Primary Dashboard</span>
+                        <span class="font-mono text-xs sm:text-sm text-[#4a90d9] font-black uppercase">POLICE CONSOLE UI</span>
+                        <span class="font-mono text-xs bg-[#4a90d9]/10 border border-[#4a90d9] text-[#4a90d9] px-2.5 py-0.5 font-bold">Primary Dashboard</span>
                       </div>
                       <h3 class="text-lg sm:text-xl font-black text-white font-mono mb-1.5">SHADOWWATCH</h3>
                       <p class="text-zinc-200 text-xs sm:text-sm leading-relaxed font-sans">
                         Officer query console, real-time alert dispatch maps, timeline trajectory inspection, and automated court evidence bundle generator.
                       </p>
                     </div>
-                    <div class="mt-3 font-mono text-xs sm:text-sm text-blue-300 font-bold bg-blue-950/80 border border-blue-600 p-2 text-center">
+                    <div class="mt-3 font-mono text-xs sm:text-sm text-[#4a90d9] font-bold bg-[#4a90d9]/10 border border-[#4a90d9] p-2 text-center">
                       User Dashboard · Case Graph · Court Evidence Export
                     </div>
                   </div>
@@ -461,96 +559,143 @@ onBeforeUnmount(() => {
               </div>
 
               <!-- FOUNDATIONAL PRIVATE EDGE CLOUD -->
-              <div class="bg-[#121216] border-2 border-emerald-500 p-4 shadow-xl space-y-2 shrink-0">
+              <div class="bg-[#121216] border-2 border-[#3d8b5e] p-4 shadow-xl space-y-2 shrink-0">
                 <div class="flex items-center justify-between border-b border-[#27272a] pb-1.5">
-                  <span class="font-mono text-xs sm:text-sm text-emerald-400 font-black uppercase">FOUNDATIONAL PRIVATE EDGE CLOUD: SHADOWVERSE</span>
-                  <span class="font-mono text-xs sm:text-sm text-emerald-300 font-black">20 GPU Servers / District Edge DC</span>
+                  <span class="font-mono text-xs sm:text-sm text-[#3d8b5e] font-black uppercase">FOUNDATIONAL PRIVATE EDGE CLOUD: SHADOWVERSE</span>
+                  <span class="font-mono text-xs sm:text-sm text-[#3d8b5e] font-black">20 GPU Servers / District Edge DC</span>
                 </div>
                 <div class="flex flex-wrap gap-2.5 font-mono text-xs sm:text-sm font-bold text-zinc-200">
-                  <span class="bg-emerald-950 border border-emerald-500 text-emerald-300 px-3 py-1">MongoDB (Metadata)</span>
-                  <span class="bg-emerald-950 border border-emerald-500 text-emerald-300 px-3 py-1">Neo4j Graph (Trajectories)</span>
-                  <span class="bg-emerald-950 border border-emerald-500 text-emerald-300 px-3 py-1">CockroachDB (Global SQL)</span>
-                  <span class="bg-blue-950 border border-blue-500 text-blue-300 px-3 py-1">Image Lake (Detections)</span>
-                  <span class="bg-purple-950 border border-purple-500 text-purple-300 px-3 py-1">Video Lake (Raw Buffer)</span>
-                  <span class="bg-amber-950 border border-amber-500 text-amber-300 px-3 py-1">Clustered GPUs (Inference)</span>
+                  <span class="bg-[#3d8b5e]/10 border border-[#3d8b5e] text-[#3d8b5e] px-3 py-1">MongoDB (Metadata)</span>
+                  <span class="bg-[#3d8b5e]/10 border border-[#3d8b5e] text-[#3d8b5e] px-3 py-1">Neo4j Graph (Trajectories)</span>
+                  <span class="bg-[#3d8b5e]/10 border border-[#3d8b5e] text-[#3d8b5e] px-3 py-1">CockroachDB (Global SQL)</span>
+                  <span class="bg-[#4a90d9]/10 border border-[#4a90d9] text-[#4a90d9] px-3 py-1">Image Lake (Detections)</span>
+                  <span class="bg-[#4a90d9]/10 border border-[#4a90d9] text-[#4a90d9] px-3 py-1">Video Lake (Raw Buffer)</span>
+                  <span class="bg-[#c49a3c]/10 border border-[#c49a3c] text-[#c49a3c] px-3 py-1">Clustered GPUs (Inference)</span>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- ════════ STATION 4 (X: 1300, Y: 800) ════════ -->
+        <!-- ════════ STATION 5 (X: 0, Y: 560) ════════ -->
         <div
           class="absolute transition-opacity duration-300 flex items-center justify-center"
-          :class="currentSlide === 4 ? 'w-[1300px] h-[820px] opacity-100 pointer-events-auto z-30' : (currentSlide === 0 ? 'w-auto h-auto opacity-100 pointer-events-auto z-20 cursor-pointer' : 'w-[1300px] h-[820px] opacity-0 pointer-events-none z-0')"
-          style="left: 1300px; top: 800px; transform: translate(-50%, -50%);"
-          @click="currentSlide === 0 && goToSlide(4)"
-        >
-          <!-- OVERVIEW WAYPOINT BADGE (Only in mode 0) -->
-          <div
-            v-if="currentSlide === 0"
-            class="px-6 py-3.5 bg-[#0a0a0e] border-2 border-[#e02870] font-mono shadow-2xl flex items-center gap-3.5 cursor-pointer transition-transform hover:scale-105"
-          >
-            <div class="w-11 h-11 bg-[#750d37] border-2 border-[#e02870] flex items-center justify-center text-white font-black text-xl shadow-lg">
-              <span class="material-symbols-outlined text-xl">model_training</span>
-            </div>
-            <div>
-              <div class="text-[#e02870] font-black text-xs uppercase flex items-center gap-1.5">
-                <span class="w-2.5 h-2.5 rounded-full bg-[#e02870]"></span>
-                <span>04 // RETRAINING</span>
-              </div>
-              <div class="text-white font-black text-sm sm:text-base">Continuous City Ground-Truth Retraining</div>
-            </div>
-            <span class="material-symbols-outlined text-zinc-300 text-base ml-2">arrow_forward</span>
-          </div>
-
-          <!-- STATION 4 INTERACTIVE RETRAINING FLYWHEEL & VISUALIZER -->
-          <div v-else-if="currentSlide === 4" class="w-full h-full bg-[#09090c] border-2 border-[#27272a] shadow-2xl overflow-hidden">
-            <Slide4Retraining />
-          </div>
-        </div>
-
-        <!-- ════════ STATION 5 (X: 0, Y: 1450) ════════ -->
-        <div
-          class="absolute transition-opacity duration-300 flex items-center justify-center"
-          :class="currentSlide === 5 ? 'w-screen h-screen opacity-100 pointer-events-auto z-30' : (currentSlide === 0 ? 'w-auto h-auto opacity-100 pointer-events-auto z-20 cursor-pointer' : 'w-screen h-screen opacity-0 pointer-events-none z-0')"
-          style="left: 0px; top: 1450px; transform: translate(-50%, -50%);"
+          :class="currentSlide === 5 ? 'w-[1300px] h-[820px] opacity-100 pointer-events-auto z-30' : (currentSlide === 0 ? 'w-auto h-auto opacity-100 pointer-events-auto z-20 cursor-pointer' : 'w-[1300px] h-[820px] opacity-0 pointer-events-none z-0')"
+          style="left: 0px; top: 560px; transform: translate(-50%, -50%);"
           @click="currentSlide === 0 && goToSlide(5)"
         >
           <!-- OVERVIEW WAYPOINT BADGE (Only in mode 0) -->
           <div
             v-if="currentSlide === 0"
-            class="px-6 py-3.5 bg-[#0a0a0e] border-2 border-amber-500 font-mono shadow-2xl flex items-center gap-3.5 cursor-pointer transition-transform hover:scale-105"
+            class="px-4 py-2.5 bg-[#0a0a0e] border-2 border-[#e02870] font-mono shadow-2xl hidden lg:flex items-center gap-3.5 cursor-pointer transition-colors hover:bg-[#15151c]"
+            :style="overviewBadgeStyle"
           >
-            <div class="w-11 h-11 bg-amber-600 border-2 border-amber-400 flex items-center justify-center text-white font-black text-xl shadow-lg">
-              <span class="material-symbols-outlined text-xl">insights</span>
+            <div class="w-9 h-9 bg-[#750d37] border-2 border-[#e02870] flex items-center justify-center text-white font-black text-xl shadow-lg">
+              <span class="material-symbols-outlined text-lg">model_training</span>
             </div>
             <div>
-              <div class="text-amber-400 font-black text-xs uppercase flex items-center gap-1.5">
-                <span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
-                <span>05 // SAVINGS</span>
+              <div class="text-[#e02870] font-black text-xs uppercase flex items-center gap-1.5 whitespace-nowrap">
+                <span class="w-2.5 h-2.5 rounded-full bg-[#e02870]"></span>
+                <span>05 // RETRAINING</span>
               </div>
-              <div class="text-white font-black text-sm sm:text-base">Flock AI + Palantir 3D Savings Pods</div>
+              <div class="text-white font-black text-sm whitespace-nowrap">Continuous City Ground-Truth Retraining</div>
+            </div>
+            <span class="material-symbols-outlined text-zinc-300 text-base ml-2">arrow_forward</span>
+          </div>
+
+          <!-- STATION 4 INTERACTIVE RETRAINING FLYWHEEL & VISUALIZER -->
+          <div v-else-if="currentSlide === 5" class="w-full h-full bg-[#09090c] border-2 border-[#27272a] shadow-2xl overflow-hidden">
+            <Slide4Retraining />
+          </div>
+        </div>
+
+        <!-- ════════ STATION 6 (X: -1000, Y: 560) ════════ -->
+        <div
+          class="absolute transition-opacity duration-300 flex items-center justify-center"
+          :class="currentSlide === 6 ? 'w-screen h-screen opacity-100 pointer-events-auto z-30' : (currentSlide === 0 ? 'w-auto h-auto opacity-100 pointer-events-auto z-20 cursor-pointer' : 'w-screen h-screen opacity-0 pointer-events-none z-0')"
+          style="left: -1000px; top: 560px; transform: translate(-50%, -50%);"
+          @click="currentSlide === 0 && goToSlide(6)"
+        >
+          <!-- OVERVIEW WAYPOINT BADGE (Only in mode 0) -->
+          <div
+            v-if="currentSlide === 0"
+            class="px-4 py-2.5 bg-[#0a0a0e] border-2 border-[#c49a3c] font-mono shadow-2xl hidden lg:flex items-center gap-3.5 cursor-pointer transition-colors hover:bg-[#15151c]"
+            :style="overviewBadgeStyle"
+          >
+            <div class="w-9 h-9 bg-[#c49a3c] border-2 border-[#c49a3c] flex items-center justify-center text-white font-black text-xl shadow-lg">
+              <span class="material-symbols-outlined text-lg">insights</span>
+            </div>
+            <div>
+              <div class="text-[#c49a3c] font-black text-xs uppercase flex items-center gap-1.5 whitespace-nowrap">
+                <span class="w-2.5 h-2.5 rounded-full bg-[#c49a3c]"></span>
+                <span>06 // SAVINGS</span>
+              </div>
+              <div class="text-white font-black text-sm whitespace-nowrap">Flock AI + Palantir 3D Savings Pods</div>
             </div>
             <span class="material-symbols-outlined text-zinc-300 text-base ml-2">arrow_forward</span>
           </div>
 
           <!-- FULL-SCREEN 3D SAVINGS PODS CANVAS (NO CHROME / NO BOXES) -->
-          <div v-else-if="currentSlide === 5" class="w-full h-full">
+          <div v-else-if="currentSlide === 6" class="w-full h-full">
             <ThreeSlide5Savings :minimal="true" />
           </div>
         </div>
 
+
       </div>
     </div>
 
-    <!-- MINIMAL BOTTOM KEYBOARD HINT (NO BUTTON BAR) -->
-    <div class="absolute bottom-3 left-4 right-4 flex items-center justify-between pointer-events-none font-mono text-[11px] text-zinc-500">
-      <div>
-        <span>Press <strong class="text-zinc-300">[→]</strong> / <strong class="text-zinc-300">[Space]</strong> to move along X-Y zigzag path</span>
-      </div>
-      <div>
-        <span><strong class="text-zinc-300">[0]</strong> Overview · <strong class="text-zinc-300">[1-5]</strong> Jump to Station · <strong class="text-zinc-300">[ESC]</strong> Close</span>
+    <!-- DECK CONTROL BAR — position, direct jumps and step controls. The deck
+         previously offered keyboard only, with no indication of where you were. -->
+    <div class="absolute bottom-0 inset-x-0 z-40 border-t border-[#1e1e20] bg-[#0a0a0e]/92 backdrop-blur-sm">
+      <div class="flex items-center justify-between gap-3 px-3 sm:px-5 h-11 font-mono">
+        <!-- Where you are -->
+        <div class="flex items-center gap-2.5 min-w-0">
+          <span class="text-[#e02870] font-black text-[11px] tabular-nums shrink-0">
+            {{ currentSlide === 0 ? 'OVERVIEW' : `${String(currentSlide).padStart(2, '0')} / ${String(totalSlides).padStart(2, '0')}` }}
+          </span>
+          <span v-if="currentStation" class="hidden md:block text-white font-bold text-[11px] truncate">
+            {{ currentStation.title }}
+          </span>
+        </div>
+
+        <!-- Direct jumps -->
+        <div class="flex items-center gap-1">
+          <button
+            v-for="n in totalSlides"
+            :key="n"
+            @click="goToSlide(n)"
+            class="w-7 h-7 flex items-center justify-center text-[10px] font-bold border transition-colors cursor-pointer"
+            :class="currentSlide === n
+              ? 'bg-[#750d37] border-[#e02870] text-white'
+              : 'bg-transparent border-[#27272a] text-zinc-500 hover:text-white hover:border-zinc-500'"
+            :title="stationMeta[n - 1]?.title"
+            :aria-label="`Go to station ${n}: ${stationMeta[n - 1]?.title}`"
+            :aria-current="currentSlide === n ? 'true' : undefined"
+          >{{ n }}</button>
+        </div>
+
+        <!-- Step through -->
+        <div class="flex items-center gap-1.5 shrink-0">
+          <button
+            @click="prevSlide"
+            :disabled="currentSlide === 0"
+            class="w-7 h-7 flex items-center justify-center border border-[#27272a] text-zinc-400 enabled:hover:text-white enabled:hover:border-zinc-500 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
+            title="Previous [←]"
+            aria-label="Previous station"
+          >
+            <span class="material-symbols-outlined text-sm">chevron_left</span>
+          </button>
+          <button
+            @click="nextSlide"
+            :disabled="currentSlide === totalSlides"
+            class="w-7 h-7 flex items-center justify-center border border-[#27272a] text-zinc-400 enabled:hover:text-white enabled:hover:border-zinc-500 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
+            title="Next [→ / Space]"
+            aria-label="Next station"
+          >
+            <span class="material-symbols-outlined text-sm">chevron_right</span>
+          </button>
+        </div>
       </div>
     </div>
   </div>

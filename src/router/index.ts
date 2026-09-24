@@ -24,10 +24,20 @@ const router = createRouter({
       meta: { title: 'Shadowverse — DPDP Privacy & Grievance Redressal Portal' },
     },
     {
-      path: '/cctv-presentation/:slide?',
-      name: 'cctv-presentation',
+      path: '/scalability/:slide?',
+      name: 'scalability',
       component: () => import('../views/LandingView.vue'),
-      meta: { title: 'Shadowverse — CCTV VisionScan Presentation' },
+      meta: { title: 'Shadowverse — Scalability Architecture' },
+    },
+    {
+      // Former paths. Kept so existing links and bookmarks still resolve, with
+      // the slide preserved rather than dropped.
+      path: '/pitch-slides/:slide?',
+      redirect: (to) => ({ name: 'scalability', params: to.params }),
+    },
+    {
+      path: '/cctv-presentation/:slide?',
+      redirect: (to) => ({ name: 'scalability', params: to.params }),
     },
     {
       // Catch-all 404 → home

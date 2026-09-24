@@ -150,7 +150,7 @@ function afterAuth(displayName: string) {
     showToast({ title: 'ACCESS GRANTED', message: `${authStore.userProfile?.fullName || authStore.operatorId}`, type: 'SUCCESS' })
     emit('close')
     if (props.isPresentationOnly) {
-      router.push('/cctv-presentation/1')
+      router.push('/scalability/1')
     } else {
       router.push('/dashboard')
     }

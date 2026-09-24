@@ -1,6 +1,12 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 import * as THREE from 'three'
+import { createStage } from '../three/stage'
+import {
+  createBladeServerTower,
+  createNvrStorageUnit,
+  createRealisticCctvCamera,
+} from '../three/hardware'
 
 
 
@@ -48,6 +54,7 @@ const selectedNode = ref<TelemetryData | null>(null)
 let scene: THREE.Scene
 let camera: THREE.PerspectiveCamera
 let renderer: THREE.WebGLRenderer
+let stage: ReturnType<typeof createStage> | null = null
 let animId: number | null = null
 
 let topologyGroup: THREE.Group
@@ -138,11 +145,17 @@ function onPointerDown(event: PointerEvent) {
   window.addEventListener('pointerup', onGlobalPointerUp)
 }
 
-function onGlobalPointerMove(event: PointerEvent) {
+function onHoverMove(event: PointerEvent) {
   if (!mountRef.value) return
   const rect = mountRef.value.getBoundingClientRect()
   mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1
   mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1
+  pointerMoved = true
+}
+
+function onGlobalPointerMove(event: PointerEvent) {
+  if (!mountRef.value) return
+  onHoverMove(event)
 
   if (isDragging && topologyGroup) {
     const deltaX = event.clientX - previousMouse.x
@@ -206,9 +219,10 @@ interface NodeLabel {
   worldPos: THREE.Vector3
   screenX: number
   screenY: number
-  visible: boolean
   isHeader?: boolean
   zIndex?: number
+  opacity?: number
+  scale?: number
 }
 
 const nodeLabels = ref<NodeLabel[]>([])
@@ -223,6 +237,10 @@ interface Packet {
 }
 
 const packets: Packet[] = []
+
+// Cached per-frame animation targets so animate() never walks the scene graph.
+const ledMeshes: THREE.Mesh[] = []
+let pointerMoved = true
 
 function toggleFullscreen() {
   const elem = containerRef.value
@@ -256,268 +274,8 @@ function handleResize() {
 }
 
 // ════════ HELPER: HIGH-FIDELITY 4K BULLET CCTV SECURITY CAMERA ════════
-function createRealisticCctvCamera(colorHex = 0x3d8b5e): THREE.Group {
-  const group = new THREE.Group()
-
-  // 1. Weatherproof Cylindrical Metal Camera Body
-  const bodyGeo = new THREE.CylinderGeometry(0.36, 0.32, 1.2, 24)
-  const bodyMat = new THREE.MeshStandardMaterial({
-    color: 0xf1f5f9,
-    metalness: 0.85,
-    roughness: 0.2,
-  })
-  const bodyMesh = new THREE.Mesh(bodyGeo, bodyMat)
-  bodyMesh.rotation.z = Math.PI / 2
-  group.add(bodyMesh)
-
-  // Body Accent Metallic Ring
-  const ringGeo = new THREE.TorusGeometry(0.365, 0.02, 16, 32)
-  const ringMat = new THREE.MeshStandardMaterial({ color: 0x334155, metalness: 0.9, roughness: 0.1 })
-  const ringMesh = new THREE.Mesh(ringGeo, ringMat)
-  ringMesh.rotation.y = Math.PI / 2
-  ringMesh.position.x = 0.1
-  group.add(ringMesh)
-
-  // 2. Protective Dual Top Sun Shield Visor
-  const hoodGeo = new THREE.CylinderGeometry(0.40, 0.40, 1.0, 24, 1, false, 0, Math.PI)
-  const hoodMat = new THREE.MeshStandardMaterial({
-    color: colorHex,
-    metalness: 0.75,
-    roughness: 0.25,
-    side: THREE.DoubleSide,
-  })
-  const hoodMesh = new THREE.Mesh(hoodGeo, hoodMat)
-  hoodMesh.rotation.z = Math.PI / 2
-  hoodMesh.rotation.x = Math.PI / 2
-  hoodMesh.position.set(0.14, 0.09, 0)
-  group.add(hoodMesh)
-
-  // 3. Dark Front Optical Faceplate Assembly
-  const faceGeo = new THREE.CylinderGeometry(0.34, 0.34, 0.08, 24)
-  const faceMat = new THREE.MeshStandardMaterial({ color: 0x09090b, roughness: 0.1 })
-  const faceMesh = new THREE.Mesh(faceGeo, faceMat)
-  faceMesh.rotation.z = Math.PI / 2
-  faceMesh.position.x = 0.6
-  group.add(faceMesh)
-
-  // 4. Optical Dual-Glass Lens Element & Rim
-  const lensRimGeo = new THREE.TorusGeometry(0.18, 0.035, 16, 32)
-  const lensRimMat = new THREE.MeshStandardMaterial({ color: 0x475569, metalness: 0.95, roughness: 0.1 })
-  const lensRimMesh = new THREE.Mesh(lensRimGeo, lensRimMat)
-  lensRimMesh.rotation.y = Math.PI / 2
-  lensRimMesh.position.x = 0.64
-  group.add(lensRimMesh)
-
-  const lensGlassGeo = new THREE.CylinderGeometry(0.15, 0.15, 0.05, 24)
-  const lensGlassMat = new THREE.MeshStandardMaterial({ color: 0x0284c7, roughness: 0.02, metalness: 1.0 })
-  const lensGlassMesh = new THREE.Mesh(lensGlassGeo, lensGlassMat)
-  lensGlassMesh.rotation.z = Math.PI / 2
-  lensGlassMesh.position.x = 0.65
-  group.add(lensGlassMesh)
-
-  // 5. Infrared (IR) Night-Vision LED Ring (12 LEDs)
-  const irRadius = 0.25
-  for (let i = 0; i < 12; i++) {
-    const angle = (i / 12) * Math.PI * 2
-    const irY = Math.cos(angle) * irRadius
-    const irZ = Math.sin(angle) * irRadius
-    const irGeo = new THREE.SphereGeometry(0.028, 8, 8)
-    const irMat = new THREE.MeshStandardMaterial({
-      color: 0xe02870,
-      emissive: 0xe02870,
-      emissiveIntensity: 0.9,
-    })
-    const irMesh = new THREE.Mesh(irGeo, irMat)
-    irMesh.position.set(0.64, irY, irZ)
-    group.add(irMesh)
-  }
-
-  // 6. Active Power & Status LED
-  const statusLedGeo = new THREE.SphereGeometry(0.04, 8, 8)
-  const statusLedMat = new THREE.MeshStandardMaterial({
-    color: 0x10b981,
-    emissive: 0x10b981,
-    emissiveIntensity: 1.0,
-  })
-  const statusLedMesh = new THREE.Mesh(statusLedGeo, statusLedMat)
-  statusLedMesh.position.set(0.64, 0.27, 0)
-  group.add(statusLedMesh)
-
-  // 7. Swivel Mounting Arm, Elbow Joint & Wall Plate
-  const jointGeo = new THREE.SphereGeometry(0.13, 16, 16)
-  const jointMat = new THREE.MeshStandardMaterial({ color: 0x334155, metalness: 0.85 })
-  const jointMesh = new THREE.Mesh(jointGeo, jointMat)
-  jointMesh.position.set(-0.28, -0.2, 0)
-  group.add(jointMesh)
-
-  const armGeo = new THREE.CylinderGeometry(0.09, 0.09, 0.65, 12)
-  const armMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.8 })
-  const armMesh = new THREE.Mesh(armGeo, armMat)
-  armMesh.position.set(-0.38, -0.48, 0)
-  armMesh.rotation.z = 0.4
-  group.add(armMesh)
-
-  const wallPlateGeo = new THREE.BoxGeometry(0.14, 0.48, 0.48)
-  const wallPlateMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, metalness: 0.85 })
-  const wallPlateMesh = new THREE.Mesh(wallPlateGeo, wallPlateMat)
-  wallPlateMesh.position.set(-0.52, -0.75, 0)
-  group.add(wallPlateMesh)
-
-  // Cable Conduit Tail
-  const cableGeo = new THREE.CylinderGeometry(0.03, 0.03, 0.4, 8)
-  const cableMat = new THREE.MeshStandardMaterial({ color: 0x09090b, roughness: 0.8 })
-  const cableMesh = new THREE.Mesh(cableGeo, cableMat)
-  cableMesh.position.set(-0.54, -0.9, 0)
-  group.add(cableMesh)
-
-  return group
-}
-
 // ════════ HELPER: HIGH-FIDELITY ENTERPRISE SERVER BLADE RACK TOWER ════════
-function createBladeServerTower(colorHex = 0xe02870): THREE.Group {
-  const group = new THREE.Group()
-
-  // 1. Dark Steel Cabinet Outer Frame
-  const frameGeo = new THREE.BoxGeometry(2.0, 4.2, 2.0)
-  const frameMat = new THREE.MeshStandardMaterial({
-    color: 0x09090b,
-    metalness: 0.9,
-    roughness: 0.15,
-  })
-  const frameMesh = new THREE.Mesh(frameGeo, frameMat)
-  frameMesh.position.y = 2.1
-  group.add(frameMesh)
-
-  // Illuminated Corner Edge Glow Pillars
-  const wireGeo = new THREE.BoxGeometry(2.04, 4.24, 2.04)
-  const wireMat = new THREE.MeshBasicMaterial({ color: colorHex, wireframe: true })
-  const wireMesh = new THREE.Mesh(wireGeo, wireMat)
-  wireMesh.position.y = 2.1
-  group.add(wireMesh)
-
-  // 2. 6 Individual Server Blade Chassis Drawers
-  for (let b = 0; b < 6; b++) {
-    const bladeY = 0.5 + b * 0.62
-    const bladeGeo = new THREE.BoxGeometry(1.88, 0.52, 1.88)
-    const bladeMat = new THREE.MeshStandardMaterial({
-      color: 0x18181b,
-      metalness: 0.85,
-      roughness: 0.25,
-    })
-    const bladeMesh = new THREE.Mesh(bladeGeo, bladeMat)
-    bladeMesh.position.y = bladeY
-    group.add(bladeMesh)
-
-    // Brushed Aluminum Front Faceplate
-    const frontGeo = new THREE.PlaneGeometry(1.84, 0.48)
-    const frontMat = new THREE.MeshStandardMaterial({ color: 0x27272a, metalness: 0.95, roughness: 0.1 })
-    const frontMesh = new THREE.Mesh(frontGeo, frontMat)
-    frontMesh.position.set(0, bladeY, 0.95)
-    group.add(frontMesh)
-
-    // Chrome Release Latches
-    const handleGeo = new THREE.BoxGeometry(0.14, 0.36, 0.08)
-    const handleMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.95 })
-
-    const handleLeft = new THREE.Mesh(handleGeo, handleMat)
-    handleLeft.position.set(-0.8, bladeY, 0.99)
-    group.add(handleLeft)
-
-    const handleRight = new THREE.Mesh(handleGeo, handleMat)
-    handleRight.position.set(0.8, bladeY, 0.99)
-    group.add(handleRight)
-
-    // Blinking Hard Drive & Network Activity LEDs
-    for (let ledIdx = 0; ledIdx < 5; ledIdx++) {
-      const ledGeo = new THREE.SphereGeometry(0.045, 8, 8)
-      const ledColor = ledIdx === 0 ? 0x10b981 : ledIdx === 1 ? 0x06b6d4 : ledIdx === 2 ? 0xe02870 : 0x3b82f6
-      const ledMat = new THREE.MeshStandardMaterial({
-        color: ledColor,
-        emissive: ledColor,
-        emissiveIntensity: 0.95,
-      })
-      const ledMesh = new THREE.Mesh(ledGeo, ledMat)
-      ledMesh.name = 'serverLed'
-      ledMesh.position.set(-0.5 + ledIdx * 0.24, bladeY, 1.0)
-      group.add(ledMesh)
-    }
-  }
-
-  // 3. Front Transparent Glass Door
-  const glassGeo = new THREE.PlaneGeometry(1.92, 4.0)
-  const glassMat = new THREE.MeshStandardMaterial({
-    color: 0x020617,
-    transparent: true,
-    opacity: 0.5,
-    roughness: 0.02,
-    metalness: 0.95,
-    side: THREE.DoubleSide,
-  })
-  const glassMesh = new THREE.Mesh(glassGeo, glassMat)
-  glassMesh.position.set(0, 2.1, 1.02)
-  group.add(glassMesh)
-
-  // 4. Industrial Base Pedestal Plate
-  const baseGeo = new THREE.CylinderGeometry(1.8, 2.0, 0.35, 8)
-  const baseMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, metalness: 0.85 })
-  const baseMesh = new THREE.Mesh(baseGeo, baseMat)
-  baseMesh.position.y = 0.17
-  group.add(baseMesh)
-
-  return group
-}
-
 // ════════ HELPER: REALISTIC 2U RACKMOUNT NVR STORAGE CHASSIS ════════
-function createNvrStorageUnit(colorHex = 0x3d8b5e): THREE.Group {
-  const group = new THREE.Group()
-
-  // 1. 2U Rackmount Heavy Metal Chassis Body
-  const bodyGeo = new THREE.BoxGeometry(1.4, 0.55, 1.1)
-  const bodyMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.9, roughness: 0.2 })
-  const bodyMesh = new THREE.Mesh(bodyGeo, bodyMat)
-  group.add(bodyMesh)
-
-  // 2. 19-Inch Side Rack Mounting Ears
-  const earGeo = new THREE.BoxGeometry(0.12, 0.5, 0.15)
-  const earMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, metalness: 0.9 })
-
-  const earLeft = new THREE.Mesh(earGeo, earMat)
-  earLeft.position.set(-0.76, 0, 0.48)
-  group.add(earLeft)
-
-  const earRight = new THREE.Mesh(earGeo, earMat)
-  earRight.position.set(0.76, 0, 0.48)
-  group.add(earRight)
-
-  // 3. Hot-Swappable Hard Drive Bay Trays (8 HDD Slots)
-  for (let i = 0; i < 4; i++) {
-    for (let row = 0; row < 2; row++) {
-      const hddGeo = new THREE.BoxGeometry(0.28, 0.2, 0.05)
-      const hddMat = new THREE.MeshStandardMaterial({ color: 0x334155, metalness: 0.9, roughness: 0.3 })
-      const hddMesh = new THREE.Mesh(hddGeo, hddMat)
-      hddMesh.position.set(-0.45 + i * 0.3, -0.12 + row * 0.24, 0.56)
-      group.add(hddMesh)
-
-      // HDD Activity LED
-      const ledGeo = new THREE.SphereGeometry(0.025, 6, 6)
-      const ledMat = new THREE.MeshStandardMaterial({ color: colorHex, emissive: colorHex, emissiveIntensity: 1.0 })
-      const ledMesh = new THREE.Mesh(ledGeo, ledMat)
-      ledMesh.position.set(-0.45 + i * 0.3, -0.12 + row * 0.24, 0.59)
-      group.add(ledMesh)
-    }
-  }
-
-  // Front Power Switch LED
-  const pwrGeo = new THREE.CylinderGeometry(0.04, 0.04, 0.04, 12)
-  const pwrMat = new THREE.MeshStandardMaterial({ color: 0x10b981, emissive: 0x10b981, emissiveIntensity: 1.0 })
-  const pwrMesh = new THREE.Mesh(pwrGeo, pwrMat)
-  pwrMesh.rotation.x = Math.PI / 2
-  pwrMesh.position.set(0.6, 0.15, 0.57)
-  group.add(pwrMesh)
-
-  return group
-}
-
 // ════════ HELPER: REALISTIC 3-RACK SOVEREIGN HQ ENTERPRISE DATA CENTER ════════
 function createSovereignHqCluster(): THREE.Group {
   const group = new THREE.Group()
@@ -532,7 +290,8 @@ function createSovereignHqCluster(): THREE.Group {
   // 3 Side-by-Side Enterprise Server Cabinets
   const rackOffsets = [-2.3, 0, 2.3]
   rackOffsets.forEach((offsetX) => {
-    const rack = createBladeServerTower(0x750d37)
+    const { group: rack, leds: rackLeds } = createBladeServerTower(0x750d37)
+    ledMeshes.push(...rackLeds)
     rack.position.set(offsetX, 0, 0)
     group.add(rack)
   })
@@ -571,15 +330,14 @@ onMounted(() => {
   const width = container.clientWidth
   const height = container.clientHeight || 450
 
-  scene = new THREE.Scene()
-  camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000)
+  // Shared render setup: ACES tone mapping, shadows and an image-based
+  // environment, so metal reflects something instead of reading as flat card.
+  stage = createStage(container, { fov: 45, fogDensity: 0.018, exposure: 1.2 })
+  scene = stage.scene
+  camera = stage.camera
+  renderer = stage.renderer
   camera.position.set(0, 6.0, DEFAULT_ZOOM_Z)
   camera.lookAt(0, 0, 0)
-
-  renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true })
-  renderer.setSize(width, height)
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
-  container.appendChild(renderer.domElement)
 
   topologyGroup = new THREE.Group()
   topologyGroup.rotation.x = 0.1
@@ -589,16 +347,6 @@ onMounted(() => {
   gridHelper.position.y = -0.3
   topologyGroup.add(gridHelper)
 
-  const dirLight1 = new THREE.DirectionalLight(0xffffff, 1.4)
-  dirLight1.position.set(15, 25, 20)
-  scene.add(dirLight1)
-
-  const dirLight2 = new THREE.DirectionalLight(0xe02870, 0.8)
-  dirLight2.position.set(-15, -15, -10)
-  scene.add(dirLight2)
-
-  const ambLight = new THREE.AmbientLight(0xffffff, 0.9)
-  scene.add(ambLight)
 
   const selRingGeo = new THREE.RingGeometry(1.5, 1.7, 32)
   const selRingMat = new THREE.MeshBasicMaterial({ color: 0xe02870, side: THREE.DoubleSide, transparent: true, opacity: 0.85 })
@@ -651,7 +399,6 @@ onMounted(() => {
     worldPos: new THREE.Vector3(0, 6.4, 0),
     screenX: 0,
     screenY: 0,
-    visible: true,
     isHeader: true,
   })
 
@@ -677,7 +424,8 @@ onMounted(() => {
     edgePositions.push(edgePos)
 
     // District Server Cabinet Tower
-    const towerGroup = createBladeServerTower(node.color)
+    const { group: towerGroup, leds: towerLeds } = createBladeServerTower(node.color)
+    ledMeshes.push(...towerLeds)
     towerGroup.position.copy(edgePos)
     towerGroup.userData = {
       name: `${node.name} (${node.city})`,
@@ -702,7 +450,6 @@ onMounted(() => {
       worldPos: new THREE.Vector3(x, y + 4.8, z),
       screenX: 0,
       screenY: 0,
-      visible: true,
     })
 
     // NVR Storage Aggregator Unit (placed outward at distance 5.5 from District Server Cabinet)
@@ -728,19 +475,7 @@ onMounted(() => {
     })
     topologyGroup.add(nvrGroup)
 
-    labelsList.push({
-      id: `nvr-lbl-${node.id}`,
-      name: '📹 NVR UNIT',
-      subtext: '4-CAM RTSP AGGREGATOR',
-      color: '#3d8b5e',
-      worldPos: new THREE.Vector3(nvrX, 1.6, nvrZ),
-      screenX: 0,
-      screenY: 0,
-      visible: true,
-    })
-
     // 4 4K CCTV Bullet Security Cameras Clustered Around the NVR (Fan Arc Array)
-    const cameraPositions: THREE.Vector3[] = []
     const numCameras = 4
     for (let c = 0; c < numCameras; c++) {
       const camArcOffset = -0.45 + c * 0.30
@@ -748,7 +483,6 @@ onMounted(() => {
       const camX = nvrX + Math.cos(camAngle) * 4.8
       const camZ = nvrZ + Math.sin(camAngle) * 4.8
       const camPos = new THREE.Vector3(camX, 1.2, camZ)
-      cameraPositions.push(camPos)
 
       const cctvPodGroup = createRealisticCctvCamera(0x3d8b5e)
       cctvPodGroup.position.copy(camPos)
@@ -784,20 +518,6 @@ onMounted(() => {
         new THREE.LineBasicMaterial({ color: 0x3d8b5e, opacity: 0.85, transparent: true })
       ))
       add3DPacket(camPos, nvrPos, 0x3d8b5e)
-    }
-
-    // Label for 4-Camera Array
-    if (cameraPositions[1]) {
-      labelsList.push({
-        id: `cctv-lbl-${node.id}`,
-        name: '📷 4x 4K CCTV CAMERAS',
-        subtext: `${node.city.toUpperCase()} ARRAY`,
-        color: '#3d8b5e',
-        worldPos: new THREE.Vector3(cameraPositions[1].x, 2.5, cameraPositions[1].z),
-        screenX: 0,
-        screenY: 0,
-        visible: true,
-      })
     }
 
     // 2. Line & Packet: NVR Unit -> District Blade Server Cabinet
@@ -857,6 +577,18 @@ onMounted(() => {
   isLoadingModels.value = false
   modelLoadingProgress.value = 100
 
+  // Opt the built geometry into shadowing. Only lit, solid surfaces: wireframes
+  // and unlit markers would just add cost and noise to the depth pass.
+  topologyGroup.traverse((child) => {
+    const mesh = child as THREE.Mesh
+    if (!mesh.isMesh) return
+    const mat = mesh.material as THREE.MeshStandardMaterial
+    if (!mat || Array.isArray(mesh.material) || mat.wireframe) return
+    if (!(mat as unknown as { isMeshStandardMaterial?: boolean }).isMeshStandardMaterial) return
+    mesh.castShadow = true
+    mesh.receiveShadow = true
+  })
+
   nodeLabels.value = labelsList
 
   function update3DSpaceLabels() {
@@ -873,14 +605,52 @@ onMounted(() => {
 
       tempVec.project(camera)
 
-      lbl.visible = tempVec.z < 1.0
+      // Cull anything behind the camera or well outside the frame so badges
+      // never pile up against the viewport edges.
+      const onScreen = tempVec.z < 1.0 && Math.abs(tempVec.x) < 1.25 && Math.abs(tempVec.y) < 1.3
+
+      // Depth cue: far badges recede in size and opacity, near ones stay crisp.
+      const fade = Math.min(1, Math.max(0, (dist - 24) / 36))
+      lbl.opacity = onScreen ? 1 - fade * 0.55 : 0
+      lbl.scale = 1 - fade * 0.26
 
       const rawX = (tempVec.x * 0.5 + 0.5) * containerW
       const rawY = (-(tempVec.y * 0.5) + 0.5) * containerH
 
       lbl.screenX = Math.max(80, Math.min(containerW - 80, rawX))
-      lbl.screenY = Math.max(35, Math.min(containerH - 35, rawY))
+      lbl.screenY = Math.max(48, Math.min(containerH - 24, rawY))
     })
+
+    // Screen-space declutter: walk labels front-to-back and drop any badge that
+    // would overlap a nearer one, so distant nodes never sit on top of close ones.
+    const placed: Array<{ x: number; y: number; hw: number; hh: number }> = []
+    nodeLabels.value
+      .filter((l) => (l.opacity ?? 0) > 0)
+      .sort((a, b) => {
+        // Headers claim their space first; they are the primary read of the scene
+        // and must never be culled by a secondary node badge.
+        if (!!a.isHeader !== !!b.isHeader) return a.isHeader ? -1 : 1
+        return (b.zIndex ?? 0) - (a.zIndex ?? 0)
+      })
+      .forEach((lbl) => {
+        const sc = lbl.scale ?? 1
+        const hw = (lbl.isHeader ? 132 : 108) * sc
+        const hh = (lbl.isHeader ? 34 : 32) * sc
+        // The badge is drawn above its anchor point, so test that shifted box.
+        const cy = lbl.screenY - hh - 16 * sc
+        const clash = placed.some(
+          (p) => Math.abs(p.x - lbl.screenX) < p.hw + hw && Math.abs(p.y - cy) < p.hh + hh
+        )
+        // Headers are the scene's structure and always render; only the
+        // secondary node badges yield when space runs out. Hiding uses opacity,
+        // not display, so a badge fades instead of blinking as the camera moves
+        // it across a collision boundary.
+        if (clash && !lbl.isHeader) {
+          lbl.opacity = 0
+        } else {
+          placed.push({ x: lbl.screenX, y: cy, hw, hh })
+        }
+      })
   }
 
 function animate() {
@@ -905,26 +675,22 @@ function animate() {
     }
   }
 
-  // 2. Wave indicator flashing server LEDs
+  // 2. Wave indicator flashing server LEDs (mesh list cached at build time)
   const flashTime = Date.now() * 0.005
-  topologyGroup.traverse((child) => {
-    if (child.name === 'serverLed') {
-      const mesh = child as THREE.Mesh
-      const mat = mesh.material as THREE.MeshStandardMaterial
-      if (mat) {
-        const pulse = Math.sin(flashTime + mesh.position.y * 10 + mesh.position.x * 20)
-        mat.emissiveIntensity = pulse > 0.3 ? 0.95 : 0.15
-      }
+  ledMeshes.forEach((mesh) => {
+    const mat = mesh.material as THREE.MeshStandardMaterial
+    if (mat) {
+      const pulse = Math.sin(flashTime + mesh.position.y * 10 + mesh.position.x * 20)
+      mat.emissiveIntensity = pulse > 0.3 ? 0.95 : 0.15
     }
   })
 
-  // 3. Pointer cursor highlight on hover
-  raycaster.setFromCamera(mouse, camera)
-  const intersects = raycaster.intersectObjects(allInteractables, true)
-  if (intersects.length > 0) {
-    if (mountRef.value) mountRef.value.style.cursor = 'pointer'
-  } else {
-    if (mountRef.value) mountRef.value.style.cursor = 'grab'
+  // 3. Pointer cursor highlight on hover — only re-raycast when the pointer moved
+  if (pointerMoved) {
+    pointerMoved = false
+    raycaster.setFromCamera(mouse, camera)
+    const intersects = raycaster.intersectObjects(allInteractables, true)
+    if (mountRef.value) mountRef.value.style.cursor = intersects.length > 0 ? 'pointer' : 'grab'
   }
 
   renderer.render(scene, camera)
@@ -952,6 +718,7 @@ function animate() {
 onBeforeUnmount(() => {
   if (animId) cancelAnimationFrame(animId)
   window.removeEventListener('resize', handleResize)
+  stage?.dispose()
   if (typeof document !== 'undefined') {
     document.removeEventListener('fullscreenchange', handleFullscreenChange)
   }
@@ -1021,51 +788,58 @@ onBeforeUnmount(() => {
     <div
       ref="mountRef"
       @pointerdown="onPointerDown"
+      @pointermove="onHoverMove"
       @contextmenu="onContextMenu"
       @wheel="onWheel"
       class="w-full cursor-grab active:cursor-grabbing relative overflow-hidden touch-none select-none"
       :class="props.minimal ? 'h-full' : (isFullscreen ? 'h-[calc(100vh-90px)]' : 'h-[58vh] sm:h-[65vh]')"
     >
-      <!-- Direct Floating 3D Space Labels Overlay -->
+      <!-- Floating 3D space label overlay: GPU-composited, depth-faded, stem-anchored -->
       <div
         v-for="lbl in nodeLabels"
         :key="lbl.id"
-        v-show="lbl.visible"
-        class="absolute pointer-events-none transform -translate-x-1/2 -translate-y-1/2 transition-transform duration-75"
-        :style="{ left: `${lbl.screenX}px`, top: `${lbl.screenY}px`, zIndex: lbl.zIndex || 10 }"
+        class="node-label absolute left-0 top-0 pointer-events-none flex flex-col items-center"
+        :style="{
+          transform: `translate3d(${lbl.screenX}px, ${lbl.screenY}px, 0) translate(-50%, -100%) scale(${lbl.scale ?? 1})`,
+          opacity: lbl.opacity ?? 1,
+          zIndex: lbl.zIndex || 10,
+        }"
       >
-        <!-- Header Badge -->
+        <!-- Header Badge: the one anchor label, carries full weight -->
         <div
           v-if="lbl.isHeader"
-          class="px-4 py-2 bg-[#0a0a0e] border-2 font-mono text-xs sm:text-sm font-black shadow-2xl tracking-wider uppercase whitespace-nowrap text-center"
-          :style="{ borderColor: lbl.color, color: lbl.color }"
+          class="px-4 py-2 bg-[#0a0a0e]/92 backdrop-blur-sm border-2 font-mono shadow-2xl whitespace-nowrap text-center"
+          :style="{ borderColor: lbl.color, boxShadow: `0 0 20px -6px ${lbl.color}` }"
         >
-          <div class="text-white font-black">{{ lbl.name }}</div>
-          <div class="text-[11px] text-zinc-300 font-bold mt-0.5">{{ lbl.subtext }}</div>
+          <div class="text-white font-black text-xs sm:text-sm tracking-wider uppercase">{{ lbl.name }}</div>
+          <div class="text-[10px] text-zinc-300 font-bold tracking-widest mt-0.5">{{ lbl.subtext }}</div>
         </div>
 
-        <!-- Node Telemetry Badge -->
+        <!-- Node Badge: lighter chrome so six of them do not fight the geometry -->
         <div
           v-else
-          class="px-3 py-1.5 bg-[#0a0a0e] border-2 font-mono text-xs font-bold shadow-2xl tracking-tight whitespace-nowrap text-center"
-          :style="{ borderColor: lbl.color, color: lbl.color }"
+          class="pl-2.5 pr-3 py-1.5 bg-[#0a0a0e]/88 backdrop-blur-sm border border-white/10 border-l-[3px] font-mono shadow-xl whitespace-nowrap text-left"
+          :style="{ borderLeftColor: lbl.color }"
         >
-          <div class="text-white font-black text-xs sm:text-sm">{{ lbl.name }}</div>
-          <div class="text-[10px] sm:text-xs text-zinc-300 font-bold mt-0.5">{{ lbl.subtext }}</div>
+          <div class="text-white font-bold text-[11px] sm:text-xs tracking-wide">{{ lbl.name }}</div>
+          <div class="text-[9px] sm:text-[10px] text-zinc-400 font-semibold tracking-wider mt-px">{{ lbl.subtext }}</div>
         </div>
+
+        <!-- Stem tying the badge to the object it names -->
+        <div class="w-px h-4" :style="{ background: `linear-gradient(to bottom, ${lbl.color}, transparent)` }"></div>
       </div>
 
       <!-- SELECTED NODE TELEMETRY INSPECTION DRAWER CARD (UX) -->
       <div
         v-if="selectedNode"
-        class="absolute bottom-3 right-3 p-3 bg-[#121216] border-2 border-[#e02870] font-mono text-xs text-white shadow-2xl z-30 max-w-sm w-full space-y-2 animate-fade-in"
+        class="absolute bottom-14 right-3 p-3 bg-[#121216] border-2 border-[#e02870] font-mono text-xs text-white shadow-2xl z-30 max-w-sm w-full space-y-2 animate-fade-in"
       >
         <div class="flex items-center justify-between border-b border-[#27272a] pb-1.5">
           <div class="text-[#e02870] font-black uppercase text-xs flex items-center gap-1.5">
             <span class="material-symbols-outlined text-sm">info</span>
             <span>NODE TELEMETRY INSPECTOR</span>
           </div>
-          <button @click="selectedNode = null" class="text-zinc-400 hover:text-white font-bold cursor-pointer">✕</button>
+          <button @click="selectedNode = null" class="text-zinc-400 hover:text-white cursor-pointer flex items-center"><span class="material-symbols-outlined text-base">close</span></button>
         </div>
         <div class="font-bold text-sm text-[#e02870]">{{ selectedNode.name }}</div>
         <div class="text-zinc-300 text-[11px] leading-relaxed">{{ selectedNode.detail || selectedNode.servers }}</div>
@@ -1100,3 +874,18 @@ onBeforeUnmount(() => {
     </div>
   </div>
 </template>
+
+<style scoped>
+/* Labels are repositioned every frame via transform, so only fade them in on
+   mount — never transition transform, or they would lag the geometry. */
+.node-label {
+  will-change: transform, opacity;
+  transition: opacity 0.22s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .node-label {
+    transition: none;
+  }
+}
+</style>

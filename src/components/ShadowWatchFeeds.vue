@@ -291,21 +291,21 @@ const capacityMetrics = computed(() => {
                 <div class="grid grid-cols-3 gap-1 bg-[#111113] p-1 border border-[#1e1e20]">
                   <button
                     @click="activeViewMode = 'ai'"
-                    class="py-1.5 text-[10px] font-bold transition-all text-center cursor-pointer"
+                    class="py-2.5 text-[10px] font-bold transition-all text-center cursor-pointer"
                     :class="activeViewMode === 'ai' ? 'bg-[#750d37] text-white shadow' : 'text-[#88888c] hover:text-white'"
                   >
                     Full AI
                   </button>
                   <button
                     @click="activeViewMode = 'mix'"
-                    class="py-1.5 text-[10px] font-bold transition-all text-center cursor-pointer"
+                    class="py-2.5 text-[10px] font-bold transition-all text-center cursor-pointer"
                     :class="activeViewMode === 'mix' ? 'bg-[#4a7ebb] text-white shadow' : 'text-[#88888c] hover:text-white'"
                   >
                     50/50 Mix
                   </button>
                   <button
                     @click="activeViewMode = 'stream'"
-                    class="py-1.5 text-[10px] font-bold transition-all text-center cursor-pointer"
+                    class="py-2.5 text-[10px] font-bold transition-all text-center cursor-pointer"
                     :class="activeViewMode === 'stream' ? 'bg-[#3d8b5e] text-white shadow' : 'text-[#88888c] hover:text-white'"
                   >
                     Stream Only

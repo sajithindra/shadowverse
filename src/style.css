@@ -339,3 +339,24 @@ body {
   color: #ffffff;
 }
 
+
+/* ────────────────────────────────────────────────────────────────────────────
+ * In-page navigation
+ *
+ * The header is fixed at 80px, so an un-offset anchor jump parks the target
+ * section's heading underneath it. scroll-margin-top reserves that space, and
+ * scrolling is smoothed for anyone who has not asked otherwise.
+ * ──────────────────────────────────────────────────────────────────────────── */
+section[id] {
+  scroll-margin-top: 6rem;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
