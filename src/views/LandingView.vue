@@ -132,10 +132,7 @@ onMounted(() => {
     <LogicLockSection />
 
     <!-- Visitor Risk Watchlist & Vision AI Agent Specifications -->
-    <ScenariosSection
-      @openImpactModal="handleOpenImpact"
-      @openVideoSearch="showVideoSearchModal = true"
-    />
+    <ScenariosSection />
 
     <!-- Enterprise Deployment Call to Action -->
     <ContactCtaSection />

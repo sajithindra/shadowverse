@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 
-const emit = defineEmits(['openImpactModal', 'openVideoSearch'])
 
 const safetyFeatures = [
   {
@@ -249,16 +248,9 @@ const currentFeature = computed(() => safetyFeatures[activeFeatureIndex.value] |
               </div>
             </div>
 
-            <!-- Action Bar -->
-            <div class="pt-4 border-t border-[#1e1e20] flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-              <button
-                @click="emit('openImpactModal', currentFeature)"
-                class="industrial-btn industrial-btn-primary py-3 px-6 text-xs font-bold flex items-center justify-center gap-2 shadow-lg"
-              >
-                <span>EXPLORE SOCIAL IMPACT DEMO</span>
-                <span class="material-symbols-outlined text-sm">arrow_forward</span>
-              </button>
-              <span class="text-[10px] font-mono text-[#88888c] text-center sm:text-right">
+            <!-- Status note -->
+            <div class="pt-4 border-t border-[#1e1e20] flex justify-center sm:justify-end">
+              <span class="text-[10px] font-mono text-[#88888c]">
                 100% PRIVATE LOCAL PROCESSING
               </span>
             </div>
