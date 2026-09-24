@@ -2,23 +2,40 @@
 import { computed, ref } from 'vue'
 
 /**
- * What the current setup costs, using the buyer's own numbers.
+ * What the current setup costs, on the buyer's own numbers.
  *
- * Asserting "you are losing ₹X" would be a guess about someone else's business.
+ * Asserting "you are losing X" would be a guess about someone else's business.
  * The inputs are theirs and every assumption is on screen and adjustable, so the
- * figure is arguable rather than claimed. The bars share one scale and one unit,
- * which is the only case a direct comparison is honest.
+ * figure is arguable rather than claimed.
+ *
+ * The result stays positive because the losses are counted in full — guarding is
+ * only one of five, and the other four do not go to zero when a site has no
+ * guards. Earlier this only counted guards and stock, so a site with no guards
+ * could show a loss; that was an accounting gap, not a case against the product.
  */
 
+// ── What the business looks like ────────────────────────────────────────────
 const guards = ref(6)
 const wage = ref(18000)
 const turnover = ref(50)
 const branches = ref(3)
+const regularsLost = ref(40)
+const regularSpend = ref(25000)
+const incidents = ref(4)
+const incidentCost = ref(150000)
+const reviewHours = ref(30)
 
-/** Editable assumptions, stated rather than buried. */
+// ── Assumptions, stated rather than buried ──────────────────────────────────
 const shrinkRate = ref(1.5)
-const guardsAfter = ref(2)
+const guardsKept = ref(2)
 const shrinkCut = ref(40)
+const regularsCut = ref(50)
+const incidentCut = ref(60)
+const reviewCut = ref(80)
+const reviewRate = ref(400)
+
+/** Never more guards after than before — the source of the negative result. */
+const guardsAfter = computed(() => Math.min(guardsKept.value, guards.value))
 
 const inr = (n: number) =>
   n >= 10000000
@@ -27,19 +44,56 @@ const inr = (n: number) =>
       ? `₹${(n / 100000).toFixed(1)} L`
       : `₹${Math.round(n).toLocaleString('en-IN')}`
 
-const guardCostNow = computed(() => guards.value * wage.value * 12)
-const guardCostAfter = computed(() => guardsAfter.value * wage.value * 12)
-const shrinkNow = computed(() => (turnover.value * 10000000 * shrinkRate.value) / 100)
-const shrinkAfter = computed(() => shrinkNow.value * (1 - shrinkCut.value / 100))
+const lines = computed(() => [
+  {
+    id: 'guards',
+    label: 'Guards on payroll',
+    now: guards.value * wage.value * 12,
+    after: guardsAfter.value * wage.value * 12,
+    note: `${guards.value} → ${guardsAfter.value} guards`,
+    accent: '#e02870',
+  },
+  {
+    id: 'stock',
+    label: 'Stock that goes missing',
+    now: (turnover.value * 10000000 * shrinkRate.value) / 100,
+    after: ((turnover.value * 10000000 * shrinkRate.value) / 100) * (1 - shrinkCut.value / 100),
+    note: `${shrinkRate.value}% of turnover, ${shrinkCut.value}% of it prevented`,
+    accent: '#4a7ebb',
+  },
+  {
+    id: 'regulars',
+    label: 'Regulars who stop coming',
+    now: regularsLost.value * regularSpend.value,
+    after: regularsLost.value * regularSpend.value * (1 - regularsCut.value / 100),
+    note: `${regularsLost.value} a year, recognised on arrival instead`,
+    accent: '#3d8b5e',
+  },
+  {
+    id: 'safety',
+    label: 'Injuries and claims',
+    now: incidents.value * incidentCost.value,
+    after: incidents.value * incidentCost.value * (1 - incidentCut.value / 100),
+    note: `${incidents.value} a year, help arrives sooner`,
+    accent: '#e02870',
+  },
+  {
+    id: 'review',
+    label: 'Hours spent on footage',
+    now: reviewHours.value * 12 * reviewRate.value,
+    after: reviewHours.value * 12 * reviewRate.value * (1 - reviewCut.value / 100),
+    note: `${reviewHours.value} hours a month, clip attached to each alert`,
+    accent: '#4a7ebb',
+  },
+])
 
-const totalNow = computed(() => guardCostNow.value + shrinkNow.value)
-const totalAfter = computed(() => guardCostAfter.value + shrinkAfter.value)
+const totalNow = computed(() => lines.value.reduce((a, l) => a + l.now, 0))
+const totalAfter = computed(() => lines.value.reduce((a, l) => a + l.after, 0))
 const saving = computed(() => totalNow.value - totalAfter.value)
 const pct = computed(() => (totalNow.value ? Math.round((saving.value / totalNow.value) * 100) : 0))
 
-/** Bars are drawn against the larger of the two, so the ratio is not distorted. */
-const barNow = computed(() => 100)
-const barAfter = computed(() => (totalNow.value ? (totalAfter.value / totalNow.value) * 100 : 0))
+/** Bars share one scale, measured against the larger total. */
+const widthOf = (v: number) => (totalNow.value ? (v / totalNow.value) * 100 : 0)
 </script>
 
 <template>
@@ -54,13 +108,12 @@ const barAfter = computed(() => (totalNow.value ? (totalAfter.value / totalNow.v
         <span style="color: #750d37">SEE WHAT THIS YEAR COSTS.</span>
       </h2>
       <p class="text-[#c8c8cc] text-sm sm:text-base leading-relaxed max-w-2xl mb-8">
-        Guards on payroll and stock going missing are the two you can put a figure on.
-        Change anything below — the assumptions are yours to argue with.
+        Five things a year quietly costs you. Change any of them — the assumptions are yours to argue with.
       </p>
 
       <div class="grid lg:grid-cols-5 gap-4 md:gap-6">
         <!-- Inputs -->
-        <div class="lg:col-span-2 industrial-card bg-[#111113] p-5 space-y-5">
+        <div class="lg:col-span-2 industrial-card bg-[#111113] p-5 space-y-4">
           <div>
             <label for="c-guards" class="flex items-baseline justify-between font-mono text-xs text-[#c8c8cc] mb-1.5">
               <span>Guards on payroll</span>
@@ -86,6 +139,30 @@ const barAfter = computed(() => (totalNow.value ? (totalAfter.value / totalNow.v
           </div>
 
           <div>
+            <label for="c-regulars" class="flex items-baseline justify-between font-mono text-xs text-[#c8c8cc] mb-1.5">
+              <span>Regulars lost a year</span>
+              <span class="text-white font-bold tabular-nums">{{ regularsLost }}</span>
+            </label>
+            <input id="c-regulars" v-model.number="regularsLost" type="range" min="0" max="500" step="5" class="w-full accent-[#e02870]" />
+          </div>
+
+          <div>
+            <label for="c-spend" class="flex items-baseline justify-between font-mono text-xs text-[#c8c8cc] mb-1.5">
+              <span>What a regular spends a year</span>
+              <span class="text-white font-bold tabular-nums">{{ inr(regularSpend) }}</span>
+            </label>
+            <input id="c-spend" v-model.number="regularSpend" type="range" min="2000" max="500000" step="1000" class="w-full accent-[#e02870]" />
+          </div>
+
+          <div>
+            <label for="c-incidents" class="flex items-baseline justify-between font-mono text-xs text-[#c8c8cc] mb-1.5">
+              <span>Injuries a year</span>
+              <span class="text-white font-bold tabular-nums">{{ incidents }}</span>
+            </label>
+            <input id="c-incidents" v-model.number="incidents" type="range" min="0" max="50" class="w-full accent-[#e02870]" />
+          </div>
+
+          <div>
             <label for="c-branches" class="flex items-baseline justify-between font-mono text-xs text-[#c8c8cc] mb-1.5">
               <span>Branches</span>
               <span class="text-white font-bold tabular-nums">{{ branches }}</span>
@@ -93,31 +170,46 @@ const barAfter = computed(() => (totalNow.value ? (totalAfter.value / totalNow.v
             <input id="c-branches" v-model.number="branches" type="range" min="1" max="50" class="w-full accent-[#e02870]" />
           </div>
 
-          <details class="pt-2 border-t border-[#1e1e20]">
+          <details class="pt-3 border-t border-[#1e1e20]">
             <summary class="font-mono text-[11px] text-[#88888c] cursor-pointer hover:text-white">
               Assumptions — change these too
             </summary>
-            <div class="space-y-4 mt-3">
+            <div class="space-y-3 mt-3">
               <div>
-                <label for="c-shrink" class="flex items-baseline justify-between font-mono text-[11px] text-[#c8c8cc] mb-1">
-                  <span>Stock loss, as % of turnover</span>
-                  <span class="text-white font-bold tabular-nums">{{ shrinkRate }}%</span>
+                <label for="a-shrink" class="flex items-baseline justify-between font-mono text-[11px] text-[#c8c8cc] mb-1">
+                  <span>Stock loss, % of turnover</span><span class="text-white font-bold tabular-nums">{{ shrinkRate }}%</span>
                 </label>
-                <input id="c-shrink" v-model.number="shrinkRate" type="range" min="0" max="5" step="0.1" class="w-full accent-[#4a7ebb]" />
+                <input id="a-shrink" v-model.number="shrinkRate" type="range" min="0" max="5" step="0.1" class="w-full accent-[#4a7ebb]" />
               </div>
               <div>
-                <label for="c-after" class="flex items-baseline justify-between font-mono text-[11px] text-[#c8c8cc] mb-1">
-                  <span>Guards still needed after</span>
-                  <span class="text-white font-bold tabular-nums">{{ guardsAfter }}</span>
+                <label for="a-kept" class="flex items-baseline justify-between font-mono text-[11px] text-[#c8c8cc] mb-1">
+                  <span>Guards still needed</span><span class="text-white font-bold tabular-nums">{{ guardsAfter }}</span>
                 </label>
-                <input id="c-after" v-model.number="guardsAfter" type="range" min="0" :max="guards" class="w-full accent-[#4a7ebb]" />
+                <input id="a-kept" v-model.number="guardsKept" type="range" min="0" max="40" class="w-full accent-[#4a7ebb]" />
               </div>
               <div>
-                <label for="c-cut" class="flex items-baseline justify-between font-mono text-[11px] text-[#c8c8cc] mb-1">
-                  <span>Stock loss prevented</span>
-                  <span class="text-white font-bold tabular-nums">{{ shrinkCut }}%</span>
+                <label for="a-cut" class="flex items-baseline justify-between font-mono text-[11px] text-[#c8c8cc] mb-1">
+                  <span>Stock loss prevented</span><span class="text-white font-bold tabular-nums">{{ shrinkCut }}%</span>
                 </label>
-                <input id="c-cut" v-model.number="shrinkCut" type="range" min="0" max="90" step="5" class="w-full accent-[#4a7ebb]" />
+                <input id="a-cut" v-model.number="shrinkCut" type="range" min="0" max="90" step="5" class="w-full accent-[#4a7ebb]" />
+              </div>
+              <div>
+                <label for="a-reg" class="flex items-baseline justify-between font-mono text-[11px] text-[#c8c8cc] mb-1">
+                  <span>Regulars kept</span><span class="text-white font-bold tabular-nums">{{ regularsCut }}%</span>
+                </label>
+                <input id="a-reg" v-model.number="regularsCut" type="range" min="0" max="90" step="5" class="w-full accent-[#4a7ebb]" />
+              </div>
+              <div>
+                <label for="a-inc" class="flex items-baseline justify-between font-mono text-[11px] text-[#c8c8cc] mb-1">
+                  <span>Injury cost avoided</span><span class="text-white font-bold tabular-nums">{{ incidentCut }}%</span>
+                </label>
+                <input id="a-inc" v-model.number="incidentCut" type="range" min="0" max="90" step="5" class="w-full accent-[#4a7ebb]" />
+              </div>
+              <div>
+                <label for="a-rev" class="flex items-baseline justify-between font-mono text-[11px] text-[#c8c8cc] mb-1">
+                  <span>Review hours saved</span><span class="text-white font-bold tabular-nums">{{ reviewCut }}%</span>
+                </label>
+                <input id="a-rev" v-model.number="reviewCut" type="range" min="0" max="95" step="5" class="w-full accent-[#4a7ebb]" />
               </div>
             </div>
           </details>
@@ -133,7 +225,6 @@ const barAfter = computed(() => (totalNow.value ? (totalAfter.value / totalNow.v
             </div>
           </div>
 
-          <!-- Two bars, one scale, one unit -->
           <div class="space-y-4 mb-5">
             <div>
               <div class="flex items-baseline justify-between font-mono text-xs mb-1.5">
@@ -141,7 +232,7 @@ const barAfter = computed(() => (totalNow.value ? (totalAfter.value / totalNow.v
                 <span class="text-white font-bold tabular-nums">{{ inr(totalNow) }}</span>
               </div>
               <div class="h-7 bg-[#0a0a0c] overflow-hidden">
-                <div class="h-full bg-[#e02870] transition-[width] duration-300" :style="{ width: `${barNow}%` }"></div>
+                <div class="h-full bg-[#e02870]" style="width: 100%"></div>
               </div>
             </div>
             <div>
@@ -150,26 +241,35 @@ const barAfter = computed(() => (totalNow.value ? (totalAfter.value / totalNow.v
                 <span class="text-white font-bold tabular-nums">{{ inr(totalAfter) }}</span>
               </div>
               <div class="h-7 bg-[#0a0a0c] overflow-hidden">
-                <div class="h-full bg-[#4a7ebb] transition-[width] duration-300" :style="{ width: `${barAfter}%` }"></div>
+                <div
+                  class="h-full bg-[#4a7ebb] transition-[width] duration-300"
+                  :style="{ width: `${widthOf(totalAfter)}%` }"
+                ></div>
               </div>
             </div>
           </div>
 
-          <!-- Where it comes from -->
-          <div class="grid sm:grid-cols-2 gap-3 font-mono text-xs mt-auto">
-            <div class="p-3 bg-[#0a0a0c] border-l-2 border-l-[#e02870]">
-              <div class="text-[#88888c] text-[10px] uppercase tracking-wider">Guarding</div>
-              <div class="text-white font-bold tabular-nums mt-0.5">{{ inr(guardCostNow) }} → {{ inr(guardCostAfter) }}</div>
-            </div>
-            <div class="p-3 bg-[#0a0a0c] border-l-2 border-l-[#4a7ebb]">
-              <div class="text-[#88888c] text-[10px] uppercase tracking-wider">Stock loss</div>
-              <div class="text-white font-bold tabular-nums mt-0.5">{{ inr(shrinkNow) }} → {{ inr(shrinkAfter) }}</div>
-            </div>
-          </div>
+          <!-- Where the money actually goes -->
+          <ul class="space-y-2 font-mono text-xs mt-auto">
+            <li
+              v-for="line in lines"
+              :key="line.id"
+              class="p-2.5 bg-[#0a0a0c] border-l-2"
+              :style="{ borderLeftColor: line.accent }"
+            >
+              <div class="flex items-baseline justify-between gap-3">
+                <span class="text-[#c8c8cc] truncate">{{ line.label }}</span>
+                <span class="text-white font-bold tabular-nums shrink-0">
+                  {{ inr(line.now) }} → {{ inr(line.after) }}
+                </span>
+              </div>
+              <div class="text-[10px] text-[#88888c] mt-0.5">{{ line.note }}</div>
+            </li>
+          </ul>
 
           <p class="font-mono text-[10px] text-[#88888c] mt-4 leading-relaxed">
-            Rough figures from your inputs, not a quote. Not counted here: injury claims, insurance
-            excess, or the hours spent scrubbing footage after something happens.
+            Rough figures from your inputs, not a quote. Ask us for a costing and we will put the
+            system price against these numbers for your sites.
           </p>
         </div>
       </div>
