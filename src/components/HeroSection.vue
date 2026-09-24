@@ -12,7 +12,7 @@ import { MAIL_HREF, WHATSAPP_HREF } from '../utils/contact'
       <!-- Hero Content Layout with 3D WebGL Orb -->
       <div class="grid lg:grid-cols-12 gap-8 items-center">
         <div class="lg:col-span-7">
-          <div class="section-tag mb-3 md:mb-6 text-xs sm:text-sm font-bold">// SOVEREIGN VISION AI FOR ENTERPRISE SECURITY</div>
+          <div class="section-tag mb-3 md:mb-6 text-xs sm:text-sm font-bold">// AI FOR THE CAMERAS YOU ALREADY OWN</div>
 
           <h1 class="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-tight uppercase leading-[1.08] md:leading-[0.95] mb-4 md:mb-6">
             THE <span class="eye-blink-text inline-block" style="color: #750d37">EYE</span> THAT<br/>
@@ -20,7 +20,9 @@ import { MAIL_HREF, WHATSAPP_HREF } from '../utils/contact'
           </h1>
 
           <p class="text-[#c8c8cc] text-sm sm:text-base md:text-lg font-normal leading-relaxed max-w-xl mb-6 md:mb-8">
-            Shadowverse watches every camera you already own, on servers you control. ShadowWatch centralises 12,000+ feeds; ShadowVision AI agents catch threats, enforce safety rules and write tamper-proof incident logs. Nothing leaves your premises.
+            Your cameras record everything. Nobody watches them. We do — spotting theft,
+            unsafe work and people where they should not be, the moment it happens. It runs
+            on a server in your building, so no footage ever leaves.
           </p>
 
           <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 md:gap-4 mb-4 w-full">
@@ -47,12 +49,12 @@ import { MAIL_HREF, WHATSAPP_HREF } from '../utils/contact'
             </a>
           </div>
           <p class="text-[#88888c] text-xs sm:text-sm mb-4 md:mb-6">
-            You reach the founder directly. Replies within one business day.
+            Talk to the founder directly. We reply within one working day.
             <button
               @click="emit('openVideoSearch')"
               class="text-[#c8c8cc] hover:text-white font-bold underline underline-offset-4 decoration-[#750d37] hover:decoration-white transition-colors cursor-pointer ml-1 inline-block py-2"
             >
-              See capability overview
+              See how it works
             </button>
           </p>
         </div>

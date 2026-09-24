@@ -9,7 +9,7 @@ const router = createRouter({
       path: '/',
       name: 'landing',
       component: () => import('../views/LandingView.vue'),
-      meta: { guestOnly: true, title: 'Shadowverse — Sovereign Private AI Video Security' }, // redirect to /dashboard if already logged in
+      meta: { guestOnly: true, title: 'Shadowverse — AI for the cameras you already own' }, // redirect to /dashboard if already logged in
     },
     {
       path: '/dashboard',

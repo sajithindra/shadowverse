@@ -28,16 +28,16 @@ const emit = defineEmits(['openVideoSearch', 'openImpactModal'])
               <span class="text-[9px] font-mono text-[#c44a4a] bg-[#c44a4a]/10 px-2 py-0.5 border border-[#c44a4a]/30">SAFETY & COMPLIANCE RISK</span>
             </div>
             
-            <h3 class="text-base font-black uppercase text-white mt-2 mb-1">Security Gaps & Compliance Liability</h3>
+            <h3 class="text-base font-black uppercase text-white mt-2 mb-1">Nobody Is Actually Watching</h3>
             <p class="text-xs text-[#c8c8cc] leading-normal">
-              Traditional CCTV systems create compliance blind spots — no audit trails, no incident documentation, and data stored on third-party cloud servers violating data protection regulations.
+              Cameras record, but no one can watch every screen all day. Problems get found hours later, on footage someone has to scrub through by hand.
             </p>
           </div>
 
           <div class="p-2.5 bg-[#111113] border border-[#1e1e20] font-mono text-[10px] text-[#88888c] space-y-0.5">
-            <div>• No tamper-proof incident audit trail</div>
-            <div>• Video data exposed to third-party cloud risk</div>
-            <div>• Zero automated safety protocol enforcement</div>
+            <div>• Incidents found hours or days late</div>
+            <div>• Hours lost scrubbing through footage</div>
+            <div>• Nothing flags a problem as it happens</div>
           </div>
         </div>
 
@@ -54,7 +54,7 @@ const emit = defineEmits(['openVideoSearch', 'openImpactModal'])
             
             <h3 class="text-base font-black uppercase text-white mt-2 mb-1">Detect, Enforce & Document — Automatically</h3>
             <p class="text-xs text-[#c8c8cc] leading-normal">
-              ShadowVision AI agents enforce safety and security protocols in real-time — generating tamper-proof incident logs, dispatching emergency responders, and keeping your organisation audit-ready 24×7.
+              It watches every camera continuously and tells the right person the moment something matters — with the clip attached, so there is nothing to go looking for.
             </p>
           </div>
 
@@ -65,11 +65,11 @@ const emit = defineEmits(['openVideoSearch', 'openImpactModal'])
             </div>
             <div class="text-[#3d8b5e] flex items-center gap-1">
               <span class="material-symbols-outlined text-xs text-[#3d8b5e]">phone_in_talk</span>
-              <span>Automated Police & Emergency Dispatch</span>
+              <span>Alerts to the right manager, instantly</span>
             </div>
             <div class="text-[#3d8b5e] flex items-center gap-1">
               <span class="material-symbols-outlined text-xs text-[#3d8b5e]">verified_user</span>
-              <span>DPDP Act 2023 & Data Sovereignty</span>
+              <span>Footage never leaves your building</span>
             </div>
           </div>
         </div>
@@ -91,8 +91,8 @@ const emit = defineEmits(['openVideoSearch', 'openImpactModal'])
                   <span class="material-symbols-outlined text-lg text-[#750d37]">cloud_off</span>
                 </div>
                 <div>
-                  <strong class="text-white font-black block text-xs tracking-tight">SHADOWVERSE PRIVATE AI CLOUD</strong>
-                  <span class="text-[11px] text-[#c8c8cc] font-sans">Sovereign on-premise compute. Zero public AWS/Azure leaks.</span>
+                  <strong class="text-white font-black block text-xs tracking-tight">RUNS ON YOUR OWN SERVER</strong>
+                  <span class="text-[11px] text-[#c8c8cc] font-sans">Nothing is uploaded. No cloud subscription, no outside access.</span>
                 </div>
               </div>
 
@@ -101,8 +101,8 @@ const emit = defineEmits(['openVideoSearch', 'openImpactModal'])
                   <span class="material-symbols-outlined text-lg text-[#4a7ebb]">dns</span>
                 </div>
                 <div>
-                  <strong class="text-white font-black block text-xs tracking-tight">SHADOWWATCH 12,000+ CAMERAS</strong>
-                  <span class="text-[11px] text-[#c8c8cc] font-sans">Centralized streaming, playback & analytical reports.</span>
+                  <strong class="text-white font-black block text-xs tracking-tight">EVERY CAMERA IN ONE PLACE</strong>
+                  <span class="text-[11px] text-[#c8c8cc] font-sans">Live view, playback and reports across all your branches.</span>
                 </div>
               </div>
 
@@ -111,8 +111,8 @@ const emit = defineEmits(['openVideoSearch', 'openImpactModal'])
                   <span class="material-symbols-outlined text-lg text-[#3d8b5e]">smart_toy</span>
                 </div>
                 <div>
-                  <strong class="text-white font-black block text-xs tracking-tight">SHADOWVISION ACTION AGENTS</strong>
-                  <span class="text-[11px] text-[#c8c8cc] font-sans">Observe, analyze, and take automated action 24×7.</span>
+                  <strong class="text-white font-black block text-xs tracking-tight">IT ACTS, NOT JUST RECORDS</strong>
+                  <span class="text-[11px] text-[#c8c8cc] font-sans">Sends the alert, opens or locks the door, logs the incident.</span>
                 </div>
               </div>
 

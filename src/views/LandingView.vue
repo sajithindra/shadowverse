@@ -5,6 +5,7 @@ import { useRoute, useRouter } from 'vue-router'
 import HeaderNav from '../components/HeaderNav.vue'
 import HeroSection from '../components/HeroSection.vue'
 import CoreSummarySection from '../components/CoreSummarySection.vue'
+import CostOfDoingNothing from '../components/CostOfDoingNothing.vue'
 import ProblemSection from '../components/ProblemSection.vue'
 import FactsSection from '../components/FactsSection.vue'
 import ArchitectureSection from '../components/ArchitectureSection.vue'
@@ -122,13 +123,16 @@ onMounted(() => {
     <!-- Human vs Vision AI Facts & Metrics -->
     <FactsSection />
 
+    <!-- The purchase case, on the buyer's own numbers -->
+    <CostOfDoingNothing />
+
     <!-- 3-Layer Ecosystem Architecture -->
     <ArchitectureSection />
 
     <!-- ShadowWatch Section -->
     <ShadowWatchFeeds />
 
-    <!-- Logic Lock 9x9 ASCII Matrix Authentication -->
+    <!-- Integrations with the systems already in the building -->
     <LogicLockSection />
 
     <!-- Visitor Risk Watchlist & Vision AI Agent Specifications -->

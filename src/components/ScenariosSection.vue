@@ -25,7 +25,7 @@ const safetyFeatures = [
   {
     icon: 'phone_in_talk',
     title: 'AUTOMATED POLICE & VOICE CALLING',
-    desc: 'ShadowVision AI agents trigger immediate phone calls to property owners, security guards, or local police stations.',
+    desc: 'Calls or messages the manager on duty, the guard on site, or whoever you nominate.',
     helpfulApplication: 'Ensures critical high-risk incidents get verbal voice escalation even if phone notifications are muted.',
     socialImpact: {
       headline: 'Instant Automated Emergency Dispatch & Response',
@@ -115,7 +115,7 @@ const currentFeature = computed(() => safetyFeatures[activeFeatureIndex.value] |
           <span style="color: #750d37">TAKE REAL-WORLD ACTION.</span>
         </h2>
         <p class="text-[#c8c8cc] text-sm sm:text-base md:text-lg max-w-2xl mt-3 leading-relaxed">
-          ShadowVision AI doesn't just watch — it acts. Calling police, sending SMS alerts, switching off AC/lights, and identifying blacklisted threats across 12,000+ camera feeds.
+          It does not just flag things. It can call someone, send the alert, switch off the lights or lock a door on its own.
         </p>
       </div>
 

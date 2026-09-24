@@ -67,7 +67,7 @@ const emit = defineEmits(['openPrivacy', 'openTerms', 'openDpdpPortal', 'openSca
             <li>
               <a href="/#logiclock" class="text-[#a0a0a4] hover:text-white transition-colors flex items-center gap-1.5 py-1.5 -my-0.5">
                 <span class="text-[#4a7ebb] font-bold">05.</span>
-                <span>LOGIC LOCK AUTHENTICATION</span>
+                <span>INTEGRATIONS</span>
               </a>
             </li>
             <li>

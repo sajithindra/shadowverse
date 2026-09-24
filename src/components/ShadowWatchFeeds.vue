@@ -151,7 +151,7 @@ const capacityMetrics = computed(() => {
           <span style="color: #750d37">SIMULATOR</span>
         </h2>
         <p class="text-[#c8c8cc] text-sm sm:text-base leading-relaxed">
-          ShadowWatch manages 12,000+ camera streams in a single private platform. Configure your GPU hardware and ShadowVision AI agent features to calculate real-time streaming and AI analysis capacity.
+          Pick your hardware and see how many cameras it covers. Useful if you are working out what a site actually needs.
         </p>
       </div>
 

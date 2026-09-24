@@ -18,7 +18,7 @@ const navLinks = [
   { id: 'facts', label: '// HUMAN VS AI', accent: '#3d8b5e' },
   { id: 'architecture', label: '// ECOSYSTEM', accent: '#4a7ebb' },
   { id: 'shadowwatch', label: '// SHADOWWATCH', accent: '#750d37' },
-  { id: 'logiclock', label: '// LOGIC LOCK', accent: '#4a7ebb' },
+  { id: 'logiclock', label: '// INTEGRATIONS', accent: '#4a7ebb' },
   { id: 'scenarios', label: '// AI SAFETY', accent: '#3d8b5e' },
 ]
 
@@ -294,8 +294,8 @@ onBeforeUnmount(() => {
             @click="handleNav('/#logiclock')"
             class="p-3 bg-[#111113] border border-[#1e1e20] text-[#c8c8cc] hover:text-white hover:border-[#4a7ebb] transition-all flex items-center justify-between cursor-pointer active:bg-[#4a7ebb]/10"
           >
-            <span class="font-bold">// 05. LOGIC LOCK</span>
-            <span class="text-[10px] text-[#4a7ebb]">KEYLESS LOGIN</span>
+            <span class="font-bold">// 05. INTEGRATIONS</span>
+            <span class="text-[10px] text-[#4a7ebb]">CONNECTS TO YOUR SYSTEMS</span>
           </a>
 
           <a
