@@ -44,6 +44,29 @@ const HEADER_BOX = { hw: 132, hh: 34 }
 const NODE_BOX = { hw: 108, hh: 32 }
 
 /**
+ * Declutter boxes and edge margin for a given viewport width.
+ *
+ * The desktop box is 216px wide, which on a phone is more than half the screen:
+ * every badge collided with the header and the plane rendered with no labels at
+ * all. The badges themselves are capped to the same fraction of the viewport in
+ * the templates, so the boxes here describe what is actually drawn.
+ */
+export function labelMetrics(width: number) {
+  // 768 to match the `md:` cap the badge templates use. Below it the badges wrap
+  // to two or three lines, trading width for height, and the box follows.
+  const narrow = width < 768
+  return {
+    /** Wide enough that a centred badge cannot hang off the edge it is clamped to. */
+    margin: Math.round(Math.min(118, width * 0.23)),
+    header: { hw: Math.min(HEADER_BOX.hw, width * 0.21), hh: narrow ? 38 : HEADER_BOX.hh },
+    node: { hw: Math.min(NODE_BOX.hw, width * 0.21), hh: narrow ? 40 : NODE_BOX.hh },
+    /** On a phone a plane with several headers stacks them into an unreadable
+     *  pile, so there they compete for space like any other badge. */
+    cullHeaders: narrow,
+  }
+}
+
+/**
  * Projects every label to screen space, applies the depth cue, then hides any
  * badge that would overlap a nearer one. Call once per frame.
  */
@@ -57,6 +80,7 @@ export function projectLabels(
 ): void {
   const { fadeStart = 24, fadeRange = 36, reserved } = options
   const v = new THREE.Vector3()
+  const metrics = labelMetrics(width)
 
   for (const label of labels) {
     v.copy(label.worldPos)
@@ -75,11 +99,14 @@ export function projectLabels(
     label.opacity = onScreen ? 1 - fade * 0.55 : 0
     label.scale = 1 - fade * 0.26
 
-    label.screenX = Math.max(118, Math.min(width - 118, (v.x * 0.5 + 0.5) * width))
+    label.screenX = Math.max(
+      metrics.margin,
+      Math.min(width - metrics.margin, (v.x * 0.5 + 0.5) * width),
+    )
     label.screenY = Math.max(48, Math.min(height - 24, (-(v.y * 0.5) + 0.5) * height))
   }
 
-  declutter(labels, reserved)
+  declutter(labels, metrics, reserved)
 }
 
 /**
@@ -87,7 +114,11 @@ export function projectLabels(
  * label overlapping a claimed box is hidden. Headers claim first so a
  * secondary badge can never push one out.
  */
-function declutter(labels: SceneLabel[], reserved?: Rect[]): void {
+function declutter(
+  labels: SceneLabel[],
+  metrics: ReturnType<typeof labelMetrics>,
+  reserved?: Rect[],
+): void {
   // Overlay panels claim their space before any label does, so a badge can
   // never end up unreadable underneath one.
   const placed: Rect[] = reserved ? [...reserved] : []
@@ -101,7 +132,7 @@ function declutter(labels: SceneLabel[], reserved?: Rect[]): void {
 
   for (const label of ordered) {
     const scale = label.scale ?? 1
-    const box = label.isHeader ? HEADER_BOX : NODE_BOX
+    const box = label.isHeader ? metrics.header : metrics.node
     const hw = box.hw * scale
     const hh = box.hh * scale
     // The badge renders above its anchor point, so collide the shifted box.
@@ -113,7 +144,7 @@ function declutter(labels: SceneLabel[], reserved?: Rect[]): void {
 
     // Hidden with opacity rather than display, so a badge fades instead of
     // blinking as the camera carries it across a collision boundary.
-    if (clash && !label.isHeader) {
+    if (clash && (metrics.cullHeaders || !label.isHeader)) {
       label.opacity = 0
     } else {
       placed.push({ x: label.screenX, y: cy, hw, hh })

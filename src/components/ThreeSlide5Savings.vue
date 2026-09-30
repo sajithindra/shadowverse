@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import * as THREE from 'three'
-import { createStage } from '../three/stage'
+import { attachPinchZoom, createStage } from '../three/stage'
+import { labelMetrics } from '../three/labels'
 import { createBladeServerTower } from '../three/hardware'
 
 const props = withDefaults(
@@ -101,7 +102,12 @@ const isFullscreen = ref(false)
 
 // Active Card Index: 0 to 3, or -1 for All Cards Grid View
 const activeIndex = ref(0)
-const isGridView = ref(true)
+// Six pods sit in an arc four times wider than a phone screen, so the grid
+// reads as a row of specks there. A narrow viewport opens on the spotlight card,
+// which carries the same numbers at a size worth reading; the pod labels stay
+// tappable for switching between them.
+const isNarrow = ref(typeof window !== 'undefined' && window.innerWidth < 640)
+const isGridView = ref(!(typeof window !== 'undefined' && window.innerWidth < 640))
 /** Detail is revealed by clicking a cabinet, not shown up front. */
 const hasSelection = ref(false)
 const activeCard = computed(() => cards[activeIndex.value] ?? cards[0]!)
@@ -111,6 +117,7 @@ let scene: THREE.Scene
 let camera: THREE.PerspectiveCamera
 let renderer: THREE.WebGLRenderer
 let stage: ReturnType<typeof createStage> | null = null
+let detachPinch: (() => void) | null = null
 let animId: number | null = null
 
 let stageGroup: THREE.Group
@@ -290,8 +297,10 @@ function initThree() {
 
 function updateCameraForActiveCard() {
   if (isGridView.value) {
-    // Overview perspective
-    targetCameraPos.set(0, 16, 32)
+    // Overview perspective. The pods sit in a wide arc, so a portrait viewport
+    // loses the outer two even after the stage widens the fov — pull back.
+    const pull = camera && camera.aspect < 1 ? Math.min(1.9, 1 / Math.max(camera.aspect, 0.45)) : 1
+    targetCameraPos.set(0, 16 * pull, 32 * pull)
     targetLookAt.set(0, 0, -2)
     return
   }
@@ -328,8 +337,11 @@ function updateScreenLabels() {
     }
 
     const rect = renderer.domElement.getBoundingClientRect()
-    lbl.screenX = (proj.x + 1) * 0.5 * rect.width
-    lbl.screenY = (-proj.y + 1) * 0.5 * rect.height
+    // Clamped, or a pod near the edge of a phone screen hangs its badge half
+    // off the viewport.
+    const margin = labelMetrics(rect.width).margin
+    lbl.screenX = Math.max(margin, Math.min(rect.width - margin, (proj.x + 1) * 0.5 * rect.width))
+    lbl.screenY = Math.max(40, Math.min(rect.height - 40, (-proj.y + 1) * 0.5 * rect.height))
     lbl.visible = true
   })
 }
@@ -461,13 +473,18 @@ function onPointerUp() {
   isDragging = false
 }
 
-function onWheel(event: WheelEvent) {
+function zoomBy(deltaY: number) {
   if (!camera) return
-  event.preventDefault()
   const dir = new THREE.Vector3()
   camera.getWorldDirection(dir)
-  const delta = event.deltaY > 0 ? -2.5 : 2.5
-  targetCameraPos.addScaledVector(dir, delta)
+  // Proportional, so a pinch's stream of small deltas moves the camera smoothly
+  // instead of a fixed 2.5 units per event.
+  targetCameraPos.addScaledVector(dir, -deltaY * 0.025)
+}
+
+function onWheel(event: WheelEvent) {
+  event.preventDefault()
+  zoomBy(event.deltaY)
 }
 
 function reset3DView() {
@@ -483,12 +500,9 @@ function toggleFullscreen() {
 }
 
 function onResize() {
-  if (!mountRef.value || !camera || !renderer) return
-  const width = mountRef.value.clientWidth
-  const height = mountRef.value.clientHeight
-  camera.aspect = width / height
-  camera.updateProjectionMatrix()
-  renderer.setSize(width, height)
+  // Through the stage, so the narrow-viewport fov fit applies here too.
+  stage?.resize()
+  isNarrow.value = typeof window !== 'undefined' && window.innerWidth < 640
 }
 
 let resizeObserver: ResizeObserver | null = null
@@ -502,6 +516,9 @@ onMounted(() => {
     resizeObserver.observe(mountRef.value)
   }
   window.addEventListener('resize', onResize)
+  // Pinch is the only zoom on a phone: the deck renders this plane in minimal
+  // mode, without the zoom buttons.
+  if (mountRef.value) detachPinch = attachPinchZoom(mountRef.value, zoomBy)
 })
 
 onBeforeUnmount(() => {
@@ -510,6 +527,7 @@ onBeforeUnmount(() => {
     resizeObserver = null
   }
   if (animId) cancelAnimationFrame(animId)
+  detachPinch?.()
   window.removeEventListener('resize', onResize)
   stage?.dispose()
   if (renderer && renderer.domElement) {
@@ -618,6 +636,7 @@ watch(activeIndex, () => {
     <!-- 3D WEBGL STAGE & CARD OVERLAY VIEWPORT -->
     <div
       ref="mountRef"
+      data-scene
       @pointerdown="onPointerDown"
       @pointermove="onPointerMove"
       @pointerup="onPointerUp"
@@ -629,7 +648,7 @@ watch(activeIndex, () => {
       <div
         v-for="lbl in podLabels"
         :key="lbl.id"
-        v-show="lbl.visible && (isGridView || activeIndex !== lbl.id)"
+        v-show="lbl.visible && (isGridView || (activeIndex !== lbl.id && !isNarrow))"
         @click.stop="selectCard(lbl.id)"
         class="absolute pointer-events-auto transform -translate-x-1/2 -translate-y-1/2 cursor-pointer transition-transform hover:scale-110"
         :style="{ left: `${lbl.screenX}px`, top: `${lbl.screenY}px`, zIndex: lbl.zIndex || 10 }"
@@ -650,12 +669,32 @@ watch(activeIndex, () => {
         <div
           v-if="!isGridView"
           :key="activeIndex"
-          class="absolute bottom-3 left-3 right-3 sm:left-6 sm:bottom-6 sm:max-w-xl md:max-w-2xl z-30 pointer-events-auto"
+          class="absolute bottom-[calc(3.5rem+env(safe-area-inset-bottom))] left-2 right-2 max-h-[68dvh] overflow-y-auto overscroll-contain sm:bottom-6 sm:left-6 sm:right-auto sm:max-h-none sm:overflow-visible sm:max-w-xl md:max-w-2xl z-30 pointer-events-auto"
         >
           <div
             class="p-4 sm:p-5 shadow-2xl bg-[#111113] border-2 transition-all animate-fade-in"
             :class="activeCard.cardClass"
           >
+            <!-- POD SWITCHER — on a phone the floating 3D badges are hidden,
+                 so the card carries the only way between pods. -->
+            <div class="flex sm:hidden items-center gap-1 mb-3">
+              <button
+                v-for="(c, idx) in cards"
+                :key="c.id"
+                @click="selectCard(idx)"
+                class="flex-1 h-9 font-mono text-[11px] font-black border transition-colors cursor-pointer"
+                :class="
+                  activeIndex === idx
+                    ? 'bg-[#750d37] border-[#e02870] text-white'
+                    : 'bg-[#16161d] border-[#27272a] text-zinc-400'
+                "
+                :aria-label="`Pod ${idx + 1}: ${c.metricTitle}`"
+                :aria-current="activeIndex === idx ? 'true' : undefined"
+              >
+                {{ idx + 1 }}
+              </button>
+            </div>
+
             <!-- CARD HEADER & BIG NUMBER -->
             <div class="flex items-start justify-between border-b border-[#27272a] pb-3 mb-3 gap-2">
               <div>
@@ -748,7 +787,7 @@ watch(activeIndex, () => {
 
       <!-- ALL 4 CARDS GRID OVERLAY (WHEN IN GRID VIEW) -->
       <div
-        v-if="!hasSelection"
+        v-if="!hasSelection && !isNarrow"
         class="absolute bottom-14 left-1/2 -translate-x-1/2 z-30 pointer-events-none font-mono text-[11px] text-zinc-400 bg-[#0a0a0e]/90 border border-white/10 px-3 py-1.5"
       >
         Click a cabinet to see what it saves

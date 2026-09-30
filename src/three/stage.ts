@@ -37,6 +37,26 @@ export interface StageOptions {
 
 const BACKDROP = 0x08080b
 
+/** Aspect the planes were framed for. */
+const DESIGN_ASPECT = 16 / 9
+/** Past this the perspective distortion costs more than the extra framing wins. */
+const MAX_FOV = 78
+
+/**
+ * A perspective camera's fov is vertical, so a portrait viewport keeps the full
+ * height and loses the width — a phone showed a narrow strip through the middle
+ * of every plane with the outer racks cut off. This widens the vertical fov on
+ * narrow viewports to hold the horizontal coverage the scene was framed with.
+ */
+export function fitFov(designFov: number, aspect: number): number {
+  if (aspect >= DESIGN_ASPECT) return designFov
+  const halfHorizontal = Math.atan(
+    Math.tan(THREE.MathUtils.degToRad(designFov) / 2) * DESIGN_ASPECT,
+  )
+  const fov = THREE.MathUtils.radToDeg(2 * Math.atan(Math.tan(halfHorizontal) / aspect))
+  return Math.min(fov, MAX_FOV)
+}
+
 export function createStage(mount: HTMLElement, options: StageOptions = {}): Stage {
   const {
     fov = 42,
@@ -52,7 +72,7 @@ export function createStage(mount: HTMLElement, options: StageOptions = {}): Sta
   const scene = new THREE.Scene()
   if (fogDensity > 0) scene.fog = new THREE.FogExp2(BACKDROP, fogDensity)
 
-  const camera = new THREE.PerspectiveCamera(fov, width / height, 0.1, 500)
+  const camera = new THREE.PerspectiveCamera(fitFov(fov, width / height), width / height, 0.1, 500)
 
   const renderer = new THREE.WebGLRenderer({
     antialias: true,
@@ -115,6 +135,7 @@ export function createStage(mount: HTMLElement, options: StageOptions = {}): Sta
     const w = mount.clientWidth || 1
     const h = mount.clientHeight || 1
     camera.aspect = w / h
+    camera.fov = fitFov(fov, camera.aspect)
     camera.updateProjectionMatrix()
     renderer.setSize(w, h)
   }
@@ -128,6 +149,56 @@ export function createStage(mount: HTMLElement, options: StageOptions = {}): Sta
   }
 
   return { scene, camera, renderer, resize, dispose }
+}
+
+/**
+ * Turns a two-finger pinch into a wheel-equivalent `deltaY`, so a plane's
+ * existing zoom handler serves touch without a second code path. Touch is the
+ * only way to zoom these scenes on a phone — the planes render without their
+ * zoom buttons in the deck's minimal mode.
+ *
+ * Returns a detach function.
+ */
+export function attachPinchZoom(el: HTMLElement, onZoom: (deltaY: number) => void): () => void {
+  let previous = 0
+
+  const spread = (touches: TouchList) => {
+    const a = touches[0]
+    const b = touches[1]
+    if (!a || !b) return 0
+    return Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY)
+  }
+
+  const onStart = (e: TouchEvent) => {
+    if (e.touches.length === 2) previous = spread(e.touches)
+  }
+
+  const onMove = (e: TouchEvent) => {
+    if (e.touches.length !== 2 || !previous) return
+    e.preventDefault()
+    const current = spread(e.touches)
+    if (!current) return
+    // Pinching in shrinks the spread, which reads as a positive wheel delta —
+    // the same sign a scroll-down gives, so both gestures zoom out.
+    onZoom(previous - current)
+    previous = current
+  }
+
+  const onEnd = () => {
+    previous = 0
+  }
+
+  el.addEventListener('touchstart', onStart, { passive: true })
+  el.addEventListener('touchmove', onMove, { passive: false })
+  el.addEventListener('touchend', onEnd, { passive: true })
+  el.addEventListener('touchcancel', onEnd, { passive: true })
+
+  return () => {
+    el.removeEventListener('touchstart', onStart)
+    el.removeEventListener('touchmove', onMove)
+    el.removeEventListener('touchend', onEnd)
+    el.removeEventListener('touchcancel', onEnd)
+  }
 }
 
 /**

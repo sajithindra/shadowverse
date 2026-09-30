@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 import * as THREE from 'three'
-import { createStage, disposeTree } from '../three/stage'
+import { attachPinchZoom, createStage, disposeTree } from '../three/stage'
 import {
   createBladeServerTower,
   createRealisticCctvCamera,
@@ -117,6 +117,7 @@ let stage: ReturnType<typeof createStage> | null = null
 let world: THREE.Group
 let animId = 0
 let resizeObserver: ResizeObserver | null = null
+let detachPinch: (() => void) | null = null
 
 const raycaster = new THREE.Raycaster()
 const pointer = new THREE.Vector2(-10, -10)
@@ -609,6 +610,9 @@ onMounted(() => {
     resizeObserver.observe(mount)
   }
   window.addEventListener('resize', resize)
+  // Pinch is the only zoom on a phone: the deck renders this plane in minimal
+  // mode, without the zoom buttons.
+  detachPinch = attachPinchZoom(mount, zoomBy)
 
   const clock = new THREE.Clock()
 
@@ -668,6 +672,7 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   if (animId) cancelAnimationFrame(animId)
+  detachPinch?.()
   resizeObserver?.disconnect()
   window.removeEventListener('resize', onResize)
   window.removeEventListener('pointermove', onDragMove)
@@ -691,6 +696,9 @@ function updatePointer(event: PointerEvent) {
 }
 
 function onPointerDown(event: PointerEvent) {
+  // A tap fires no pointermove first, so without this the release below
+  // raycasts from wherever the pointer last hovered — never a hit on touch.
+  updatePointer(event)
   isDragging = true
   dragButton = event.button
   previous = { x: event.clientX, y: event.clientY }
@@ -731,13 +739,19 @@ function onPointerUp(event: PointerEvent) {
   selected.value = hit ? (hit.object.userData as Inspectable) : null
 }
 
-function onWheel(event: WheelEvent) {
-  event.preventDefault()
+function zoomBy(deltaY: number) {
   if (!stage) return
   const camera = stage.camera
-  const scale = event.deltaY > 0 ? 1.08 : 0.92
+  // Proportional rather than a fixed step per event: a pinch fires many small
+  // deltas per second and a fixed 8% step each time would slam into the limits.
+  const scale = Math.exp(deltaY * 0.0009)
   const next = camera.position.length() * scale
   if (next > 18 && next < 140) camera.position.multiplyScalar(scale)
+}
+
+function onWheel(event: WheelEvent) {
+  event.preventDefault()
+  zoomBy(event.deltaY)
 }
 
 function onContextMenu(event: MouseEvent) {
@@ -755,6 +769,7 @@ function onContextMenu(event: MouseEvent) {
   >
     <div
       ref="mountRef"
+      data-scene
       @pointerdown="onPointerDown"
       @pointermove="updatePointer"
       @contextmenu="onContextMenu"
@@ -771,26 +786,26 @@ function onContextMenu(event: MouseEvent) {
       >
         <div
           v-if="lbl.isHeader"
-          class="px-4 py-2 bg-[#0a0a0e]/92 backdrop-blur-sm border-2 font-mono shadow-2xl whitespace-nowrap text-center"
+          class="px-3 md:px-4 py-1.5 md:py-2 bg-[#0a0a0e]/92 backdrop-blur-sm border-2 font-mono shadow-2xl max-w-[42vw] md:max-w-none md:whitespace-nowrap text-center"
           :style="{ borderColor: lbl.color, boxShadow: `0 0 20px -6px ${lbl.color}` }"
         >
-          <div class="text-white font-black text-xs sm:text-sm tracking-wider uppercase">
+          <div class="text-white font-black text-[10px] md:text-sm tracking-wider uppercase">
             {{ lbl.text }}
           </div>
-          <div class="text-[10px] text-zinc-300 font-bold tracking-widest mt-0.5">
+          <div class="text-[9px] md:text-[10px] text-zinc-300 font-bold tracking-widest mt-0.5">
             {{ lbl.subtext }}
           </div>
         </div>
 
         <div
           v-else
-          class="pl-2.5 pr-3 py-1.5 bg-[#0a0a0e]/88 backdrop-blur-sm border border-white/10 border-l-[3px] font-mono shadow-xl whitespace-nowrap text-left"
+          class="pl-2 pr-2.5 md:pl-2.5 md:pr-3 py-1 md:py-1.5 bg-[#0a0a0e]/88 backdrop-blur-sm border border-white/10 border-l-[3px] font-mono shadow-xl max-w-[42vw] md:max-w-none md:whitespace-nowrap text-left"
           :style="{ borderLeftColor: lbl.color }"
         >
-          <div class="text-white font-bold text-[11px] sm:text-xs tracking-wide">
+          <div class="text-white font-bold text-[10px] md:text-xs tracking-wide">
             {{ lbl.text }}
           </div>
-          <div class="text-[9px] sm:text-[10px] text-zinc-400 font-semibold tracking-wider mt-px">
+          <div class="text-[9px] md:text-[10px] text-zinc-400 font-semibold tracking-wider mt-px">
             {{ lbl.subtext }}
           </div>
         </div>
@@ -803,15 +818,15 @@ function onContextMenu(event: MouseEvent) {
 
       <!-- Throughput readout: the quantitative half of the cascade argument -->
       <div
-        class="absolute bottom-16 left-3 bg-[#0a0a0e]/90 backdrop-blur-sm border border-white/10 font-mono shadow-2xl z-20 w-[16.5rem] max-w-[calc(100%-1.5rem)]"
+        class="absolute bottom-[calc(3.5rem+env(safe-area-inset-bottom))] left-3 bg-[#0a0a0e]/90 backdrop-blur-sm border border-white/10 font-mono shadow-2xl z-20 w-[16.5rem] max-w-[calc(100%-1.5rem)]"
       >
-        <div class="px-3 py-2 border-b border-white/10">
+        <div class="px-3 py-1.5 sm:py-2 border-b border-white/10">
           <div class="text-white font-black text-xs tracking-wide">GPU work per second</div>
-          <div class="text-[10px] text-zinc-400 mt-0.5">
+          <div class="hidden sm:block text-[10px] text-zinc-400 mt-0.5">
             Each tier is fed only what the one before it kept
           </div>
         </div>
-        <div class="px-3 py-2 space-y-1.5">
+        <div class="px-3 py-1.5 sm:py-2 space-y-1 sm:space-y-1.5">
           <div v-for="s in stageStats" :key="s.id">
             <div class="flex items-baseline justify-between gap-2">
               <span class="text-[11px] text-zinc-200 font-semibold truncate">{{ s.stage }}</span>
@@ -825,7 +840,7 @@ function onContextMenu(event: MouseEvent) {
                 :style="{ width: `${Math.max(s.share * 100, 1.5)}%`, background: s.color }"
               ></div>
             </div>
-            <div class="text-[9px] text-zinc-500 mt-0.5">{{ s.detail }}</div>
+            <div class="hidden sm:block text-[9px] text-zinc-500 mt-0.5">{{ s.detail }}</div>
           </div>
         </div>
         <div class="px-3 py-2 border-t border-white/10 text-[10px] text-zinc-300 leading-relaxed">
@@ -838,7 +853,7 @@ function onContextMenu(event: MouseEvent) {
       <!-- Inspector -->
       <div
         v-if="selected"
-        class="absolute bottom-3 right-3 p-3 bg-[#0a0a0e]/95 backdrop-blur-sm border-2 font-mono text-xs text-white shadow-2xl z-30 max-w-sm w-full space-y-2"
+        class="absolute bottom-[calc(3.5rem+env(safe-area-inset-bottom))] right-3 left-3 sm:left-auto p-3 bg-[#0a0a0e]/95 backdrop-blur-sm border-2 font-mono text-xs text-white shadow-2xl z-30 max-w-sm sm:w-full space-y-2"
         :style="{ borderColor: selected.color }"
       >
         <div class="flex items-start justify-between gap-3 border-b border-white/10 pb-1.5">
@@ -863,9 +878,9 @@ function onContextMenu(event: MouseEvent) {
       </div>
 
       <div
-        class="absolute top-3 left-3 font-mono text-[10px] text-zinc-500 z-10 pointer-events-none"
+        class="absolute top-3 left-3 max-w-[52%] sm:max-w-none font-mono text-[10px] text-zinc-500 z-10 pointer-events-none"
       >
-        Click a server to inspect · drag to orbit · scroll to zoom
+        Tap a server to inspect · drag to orbit · pinch or scroll to zoom
       </div>
     </div>
   </div>

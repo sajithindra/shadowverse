@@ -103,6 +103,8 @@ let autoPlayTimer: ReturnType<typeof setInterval> | null = null
 const isFullscreen = ref(false)
 const touchStartX = ref(0)
 const touchStartY = ref(0)
+/** False while the gesture belongs to a plane that orbits on drag. */
+let swipeArmed = false
 
 watch(
   () => props.initialSlide,
@@ -207,10 +209,15 @@ function handleTouchStart(e: TouchEvent) {
   if (e.touches && e.touches.length > 0 && e.touches[0]) {
     touchStartX.value = e.touches[0].clientX
     touchStartY.value = e.touches[0].clientY
+    // A horizontal drag inside a 3D plane orbits the scene. Reading the same
+    // drag as a swipe meant every attempt to look around also skipped a slide.
+    const target = e.target as Element | null
+    swipeArmed = !target?.closest?.('[data-scene]')
   }
 }
 
 function handleTouchEnd(e: TouchEvent) {
+  if (!swipeArmed) return
   if (e.changedTouches && e.changedTouches.length > 0 && e.changedTouches[0]) {
     const deltaX = e.changedTouches[0].clientX - touchStartX.value
     const deltaY = e.changedTouches[0].clientY - touchStartY.value
@@ -266,7 +273,7 @@ onBeforeUnmount(() => {
 
 <template>
   <div
-    class="fixed inset-0 z-50 bg-[#050508] text-white select-none overflow-hidden"
+    class="fixed inset-0 h-[100dvh] z-50 bg-[#050508] text-white select-none overflow-hidden"
     @click.self="emit('close')"
     @touchstart="handleTouchStart"
     @touchend="handleTouchEnd"
@@ -285,29 +292,29 @@ onBeforeUnmount(() => {
       <button
         v-if="currentSlide !== 0"
         @click="goToSlide(0)"
-        class="px-2.5 py-1 bg-[#0e0e12] border border-[#27272a] hover:border-zinc-400 text-zinc-400 hover:text-white font-mono text-xs flex items-center gap-1.5 transition-colors cursor-pointer shadow-lg"
+        class="px-3 h-10 sm:h-auto sm:px-2.5 sm:py-1 bg-[#0e0e12] border border-[#27272a] hover:border-zinc-400 text-zinc-400 hover:text-white font-mono text-xs flex items-center gap-1.5 transition-colors cursor-pointer shadow-lg"
         title="Return to Grid Overview [0]"
       >
-        <span class="material-symbols-outlined text-xs">grid_view</span>
+        <span class="material-symbols-outlined text-lg sm:text-xs">grid_view</span>
         <span class="hidden sm:inline">OVERVIEW</span>
       </button>
 
       <button
         @click="toggleFullscreen"
-        class="w-7 h-7 bg-[#0e0e12] border border-[#27272a] hover:border-zinc-400 text-zinc-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer shadow-lg"
+        class="w-10 h-10 sm:w-7 sm:h-7 bg-[#0e0e12] border border-[#27272a] hover:border-zinc-400 text-zinc-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer shadow-lg"
         :title="isFullscreen ? 'Exit Fullscreen [F]' : 'Fullscreen [F]'"
       >
-        <span class="material-symbols-outlined text-sm">{{
+        <span class="material-symbols-outlined text-lg sm:text-sm">{{
           isFullscreen ? 'fullscreen_exit' : 'fullscreen'
         }}</span>
       </button>
 
       <button
         @click="emit('close')"
-        class="w-7 h-7 bg-[#0e0e12] border border-[#27272a] hover:border-[#e02870] hover:text-[#e02870] text-zinc-400 flex items-center justify-center transition-colors cursor-pointer shadow-lg"
+        class="w-10 h-10 sm:w-7 sm:h-7 bg-[#0e0e12] border border-[#27272a] hover:border-[#e02870] hover:text-[#e02870] text-zinc-400 flex items-center justify-center transition-colors cursor-pointer shadow-lg"
         title="Close presentation [ESC]"
       >
-        <span class="material-symbols-outlined text-sm">close</span>
+        <span class="material-symbols-outlined text-lg sm:text-sm">close</span>
       </button>
     </div>
 
@@ -407,10 +414,10 @@ onBeforeUnmount(() => {
           class="absolute transition-opacity duration-300 flex items-center justify-center"
           :class="
             currentSlide === 1
-              ? 'w-screen h-screen opacity-100 pointer-events-auto z-30'
+              ? 'w-screen h-[100dvh] opacity-100 pointer-events-auto z-30'
               : currentSlide === 0
                 ? 'w-auto h-auto opacity-100 pointer-events-auto z-20 cursor-pointer'
-                : 'w-screen h-screen opacity-0 pointer-events-none z-0'
+                : 'w-screen h-[100dvh] opacity-0 pointer-events-none z-0'
           "
           style="left: -1000px; top: -560px; transform: translate(-50%, -50%)"
           @click="currentSlide === 0 && goToSlide(1)"
@@ -453,10 +460,10 @@ onBeforeUnmount(() => {
           class="absolute transition-opacity duration-300 flex items-center justify-center"
           :class="
             currentSlide === 2
-              ? 'w-screen h-screen opacity-100 pointer-events-auto z-30'
+              ? 'w-screen h-[100dvh] opacity-100 pointer-events-auto z-30'
               : currentSlide === 0
                 ? 'w-auto h-auto opacity-100 pointer-events-auto z-20 cursor-pointer'
-                : 'w-screen h-screen opacity-0 pointer-events-none z-0'
+                : 'w-screen h-[100dvh] opacity-0 pointer-events-none z-0'
           "
           style="left: 0px; top: -560px; transform: translate(-50%, -50%)"
           @click="currentSlide === 0 && goToSlide(2)"
@@ -499,10 +506,10 @@ onBeforeUnmount(() => {
           class="absolute transition-opacity duration-300 flex items-center justify-center"
           :class="
             currentSlide === 3
-              ? 'w-screen h-screen opacity-100 pointer-events-auto z-30'
+              ? 'w-screen h-[100dvh] opacity-100 pointer-events-auto z-30'
               : currentSlide === 0
                 ? 'w-auto h-auto opacity-100 pointer-events-auto z-20 cursor-pointer'
-                : 'w-screen h-screen opacity-0 pointer-events-none z-0'
+                : 'w-screen h-[100dvh] opacity-0 pointer-events-none z-0'
           "
           style="left: 1000px; top: -560px; transform: translate(-50%, -50%)"
           @click="currentSlide === 0 && goToSlide(3)"
@@ -544,10 +551,10 @@ onBeforeUnmount(() => {
           class="absolute transition-opacity duration-300 flex items-center justify-center"
           :class="
             currentSlide === 4
-              ? 'w-[1300px] h-[620px] opacity-100 pointer-events-auto z-30'
+              ? 'w-screen h-[100dvh] lg:w-[1300px] lg:h-[620px] opacity-100 pointer-events-auto z-30'
               : currentSlide === 0
                 ? 'w-auto h-auto opacity-100 pointer-events-auto z-20 cursor-pointer'
-                : 'w-[1300px] h-[620px] opacity-0 pointer-events-none z-0'
+                : 'w-screen h-[100dvh] lg:w-[1300px] lg:h-[620px] opacity-0 pointer-events-none z-0'
           "
           style="left: 1000px; top: 560px; transform: translate(-50%, -50%)"
           @click="currentSlide === 0 && goToSlide(4)"
@@ -582,11 +589,11 @@ onBeforeUnmount(() => {
           <!-- STATION 3 ARCHITECTURE DIAGRAM -->
           <div
             v-else-if="currentSlide === 4"
-            class="w-full h-full flex flex-col justify-between p-4 sm:p-7 font-mono select-none overflow-hidden bg-[#09090c] border-2 border-[#27272a] shadow-2xl"
+            class="w-full h-full flex flex-col lg:justify-between p-4 sm:p-7 pb-16 lg:pb-7 font-mono select-none overflow-y-auto lg:overflow-hidden overscroll-contain bg-[#09090c] border-0 lg:border-2 border-[#27272a] shadow-2xl"
           >
             <!-- IN-SPACE TITLE -->
             <div
-              class="w-full flex items-center justify-between pb-3.5 border-b border-[#27272a] shrink-0"
+              class="w-full flex items-center justify-between gap-3 pr-28 lg:pr-0 pb-3.5 border-b border-[#27272a] shrink-0"
             >
               <div class="flex items-center gap-3.5">
                 <div
@@ -608,17 +615,17 @@ onBeforeUnmount(() => {
               </div>
 
               <div
-                class="hidden sm:flex items-center gap-2 text-xs sm:text-sm text-zinc-300 font-bold bg-[#121216] border border-[#27272a] px-3.5 py-1.5 shadow-md"
+                class="hidden lg:flex items-center gap-2 text-xs sm:text-sm text-zinc-300 font-bold bg-[#121216] border border-[#27272a] px-3.5 py-1.5 shadow-md"
               >
                 <span class="w-2.5 h-2.5 rounded-full bg-[#4a90d9]"></span>
                 <span>Decoupled UI · AI Swarm · Private Cloud</span>
               </div>
             </div>
 
-            <div class="w-full flex-1 flex flex-col justify-center gap-3.5 my-3 min-h-0">
-              <div class="grid grid-cols-12 gap-3.5 items-stretch flex-1">
+            <div class="w-full lg:flex-1 flex flex-col justify-center gap-3.5 my-3 lg:min-h-0">
+              <div class="grid grid-cols-12 gap-3.5 items-stretch lg:flex-1">
                 <!-- POLICE CONSOLE -->
-                <div class="col-span-5 flex flex-col gap-2.5">
+                <div class="col-span-12 lg:col-span-5 flex flex-col gap-2.5">
                   <div
                     class="bg-[#121216] border-2 border-[#4a90d9] p-3.5 shadow-xl flex items-center justify-between"
                   >
@@ -675,21 +682,25 @@ onBeforeUnmount(() => {
 
                 <!-- 1-WAY ARROW CONNECTOR -->
                 <div
-                  class="col-span-2 flex flex-col items-center justify-center font-mono text-xs text-[#e02870] font-black gap-2 bg-[#121216] border-2 border-[#27272a] p-3 self-center my-auto shadow-xl w-full"
+                  class="col-span-12 lg:col-span-2 flex flex-row lg:flex-col items-center justify-center font-mono text-xs text-[#e02870] font-black gap-2 bg-[#121216] border-2 border-[#27272a] p-3 self-center my-auto shadow-xl w-full"
                 >
                   <span
                     class="text-[#e02870] uppercase text-xs font-black text-center tracking-wider"
                     >1-WAY STREAM</span
                   >
+                  <!-- Stacked on a phone the flow runs upward, not leftward.
+                       Rotated rather than swapped for a second icon: the Material
+                       Symbols stylesheet sets display on this class and wins over
+                       Tailwind's `hidden`. -->
                   <span
-                    class="material-symbols-outlined text-3xl text-[#e02870] font-black animate-pulse"
+                    class="material-symbols-outlined text-3xl text-[#e02870] font-black animate-pulse rotate-90 lg:rotate-0"
                     >west</span
                   >
                   <span class="text-zinc-200 text-xs text-center font-bold">AI Swarm Results</span>
                 </div>
 
                 <!-- SHADOWVISION AI AGENTS -->
-                <div class="col-span-5 flex flex-col justify-end">
+                <div class="col-span-12 lg:col-span-5 flex flex-col justify-end">
                   <div
                     class="bg-[#121216] border-2 border-[#e02870] p-4 flex flex-col justify-between shadow-xl h-full"
                   >
@@ -778,10 +789,10 @@ onBeforeUnmount(() => {
           class="absolute transition-opacity duration-300 flex items-center justify-center"
           :class="
             currentSlide === 5
-              ? 'w-[1300px] h-[820px] opacity-100 pointer-events-auto z-30'
+              ? 'w-screen h-[100dvh] lg:w-[1300px] lg:h-[820px] opacity-100 pointer-events-auto z-30'
               : currentSlide === 0
                 ? 'w-auto h-auto opacity-100 pointer-events-auto z-20 cursor-pointer'
-                : 'w-[1300px] h-[820px] opacity-0 pointer-events-none z-0'
+                : 'w-screen h-[100dvh] lg:w-[1300px] lg:h-[820px] opacity-0 pointer-events-none z-0'
           "
           style="left: 0px; top: 560px; transform: translate(-50%, -50%)"
           @click="currentSlide === 0 && goToSlide(5)"
@@ -816,7 +827,7 @@ onBeforeUnmount(() => {
           <!-- STATION 4 INTERACTIVE RETRAINING FLYWHEEL & VISUALIZER -->
           <div
             v-else-if="currentSlide === 5"
-            class="w-full h-full bg-[#09090c] border-2 border-[#27272a] shadow-2xl overflow-hidden"
+            class="w-full h-full bg-[#09090c] border-0 lg:border-2 border-[#27272a] shadow-2xl overflow-y-auto lg:overflow-hidden overscroll-contain"
           >
             <Slide4Retraining />
           </div>
@@ -827,10 +838,10 @@ onBeforeUnmount(() => {
           class="absolute transition-opacity duration-300 flex items-center justify-center"
           :class="
             currentSlide === 6
-              ? 'w-screen h-screen opacity-100 pointer-events-auto z-30'
+              ? 'w-screen h-[100dvh] opacity-100 pointer-events-auto z-30'
               : currentSlide === 0
                 ? 'w-auto h-auto opacity-100 pointer-events-auto z-20 cursor-pointer'
-                : 'w-screen h-screen opacity-0 pointer-events-none z-0'
+                : 'w-screen h-[100dvh] opacity-0 pointer-events-none z-0'
           "
           style="left: -1000px; top: 560px; transform: translate(-50%, -50%)"
           @click="currentSlide === 0 && goToSlide(6)"
@@ -873,9 +884,11 @@ onBeforeUnmount(() => {
     <!-- DECK CONTROL BAR — position, direct jumps and step controls. The deck
          previously offered keyboard only, with no indication of where you were. -->
     <div
-      class="absolute bottom-0 inset-x-0 z-40 border-t border-[#1e1e20] bg-[#0a0a0e]/92 backdrop-blur-sm"
+      class="absolute bottom-0 inset-x-0 z-40 border-t border-[#1e1e20] bg-[#0a0a0e]/92 backdrop-blur-sm pb-[env(safe-area-inset-bottom)]"
     >
-      <div class="flex items-center justify-between gap-3 px-3 sm:px-5 h-11 font-mono">
+      <div
+        class="flex items-center justify-between gap-1.5 sm:gap-3 px-2 sm:px-5 h-13 sm:h-11 font-mono"
+      >
         <!-- Where you are -->
         <div class="flex items-center gap-2.5 min-w-0">
           <span class="text-[#e02870] font-black text-[11px] tabular-nums shrink-0">
@@ -899,7 +912,7 @@ onBeforeUnmount(() => {
             v-for="n in totalSlides"
             :key="n"
             @click="goToSlide(n)"
-            class="w-7 h-7 flex items-center justify-center text-[10px] font-bold border transition-colors cursor-pointer"
+            class="w-8 h-10 sm:w-7 sm:h-7 flex items-center justify-center text-[11px] sm:text-[10px] font-bold border transition-colors cursor-pointer"
             :class="
               currentSlide === n
                 ? 'bg-[#750d37] border-[#e02870] text-white'
@@ -918,20 +931,20 @@ onBeforeUnmount(() => {
           <button
             @click="prevSlide"
             :disabled="currentSlide === 0"
-            class="w-7 h-7 flex items-center justify-center border border-[#27272a] text-zinc-400 enabled:hover:text-white enabled:hover:border-zinc-500 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
+            class="w-10 h-10 sm:w-7 sm:h-7 flex items-center justify-center border border-[#27272a] text-zinc-400 enabled:hover:text-white enabled:hover:border-zinc-500 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
             title="Previous [←]"
             aria-label="Previous station"
           >
-            <span class="material-symbols-outlined text-sm">chevron_left</span>
+            <span class="material-symbols-outlined text-lg sm:text-sm">chevron_left</span>
           </button>
           <button
             @click="nextSlide"
             :disabled="currentSlide === totalSlides"
-            class="w-7 h-7 flex items-center justify-center border border-[#27272a] text-zinc-400 enabled:hover:text-white enabled:hover:border-zinc-500 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
+            class="w-10 h-10 sm:w-7 sm:h-7 flex items-center justify-center border border-[#27272a] text-zinc-400 enabled:hover:text-white enabled:hover:border-zinc-500 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
             title="Next [→ / Space]"
             aria-label="Next station"
           >
-            <span class="material-symbols-outlined text-sm">chevron_right</span>
+            <span class="material-symbols-outlined text-lg sm:text-sm">chevron_right</span>
           </button>
         </div>
       </div>

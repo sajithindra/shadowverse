@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 import * as THREE from 'three'
-import { createStage } from '../three/stage'
+import { attachPinchZoom, createStage } from '../three/stage'
+import { labelMetrics } from '../three/labels'
 import {
   createBladeServerTower,
   createNvrStorageUnit,
@@ -44,6 +45,7 @@ let scene: THREE.Scene
 let camera: THREE.PerspectiveCamera
 let renderer: THREE.WebGLRenderer
 let stage: ReturnType<typeof createStage> | null = null
+let detachPinch: (() => void) | null = null
 let animId: number | null = null
 
 let pipelineGroup: THREE.Group
@@ -100,19 +102,20 @@ function resetZoom() {
   selectedNode.value = null
 }
 
-function onWheel(event: WheelEvent) {
+/** Shared by the wheel and by a two-finger pinch, which has no cursor of its
+ *  own and zooms towards the point between the fingers. */
+function zoomTowards(deltaY: number, clientX: number, clientY: number) {
   if (!camera || !mountRef.value) return
-  event.preventDefault()
 
   const rect = mountRef.value.getBoundingClientRect()
-  const mouseX = ((event.clientX - rect.left) / rect.width) * 2 - 1
-  const mouseY = -((event.clientY - rect.top) / rect.height) * 2 + 1
+  const mouseX = ((clientX - rect.left) / rect.width) * 2 - 1
+  const mouseY = -((clientY - rect.top) / rect.height) * 2 + 1
 
   const targetVector = new THREE.Vector3(mouseX, mouseY, 0.5)
   targetVector.unproject(camera)
   const dir = targetVector.sub(camera.position).normalize()
 
-  const zoomFactor = event.deltaY * -0.03
+  const zoomFactor = deltaY * -0.03
 
   const nextPos = camera.position.clone().addScaledVector(dir, zoomFactor)
 
@@ -121,9 +124,17 @@ function onWheel(event: WheelEvent) {
   }
 }
 
+function onWheel(event: WheelEvent) {
+  event.preventDefault()
+  zoomTowards(event.deltaY, event.clientX, event.clientY)
+}
+
 let pointerDownPos = { x: 0, y: 0 }
 
 function onPointerDown(event: PointerEvent) {
+  // A tap fires no pointermove first, so without this the release below
+  // raycasts from wherever the pointer last hovered — never a hit on touch.
+  onHoverMove(event)
   isDragging = true
   dragButton = event.button
   isShiftPressed = event.shiftKey
@@ -268,12 +279,8 @@ function handleFullscreenChange() {
 }
 
 function handleResize() {
-  if (!mountRef.value || !renderer || !camera) return
-  const width = mountRef.value.clientWidth
-  const height = mountRef.value.clientHeight
-  camera.aspect = width / height
-  camera.updateProjectionMatrix()
-  renderer.setSize(width, height)
+  // Through the stage, so the narrow-viewport fov fit applies here too.
+  stage?.resize()
 }
 
 // ════════ HELPER 1: HIGH-FIDELITY 4K BULLET CCTV SECURITY CAMERA ════════
@@ -1126,6 +1133,8 @@ onMounted(() => {
     const containerW = mountRef.value.clientWidth
     const containerH = mountRef.value.clientHeight
     const tempVec = new THREE.Vector3()
+    // Shared with the other planes so a phone gets the same narrowed boxes.
+    const metrics = labelMetrics(containerW)
 
     pipelineLabels.value.forEach((lbl) => {
       tempVec.copy(lbl.worldPos)
@@ -1147,7 +1156,7 @@ onMounted(() => {
       const rawX = (tempVec.x * 0.5 + 0.5) * containerW
       const rawY = (-(tempVec.y * 0.5) + 0.5) * containerH
 
-      lbl.screenX = Math.max(80, Math.min(containerW - 80, rawX))
+      lbl.screenX = Math.max(metrics.margin, Math.min(containerW - metrics.margin, rawX))
       lbl.screenY = Math.max(48, Math.min(containerH - 24, rawY))
     })
 
@@ -1164,8 +1173,9 @@ onMounted(() => {
       })
       .forEach((lbl) => {
         const sc = lbl.scale ?? 1
-        const hw = (lbl.isHeader ? 132 : 108) * sc
-        const hh = (lbl.isHeader ? 34 : 32) * sc
+        const box = lbl.isHeader ? metrics.header : metrics.node
+        const hw = box.hw * sc
+        const hh = box.hh * sc
         // The badge is drawn above its anchor point, so test that shifted box.
         const cy = lbl.screenY - hh - 16 * sc
         const clash = placed.some(
@@ -1175,7 +1185,7 @@ onMounted(() => {
         // secondary node badges yield when space runs out. Hiding uses opacity,
         // not display, so a badge fades instead of blinking as the camera moves
         // it across a collision boundary.
-        if (clash && !lbl.isHeader) {
+        if (clash && (metrics.cullHeaders || !lbl.isHeader)) {
           lbl.opacity = 0
         } else {
           placed.push({ x: lbl.screenX, y: cy, hw, hh })
@@ -1262,6 +1272,15 @@ onMounted(() => {
   }
 
   window.addEventListener('resize', handleResize)
+  if (mountRef.value) {
+    // Pinch is the only zoom on a phone: the deck renders this plane in minimal
+    // mode, without the zoom buttons.
+    const el = mountRef.value
+    detachPinch = attachPinchZoom(el, (deltaY) => {
+      const rect = el.getBoundingClientRect()
+      zoomTowards(deltaY, rect.left + rect.width / 2, rect.top + rect.height / 2)
+    })
+  }
   if (typeof document !== 'undefined') {
     document.addEventListener('fullscreenchange', handleFullscreenChange)
   }
@@ -1269,6 +1288,7 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   if (animId) cancelAnimationFrame(animId)
+  detachPinch?.()
   window.removeEventListener('resize', handleResize)
   stage?.dispose()
   if (typeof document !== 'undefined') {
@@ -1351,6 +1371,7 @@ onBeforeUnmount(() => {
     <!-- 3D WebGL Canvas Container -->
     <div
       ref="mountRef"
+      data-scene
       @pointerdown="onPointerDown"
       @pointermove="onHoverMove"
       @contextmenu="onContextMenu"
@@ -1374,13 +1395,13 @@ onBeforeUnmount(() => {
         <!-- Stage Header: numbered pipeline stage, carries full weight -->
         <div
           v-if="lbl.isHeader"
-          class="px-4 py-2 bg-[#0a0a0e]/92 backdrop-blur-sm border-2 font-mono shadow-2xl whitespace-nowrap text-center"
+          class="px-3 md:px-4 py-1.5 md:py-2 bg-[#0a0a0e]/92 backdrop-blur-sm border-2 font-mono shadow-2xl max-w-[42vw] md:max-w-none md:whitespace-nowrap text-center"
           :style="{ borderColor: lbl.color, boxShadow: `0 0 20px -6px ${lbl.color}` }"
         >
-          <div class="text-white font-black text-xs sm:text-sm tracking-wider uppercase">
+          <div class="text-white font-black text-[10px] md:text-sm tracking-wider uppercase">
             {{ lbl.text }}
           </div>
-          <div class="text-[10px] text-zinc-300 font-bold tracking-widest mt-0.5">
+          <div class="text-[9px] md:text-[10px] text-zinc-300 font-bold tracking-widest mt-0.5">
             {{ lbl.subtext }}
           </div>
         </div>
@@ -1388,13 +1409,13 @@ onBeforeUnmount(() => {
         <!-- Node Badge: lighter chrome so it reads as secondary to the stage headers -->
         <div
           v-else
-          class="pl-2.5 pr-3 py-1.5 bg-[#0a0a0e]/88 backdrop-blur-sm border border-white/10 border-l-[3px] font-mono shadow-xl whitespace-nowrap text-left"
+          class="pl-2 pr-2.5 md:pl-2.5 md:pr-3 py-1 md:py-1.5 bg-[#0a0a0e]/88 backdrop-blur-sm border border-white/10 border-l-[3px] font-mono shadow-xl max-w-[42vw] md:max-w-none md:whitespace-nowrap text-left"
           :style="{ borderLeftColor: lbl.color }"
         >
-          <div class="text-white font-bold text-[11px] sm:text-xs tracking-wide">
+          <div class="text-white font-bold text-[10px] md:text-xs tracking-wide">
             {{ lbl.text }}
           </div>
-          <div class="text-[9px] sm:text-[10px] text-zinc-400 font-semibold tracking-wider mt-px">
+          <div class="text-[9px] md:text-[10px] text-zinc-400 font-semibold tracking-wider mt-px">
             {{ lbl.subtext }}
           </div>
         </div>
@@ -1409,7 +1430,7 @@ onBeforeUnmount(() => {
       <!-- SELECTED NODE TELEMETRY INSPECTION DRAWER CARD (UX) -->
       <div
         v-if="selectedNode"
-        class="absolute bottom-14 right-3 p-3 bg-[#121216] border-2 border-[#e02870] font-mono text-xs text-white shadow-2xl z-30 max-w-sm w-full space-y-2 animate-fade-in"
+        class="absolute bottom-[calc(3.5rem+env(safe-area-inset-bottom))] right-3 left-3 sm:left-auto p-3 bg-[#121216] border-2 border-[#e02870] font-mono text-xs text-white shadow-2xl z-30 max-w-sm sm:w-full space-y-2 animate-fade-in"
       >
         <div class="flex items-center justify-between border-b border-[#27272a] pb-1.5">
           <div class="text-[#e02870] font-black uppercase text-xs flex items-center gap-1.5">

@@ -76,10 +76,12 @@ const corePillars = [
 
 <template>
   <div
-    class="w-full h-full flex flex-col justify-between p-4 sm:p-7 font-mono select-none overflow-hidden bg-[#09090c]"
+    class="w-full min-h-full lg:h-full flex flex-col lg:justify-between p-4 sm:p-7 pb-16 lg:pb-7 font-mono select-none lg:overflow-hidden bg-[#09090c]"
   >
     <!-- HEADER TITLE BAR -->
-    <div class="flex items-center justify-between pb-3.5 border-b border-[#27272a] shrink-0">
+    <div
+      class="flex items-center justify-between gap-3 pr-28 lg:pr-0 pb-3.5 border-b border-[#27272a] shrink-0"
+    >
       <div class="flex items-center gap-3.5">
         <div
           class="w-12 h-12 bg-[#750d37] border-2 border-[#e02870] flex items-center justify-center text-white font-black text-2xl shadow-xl"
@@ -100,7 +102,7 @@ const corePillars = [
       </div>
 
       <div
-        class="hidden sm:flex items-center gap-2 text-xs sm:text-sm text-zinc-300 font-bold bg-[#121216] border border-[#27272a] px-3.5 py-1.5 shadow-md"
+        class="hidden lg:flex items-center gap-2 text-xs sm:text-sm text-zinc-300 font-bold bg-[#121216] border border-[#27272a] px-3.5 py-1.5 shadow-md"
       >
         <span class="w-2.5 h-2.5 rounded-full bg-[#3d8b5e] animate-pulse"></span>
         <span>24-Hour Autonomous Feedback Loop</span>
@@ -160,7 +162,7 @@ const corePillars = [
     </div>
 
     <!-- 4 PERFORMANCE PILLARS + ACCURACY PROGRESSION GRID -->
-    <div class="grid grid-cols-12 gap-3.5 flex-1 min-h-0 items-stretch">
+    <div class="grid grid-cols-12 gap-3.5 lg:flex-1 lg:min-h-0 items-stretch">
       <!-- 4 KEY PILLARS -->
       <div class="col-span-12 lg:col-span-8 grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div
