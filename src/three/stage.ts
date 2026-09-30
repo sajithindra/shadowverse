@@ -38,7 +38,13 @@ export interface StageOptions {
 const BACKDROP = 0x08080b
 
 export function createStage(mount: HTMLElement, options: StageOptions = {}): Stage {
-  const { fov = 42, fogDensity = 0.012, exposure = 1.05, shadows = true, shadowExtent = 50 } = options
+  const {
+    fov = 42,
+    fogDensity = 0.012,
+    exposure = 1.05,
+    shadows = true,
+    shadowExtent = 50,
+  } = options
 
   const width = mount.clientWidth || 1
   const height = mount.clientHeight || 1

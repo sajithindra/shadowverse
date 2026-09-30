@@ -10,7 +10,7 @@ const props = withDefaults(
   }>(),
   {
     minimal: false,
-  }
+  },
 )
 
 interface CardData {
@@ -39,8 +39,10 @@ const cards: CardData[] = [
     color: '#fbbf24',
     hexColor: 0xf59e0b,
     subHeading: '8 Regional Edge DCs analyzing 100% video locally',
-    problem: 'Streaming 200 Gbps raw video over 1,000 km WAN chokes city networks & causes dropouts.',
-    solution: '100% video computed locally at 8 Edge DCs. Only metadata sent to HQ, reducing continuous WAN load to 1.2 Gbps.',
+    problem:
+      'Streaming 200 Gbps raw video over 1,000 km WAN chokes city networks & causes dropouts.',
+    solution:
+      '100% video computed locally at 8 Edge DCs. Only metadata sent to HQ, reducing continuous WAN load to 1.2 Gbps.',
     takeaway: '200 Gbps ➔ 1.2 Gbps Continuous Load',
   },
   {
@@ -53,8 +55,10 @@ const cards: CardData[] = [
     color: '#34d399',
     hexColor: 0x10b981,
     subHeading: 'Universal Adapter Mesh for all IP & Analog cameras',
-    problem: 'Proprietary VMS vendors force expensive hardware rip-and-replace & recurring per-camera license fees.',
-    solution: 'Universal Adapter Mesh connects IP (ONVIF/RTSP) & analog DVRs (Hikvision, Dahua, Axis, CP Plus) seamlessly with zero camera changes.',
+    problem:
+      'Proprietary VMS vendors force expensive hardware rip-and-replace & recurring per-camera license fees.',
+    solution:
+      'Universal Adapter Mesh connects IP (ONVIF/RTSP) & analog DVRs (Hikvision, Dahua, Axis, CP Plus) seamlessly with zero camera changes.',
     takeaway: 'Works with 100% of Existing CCTV Assets',
   },
   {
@@ -67,8 +71,10 @@ const cards: CardData[] = [
     color: '#60a5fa',
     hexColor: 0x3b82f6,
     subHeading: 'Autonomous AI Swarm with sub-50ms police routing',
-    problem: 'Disconnected police databases & manual video scrubbing take days to track suspect vehicles.',
-    solution: 'Autonomous AI Swarm cross-matches VAHAN, eGujCop & AFIS in <50ms for instant 112 / PCR vehicle routing.',
+    problem:
+      'Disconnected police databases & manual video scrubbing take days to track suspect vehicles.',
+    solution:
+      'Autonomous AI Swarm cross-matches VAHAN, eGujCop & AFIS in <50ms for instant 112 / PCR vehicle routing.',
     takeaway: 'Sub-50ms Real-Time Police Interception',
   },
   {
@@ -81,8 +87,10 @@ const cards: CardData[] = [
     color: '#e02870',
     hexColor: 0xe02870,
     subHeading: '100% Local Execution with Zero foreign cloud telemetry',
-    problem: 'Foreign cloud AI solutions create national surveillance espionage risks & DPDP regulatory violations.',
-    solution: '100% Local Execution. Zero foreign cloud telemetry. Protected by Logic Lock Zero-Trust FIDO2 MFA on police servers.',
+    problem:
+      'Foreign cloud AI solutions create national surveillance espionage risks & DPDP regulatory violations.',
+    solution:
+      '100% Local Execution. Zero foreign cloud telemetry. Protected by Logic Lock Zero-Trust FIDO2 MFA on police servers.',
     takeaway: 'Sovereign Data Storage (48h NVMe ➔ 90d Tape)',
   },
 ]
@@ -141,8 +149,8 @@ const POD_RADIUS = 14
 const POD_ANGLES = [
   -Math.PI * 0.45, // Pod 0 (Left-front)
   -Math.PI * 0.15, // Pod 1 (Center-left)
-  Math.PI * 0.15,  // Pod 2 (Center-right)
-  Math.PI * 0.45,  // Pod 3 (Right-front)
+  Math.PI * 0.15, // Pod 2 (Center-right)
+  Math.PI * 0.45, // Pod 3 (Right-front)
 ]
 
 function getPodPosition(idx: number): THREE.Vector3 {
@@ -150,7 +158,7 @@ function getPodPosition(idx: number): THREE.Vector3 {
   return new THREE.Vector3(
     Math.sin(angle) * POD_RADIUS,
     0,
-    Math.cos(angle) * (POD_RADIUS * 0.7) - 2
+    Math.cos(angle) * (POD_RADIUS * 0.7) - 2,
   )
 }
 
@@ -250,10 +258,7 @@ function initThree() {
     podLeds.push(...cabinet.leds)
 
     // Energy Laser Line connecting to Core
-    const laserPoints = [
-      new THREE.Vector3(pos.x, -1.0, pos.z),
-      new THREE.Vector3(0, 1.5, -4),
-    ]
+    const laserPoints = [new THREE.Vector3(pos.x, -1.0, pos.z), new THREE.Vector3(0, 1.5, -4)]
     const laserGeo = new THREE.BufferGeometry().setFromPoints(laserPoints)
     const laserMat = new THREE.LineBasicMaterial({
       color: card.hexColor,
@@ -323,8 +328,8 @@ function updateScreenLabels() {
     }
 
     const rect = renderer.domElement.getBoundingClientRect()
-    lbl.screenX = ((proj.x + 1) * 0.5) * rect.width
-    lbl.screenY = ((-proj.y + 1) * 0.5) * rect.height
+    lbl.screenX = (proj.x + 1) * 0.5 * rect.width
+    lbl.screenY = (-proj.y + 1) * 0.5 * rect.height
     lbl.visible = true
   })
 }
@@ -521,11 +526,19 @@ watch(activeIndex, () => {
   <div
     ref="containerRef"
     class="w-full flex-1 flex flex-col justify-between relative select-none"
-    :class="props.minimal ? 'w-full h-full relative overflow-hidden bg-transparent' : (isFullscreen ? 'fixed inset-0 z-50 bg-[#09090b] p-4' : 'h-full')"
+    :class="
+      props.minimal
+        ? 'w-full h-full relative overflow-hidden bg-transparent'
+        : isFullscreen
+          ? 'fixed inset-0 z-50 bg-[#09090b] p-4'
+          : 'h-full'
+    "
   >
     <!-- TOP INTERACTIVE SEQUENCER BAR -->
-    <div v-if="!props.minimal" class="flex flex-wrap items-center justify-between gap-2 bg-[#121216] border border-[#27272a] px-3 py-2 z-20 shrink-0 shadow-lg">
-      
+    <div
+      v-if="!props.minimal"
+      class="flex flex-wrap items-center justify-between gap-2 bg-[#121216] border border-[#27272a] px-3 py-2 z-20 shrink-0 shadow-lg"
+    >
       <!-- STEP TABS -->
       <div class="flex items-center gap-1 sm:gap-1.5 flex-wrap">
         <button
@@ -533,7 +546,11 @@ watch(activeIndex, () => {
           :key="c.id"
           @click="selectCard(idx)"
           class="px-2.5 sm:px-3 py-1 font-mono text-[11px] sm:text-xs font-black transition-all cursor-pointer flex items-center gap-1.5 shadow-sm active:scale-95 border"
-          :class="activeIndex === idx && !isGridView ? 'bg-[#750d37] border-[#e02870] text-white' : 'bg-[#16161d] border-[#27272a] text-zinc-300 hover:border-zinc-500 hover:text-white'"
+          :class="
+            activeIndex === idx && !isGridView
+              ? 'bg-[#750d37] border-[#e02870] text-white'
+              : 'bg-[#16161d] border-[#27272a] text-zinc-300 hover:border-zinc-500 hover:text-white'
+          "
         >
           <span class="w-2 h-2 rounded-full" :style="{ backgroundColor: c.color }"></span>
           <span>0{{ idx + 1 }}. {{ c.bigNumber }}</span>
@@ -544,7 +561,11 @@ watch(activeIndex, () => {
         <button
           @click="setGridView"
           class="px-2.5 py-1 font-mono text-[11px] sm:text-xs font-black transition-all cursor-pointer flex items-center gap-1 border"
-          :class="isGridView ? 'bg-blue-600 border-blue-400 text-white' : 'bg-[#16161d] border-[#27272a] text-zinc-300 hover:border-blue-400 hover:text-white'"
+          :class="
+            isGridView
+              ? 'bg-blue-600 border-blue-400 text-white'
+              : 'bg-[#16161d] border-[#27272a] text-zinc-300 hover:border-blue-400 hover:text-white'
+          "
         >
           <span class="material-symbols-outlined text-xs">grid_view</span>
           <span>GRID VIEW</span>
@@ -553,7 +574,6 @@ watch(activeIndex, () => {
 
       <!-- SEQUENCE PLAYBACK & 3D CONTROLS -->
       <div class="flex items-center gap-1.5 sm:gap-2">
-        
         <!-- AUTO-PLAY TOGGLE -->
 
         <!-- PREV / NEXT CARD STEPPERS -->
@@ -586,10 +606,11 @@ watch(activeIndex, () => {
           @click="toggleFullscreen"
           class="px-2 py-1 text-[10px] font-mono font-bold uppercase border bg-[#16161d] border-[#27272a] text-white hover:border-[#e02870] transition-colors cursor-pointer flex items-center gap-1"
         >
-          <span class="material-symbols-outlined text-xs">{{ isFullscreen ? 'fullscreen_exit' : 'fullscreen' }}</span>
+          <span class="material-symbols-outlined text-xs">{{
+            isFullscreen ? 'fullscreen_exit' : 'fullscreen'
+          }}</span>
         </button>
       </div>
-
     </div>
 
     <!-- AUTO-PLAY SEQUENCE PROGRESS BAR -->
@@ -617,7 +638,9 @@ watch(activeIndex, () => {
           class="px-3.5 py-1.5 bg-[#0a0a0e] border-2 font-mono shadow-2xl tracking-wider uppercase text-center"
           :style="{ borderColor: lbl.color, color: lbl.color }"
         >
-          <div class="text-sm sm:text-base font-black leading-tight text-white">{{ lbl.bigNumber }}</div>
+          <div class="text-sm sm:text-base font-black leading-tight text-white">
+            {{ lbl.bigNumber }}
+          </div>
           <div class="text-[10px] sm:text-xs text-zinc-200 font-bold mt-0.5">{{ lbl.name }}</div>
         </div>
       </div>
@@ -637,16 +660,27 @@ watch(activeIndex, () => {
             <div class="flex items-start justify-between border-b border-[#27272a] pb-3 mb-3 gap-2">
               <div>
                 <div class="flex items-center gap-2">
-                  <span class="font-mono text-xs font-black text-white px-2 py-0.5 bg-black/60 border border-zinc-700 flex items-center gap-1">
+                  <span
+                    class="font-mono text-xs font-black text-white px-2 py-0.5 bg-black/60 border border-zinc-700 flex items-center gap-1"
+                  >
                     <span class="material-symbols-outlined text-xs">{{ activeCard.icon }}</span>
                     <span>POD 0{{ activeIndex + 1 }}</span>
                   </span>
-                  <span class="font-mono text-xs font-extrabold uppercase tracking-wider" :style="{ color: activeCard.color }">
+                  <span
+                    class="font-mono text-xs font-extrabold uppercase tracking-wider"
+                    :style="{ color: activeCard.color }"
+                  >
                     {{ activeCard.badge }}
                   </span>
                 </div>
-                <h3 class="text-base sm:text-xl font-black text-white font-mono mt-1 flex items-center gap-2">
-                  <span class="material-symbols-outlined text-lg sm:text-xl" :style="{ color: activeCard.color }">{{ activeCard.icon }}</span>
+                <h3
+                  class="text-base sm:text-xl font-black text-white font-mono mt-1 flex items-center gap-2"
+                >
+                  <span
+                    class="material-symbols-outlined text-lg sm:text-xl"
+                    :style="{ color: activeCard.color }"
+                    >{{ activeCard.icon }}</span
+                  >
                   <span>{{ activeCard.metricTitle }}</span>
                 </h3>
                 <p class="text-xs text-zinc-300 mt-0.5">
@@ -655,7 +689,10 @@ watch(activeIndex, () => {
               </div>
 
               <div class="text-right shrink-0">
-                <div class="text-4xl sm:text-5xl md:text-6xl font-black font-mono tracking-tight leading-none" :style="{ color: activeCard.color }">
+                <div
+                  class="text-4xl sm:text-5xl md:text-6xl font-black font-mono tracking-tight leading-none"
+                  :style="{ color: activeCard.color }"
+                >
                   {{ activeCard.bigNumber }}
                 </div>
               </div>
@@ -663,11 +700,14 @@ watch(activeIndex, () => {
 
             <!-- PROBLEM & SOLUTION SPLIT GRID -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5 text-xs">
-              
               <!-- PROBLEM BOX -->
-              <div class="bg-rose-950/40 border border-rose-800/60 p-3 flex flex-col justify-between shadow-sm">
+              <div
+                class="bg-rose-950/40 border border-rose-800/60 p-3 flex flex-col justify-between shadow-sm"
+              >
                 <div>
-                  <div class="font-mono text-[11px] text-rose-400 font-extrabold uppercase flex items-center gap-1.5 mb-1">
+                  <div
+                    class="font-mono text-[11px] text-rose-400 font-extrabold uppercase flex items-center gap-1.5 mb-1"
+                  >
                     <span class="material-symbols-outlined text-sm">error_outline</span>
                     <span>LEGACY PROBLEM</span>
                   </div>
@@ -678,9 +718,13 @@ watch(activeIndex, () => {
               </div>
 
               <!-- SOLUTION BOX -->
-              <div class="bg-emerald-950/40 border border-emerald-600/60 p-3 flex flex-col justify-between shadow-sm">
+              <div
+                class="bg-emerald-950/40 border border-emerald-600/60 p-3 flex flex-col justify-between shadow-sm"
+              >
                 <div>
-                  <div class="font-mono text-[11px] text-emerald-400 font-extrabold uppercase flex items-center gap-1.5 mb-1">
+                  <div
+                    class="font-mono text-[11px] text-emerald-400 font-extrabold uppercase flex items-center gap-1.5 mb-1"
+                  >
                     <span class="material-symbols-outlined text-sm">verified_user</span>
                     <span>SHADOWVERSE SOLUTION</span>
                   </div>
@@ -689,15 +733,15 @@ watch(activeIndex, () => {
                   </p>
                 </div>
               </div>
-
             </div>
 
             <!-- FOOTER OPERATIONAL TAKEAWAY -->
-            <div class="mt-3 pt-2 border-t border-[#27272a] flex items-center justify-between font-mono text-[11px]">
+            <div
+              class="mt-3 pt-2 border-t border-[#27272a] flex items-center justify-between font-mono text-[11px]"
+            >
               <span class="text-zinc-400">Impact Metric:</span>
               <strong class="text-white font-bold">{{ activeCard.takeaway }}</strong>
             </div>
-
           </div>
         </div>
       </Transition>
@@ -725,16 +769,27 @@ watch(activeIndex, () => {
             <div>
               <div class="flex items-start justify-between mb-2 border-b border-[#27272a] pb-2">
                 <div>
-                  <div class="text-3xl sm:text-4xl font-black font-mono tracking-tight leading-none flex items-center gap-1" :style="{ color: card.color }">
+                  <div
+                    class="text-3xl sm:text-4xl font-black font-mono tracking-tight leading-none flex items-center gap-1"
+                    :style="{ color: card.color }"
+                  >
                     <span>{{ card.bigNumber }}</span>
                   </div>
-                  <div class="font-mono text-xs font-bold uppercase tracking-wider mt-1 text-white flex items-center gap-1">
-                    <span class="material-symbols-outlined text-sm" :style="{ color: card.color }">{{ card.icon }}</span>
+                  <div
+                    class="font-mono text-xs font-bold uppercase tracking-wider mt-1 text-white flex items-center gap-1"
+                  >
+                    <span
+                      class="material-symbols-outlined text-sm"
+                      :style="{ color: card.color }"
+                      >{{ card.icon }}</span
+                    >
                     <span>{{ card.metricTitle }}</span>
                   </div>
                 </div>
                 <div class="flex items-center gap-2 shrink-0">
-                  <span class="font-mono text-[9px] px-1.5 py-0.5 bg-black/60 border border-zinc-700 text-zinc-300 font-bold">
+                  <span
+                    class="font-mono text-[9px] px-1.5 py-0.5 bg-black/60 border border-zinc-700 text-zinc-300 font-bold"
+                  >
                     0{{ idx + 1 }}
                   </span>
                   <button
@@ -749,7 +804,9 @@ watch(activeIndex, () => {
 
               <!-- Problem snippet -->
               <div class="bg-rose-950/30 border border-rose-800/40 p-2 mb-2">
-                <div class="font-mono text-[10px] text-rose-400 font-bold uppercase flex items-center gap-1 mb-0.5">
+                <div
+                  class="font-mono text-[10px] text-rose-400 font-bold uppercase flex items-center gap-1 mb-0.5"
+                >
                   <span class="material-symbols-outlined text-xs">error_outline</span> Problem
                 </div>
                 <p class="text-[11px] text-rose-200/90 leading-snug">{{ card.problem }}</p>
@@ -757,25 +814,31 @@ watch(activeIndex, () => {
 
               <!-- Solution snippet -->
               <div class="bg-emerald-950/30 border border-emerald-600/50 p-2">
-                <div class="font-mono text-[10px] text-emerald-400 font-bold uppercase flex items-center gap-1 mb-0.5">
+                <div
+                  class="font-mono text-[10px] text-emerald-400 font-bold uppercase flex items-center gap-1 mb-0.5"
+                >
                   <span class="material-symbols-outlined text-xs">verified_user</span> Solution
                 </div>
                 <p class="text-[11px] text-emerald-200/90 leading-snug">{{ card.solution }}</p>
               </div>
             </div>
 
-            <div class="mt-2 pt-1 border-t border-[#27272a] text-center font-mono text-[10px] text-zinc-300 font-bold flex items-center justify-center gap-1">
+            <div
+              class="mt-2 pt-1 border-t border-[#27272a] text-center font-mono text-[10px] text-zinc-300 font-bold flex items-center justify-center gap-1"
+            >
               <span>FOCUS POD</span>
               <span class="material-symbols-outlined text-xs">arrow_forward</span>
             </div>
           </div>
         </div>
       </div>
-
     </div>
 
     <!-- BOTTOM CONTROL FOOTER CAPTION -->
-    <div v-if="!props.minimal" class="flex flex-wrap items-center justify-between border-t border-[#27272a] pt-2 font-mono text-[10px] text-zinc-400 z-10 shrink-0 gap-2">
+    <div
+      v-if="!props.minimal"
+      class="flex flex-wrap items-center justify-between border-t border-[#27272a] pt-2 font-mono text-[10px] text-zinc-400 z-10 shrink-0 gap-2"
+    >
       <div class="flex items-center gap-3">
         <span class="flex items-center gap-1 text-amber-400 font-bold">
           <span class="w-2 h-2 bg-amber-400"></span>
@@ -794,7 +857,9 @@ watch(activeIndex, () => {
           <span>SOVEREIGN CORE</span>
         </span>
       </div>
-      <span class="text-[#e02870] font-bold">CLICK PODS / TABS TO FOCUS · DRAG TO ROTATE 3D STAGE</span>
+      <span class="text-[#e02870] font-bold"
+        >CLICK PODS / TABS TO FOCUS · DRAG TO ROTATE 3D STAGE</span
+      >
     </div>
   </div>
 </template>

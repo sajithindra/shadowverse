@@ -8,18 +8,13 @@ import {
   createRealisticCctvCamera,
 } from '../three/hardware'
 
-
-
-
-
-
 const props = withDefaults(
   defineProps<{
     minimal?: boolean
   }>(),
   {
-    minimal: false
-  }
+    minimal: false,
+  },
 )
 
 const containerRef = ref<HTMLDivElement | null>(null)
@@ -90,7 +85,7 @@ function setCameraPreset(preset: 'OVERVIEW' | 'PIPELINE' | 'RESET') {
     camera.position.set(0, 42.0, 115.0)
     camera.lookAt(0, 0, 0)
     pipelineGroup.position.set(0, 0, 0)
-    pipelineGroup.rotation.set(0.30, 0, 0)
+    pipelineGroup.rotation.set(0.3, 0, 0)
   } else {
     resetZoom()
   }
@@ -183,7 +178,12 @@ function onGlobalPointerUp(event: PointerEvent) {
 
         // Find the top-level parent node group under pipelineGroup
         let targetObj: THREE.Object3D | null = topObj
-        while (targetObj && targetObj.parent && targetObj.parent !== pipelineGroup && targetObj.parent !== scene) {
+        while (
+          targetObj &&
+          targetObj.parent &&
+          targetObj.parent !== pipelineGroup &&
+          targetObj.parent !== scene
+        ) {
           targetObj = targetObj.parent
         }
 
@@ -247,11 +247,14 @@ function toggleFullscreen() {
   if (!elem) return
 
   if (!document.fullscreenElement) {
-    elem.requestFullscreen().then(() => {
-      isFullscreen.value = true
-    }).catch(err => {
-      console.warn('Fullscreen error:', err)
-    })
+    elem
+      .requestFullscreen()
+      .then(() => {
+        isFullscreen.value = true
+      })
+      .catch((err) => {
+        console.warn('Fullscreen error:', err)
+      })
   } else {
     document.exitFullscreen().then(() => {
       isFullscreen.value = false
@@ -281,12 +284,22 @@ function create3DSmartphoneSlab(colorHex = 0xe02870): THREE.Group {
   const group = new THREE.Group()
 
   const phoneGeo = new THREE.BoxGeometry(1.4, 2.6, 0.16)
-  const phoneMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, metalness: 0.85, roughness: 0.2 })
+  const phoneMat = new THREE.MeshStandardMaterial({
+    color: 0x0f172a,
+    metalness: 0.85,
+    roughness: 0.2,
+  })
   const phoneMesh = new THREE.Mesh(phoneGeo, phoneMat)
   group.add(phoneMesh)
 
   const screenGeo = new THREE.PlaneGeometry(1.25, 2.3)
-  const screenMat = new THREE.MeshStandardMaterial({ color: colorHex, emissive: colorHex, emissiveIntensity: 0.3, roughness: 0.05, side: THREE.DoubleSide })
+  const screenMat = new THREE.MeshStandardMaterial({
+    color: colorHex,
+    emissive: colorHex,
+    emissiveIntensity: 0.3,
+    roughness: 0.05,
+    side: THREE.DoubleSide,
+  })
   const screenMesh = new THREE.Mesh(screenGeo, screenMat)
   screenMesh.position.z = 0.09
   group.add(screenMesh)
@@ -341,7 +354,11 @@ function createShadowWatchHub(): THREE.Group {
   const group = new THREE.Group()
 
   const baseGeo = new THREE.CylinderGeometry(2.6, 3.0, 0.5, 6)
-  const baseMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, metalness: 0.85, roughness: 0.25 })
+  const baseMat = new THREE.MeshStandardMaterial({
+    color: 0x0f172a,
+    metalness: 0.85,
+    roughness: 0.25,
+  })
   const baseMesh = new THREE.Mesh(baseGeo, baseMat)
   baseMesh.position.y = -0.25
   group.add(baseMesh)
@@ -359,7 +376,12 @@ function createShadowWatchHub(): THREE.Group {
   group.add(wireMesh)
 
   const orbGeo = new THREE.IcosahedronGeometry(1.1, 3)
-  const orbMat = new THREE.MeshStandardMaterial({ color: 0x3d8b5e, emissive: 0x3d8b5e, emissiveIntensity: 0.9, wireframe: true })
+  const orbMat = new THREE.MeshStandardMaterial({
+    color: 0x3d8b5e,
+    emissive: 0x3d8b5e,
+    emissiveIntensity: 0.9,
+    wireframe: true,
+  })
   const orbMesh = new THREE.Mesh(orbGeo, orbMat)
   orbMesh.name = 'coreHqOrb'
   orbMesh.position.set(0, 5.8, 0)
@@ -396,9 +418,13 @@ onMounted(() => {
   gridHelper.position.y = -0.3
   pipelineGroup.add(gridHelper)
 
-
   const selRingGeo = new THREE.RingGeometry(1.8, 2.1, 32)
-  const selRingMat = new THREE.MeshBasicMaterial({ color: 0xe02870, side: THREE.DoubleSide, transparent: true, opacity: 0.85 })
+  const selRingMat = new THREE.MeshBasicMaterial({
+    color: 0xe02870,
+    side: THREE.DoubleSide,
+    transparent: true,
+    opacity: 0.85,
+  })
   selectionRingMesh = new THREE.Mesh(selRingGeo, selRingMat)
   selectionRingMesh.visible = false
   pipelineGroup.add(selectionRingMesh)
@@ -411,10 +437,10 @@ onMounted(() => {
     color = 0xe02870,
     customSpeed?: number,
     isDynamicBurst = false,
-    lineMat?: THREE.LineBasicMaterial
+    lineMat?: THREE.LineBasicMaterial,
   ) {
     const numPackets = 3
-    const speed = customSpeed ?? (0.012 + Math.random() * 0.01)
+    const speed = customSpeed ?? 0.012 + Math.random() * 0.01
     for (let i = 0; i < numPackets; i++) {
       const geo = new THREE.SphereGeometry(0.24, 12, 12)
       const mat = new THREE.MeshBasicMaterial({ color })
@@ -475,7 +501,8 @@ onMounted(() => {
       servers: 'RTSP 60FPS Video Feed Stream',
       latency: 'SUB-20ms VISION AI INGESTION',
       status: 'STREAMING TO NVR',
-      detail: 'Ultra-HD dual-lens 4K IP camera streaming live 60FPS RTSP video frames into the NVR stream aggregator.',
+      detail:
+        'Ultra-HD dual-lens 4K IP camera streaming live 60FPS RTSP video frames into the NVR stream aggregator.',
     }
     camPodGroup.traverse((child) => {
       if ((child as THREE.Mesh).isMesh) {
@@ -495,7 +522,8 @@ onMounted(() => {
     servers: 'RTSP Stream Aggregator for 12,000+ IP Cameras',
     latency: 'INGESTING FEEDS',
     status: 'ACTIVE NVR',
-    detail: 'Hardware 2U NVR storage chassis aggregating multi-camera RTSP video streams for high-speed GPU decoding.',
+    detail:
+      'Hardware 2U NVR storage chassis aggregating multi-camera RTSP video streams for high-speed GPU decoding.',
   }
   nvrGroup.traverse((child) => {
     if ((child as THREE.Mesh).isMesh) {
@@ -510,10 +538,12 @@ onMounted(() => {
     const dir = new THREE.Vector3().subVectors(nvrPos, pos).normalize()
     const lineStart = pos.clone().addScaledVector(dir, 0.85)
 
-    pipelineGroup.add(new THREE.Line(
-      new THREE.BufferGeometry().setFromPoints([lineStart, nvrPos]),
-      new THREE.LineBasicMaterial({ color: 0x3d8b5e, transparent: true, opacity: 0.85 })
-    ))
+    pipelineGroup.add(
+      new THREE.Line(
+        new THREE.BufferGeometry().setFromPoints([lineStart, nvrPos]),
+        new THREE.LineBasicMaterial({ color: 0x3d8b5e, transparent: true, opacity: 0.85 }),
+      ),
+    )
     add3DPacket(lineStart, nvrPos, 0x3d8b5e)
   })
 
@@ -527,7 +557,8 @@ onMounted(() => {
     servers: 'Sub-50ms Hardware Stream Decoder (FFmpeg H.265 / NVDEC)',
     latency: 'SUB-50ms HW DECODE',
     status: 'FFMPEG HW DECODE ACTIVE',
-    detail: 'High-density GPU server blade cabinet running hardware NVDEC H.265 frame extraction under 50ms.',
+    detail:
+      'High-density GPU server blade cabinet running hardware NVDEC H.265 frame extraction under 50ms.',
   }
   serverCabinet.traverse((child) => {
     if ((child as THREE.Mesh).isMesh) {
@@ -539,10 +570,12 @@ onMounted(() => {
 
   // Conduit & Packet: NVR -> GPU Server Cabinet
   const serverTopPos = new THREE.Vector3(-32.0, 2.5, 0)
-  pipelineGroup.add(new THREE.Line(
-    new THREE.BufferGeometry().setFromPoints([nvrPos, serverTopPos]),
-    new THREE.LineBasicMaterial({ color: 0x06b6d4, transparent: true, opacity: 0.9 })
-  ))
+  pipelineGroup.add(
+    new THREE.Line(
+      new THREE.BufferGeometry().setFromPoints([nvrPos, serverTopPos]),
+      new THREE.LineBasicMaterial({ color: 0x06b6d4, transparent: true, opacity: 0.9 }),
+    ),
+  )
   add3DPacket(nvrPos, serverTopPos, 0x06b6d4)
 
   // ════════ 3D FLOOR PLANE SECTOR 2: SHADOWVISION AI AGENTS ENCLOSURE (X = -20.0) ════════
@@ -559,7 +592,11 @@ onMounted(() => {
 
   // Cybernetic Glass Enclosure Base & Frame (X = -20.0)
   const encBaseGeo = new THREE.BoxGeometry(6.5, 0.35, 14.5)
-  const encBaseMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, metalness: 0.85, roughness: 0.25 })
+  const encBaseMat = new THREE.MeshStandardMaterial({
+    color: 0x0f172a,
+    metalness: 0.85,
+    roughness: 0.25,
+  })
   const encBaseMesh = new THREE.Mesh(encBaseGeo, encBaseMat)
   encBaseMesh.position.set(-20.0, -0.15, 0)
   pipelineGroup.add(encBaseMesh)
@@ -573,16 +610,41 @@ onMounted(() => {
     servers: 'Cybernetic enclosure housing Autonomous Safety, Protection, Tracking, & Law Agents',
     latency: 'SUB-20ms REASONING',
     status: 'AUTONOMOUS AGENTS EXECUTING & RECEIVING WRITES',
-    detail: 'Cybernetic glass enclosure housing 4 specialized AI Swarm core reactors executing concurrently.',
+    detail:
+      'Cybernetic glass enclosure housing 4 specialized AI Swarm core reactors executing concurrently.',
   }
   pipelineGroup.add(encFrameMesh)
   allInteractables.push(encFrameMesh)
 
   const agentScenarios = [
-    { title: 'SAFETY AGENT', sub: 'PERSON HURT', color: '#c44a4a', z: -5.2, detail: 'Monitors public spaces for fallen or distressed individuals using pose estimation.' },
-    { title: 'PROTECTION AGENT', sub: 'CHILD ABANDONED', color: '#c49a3c', z: -1.7, detail: 'Detects unattended or wandering children and alerts nearby safety personnel.' },
-    { title: 'TRACKING AGENT', sub: 'TRACKING PERSON', color: '#3d8b5e', z: 1.7, detail: 'Performs multi-camera ReID tracking across district edge camera networks.' },
-    { title: 'LAW ENFORCEMENT AGENT', sub: 'STOLEN VEHICLE', color: '#e02870', z: 5.2, detail: 'Scans plate numbers against stolen vehicle databases and dispatches CAD alerts.' },
+    {
+      title: 'SAFETY AGENT',
+      sub: 'PERSON HURT',
+      color: '#c44a4a',
+      z: -5.2,
+      detail: 'Monitors public spaces for fallen or distressed individuals using pose estimation.',
+    },
+    {
+      title: 'PROTECTION AGENT',
+      sub: 'CHILD ABANDONED',
+      color: '#c49a3c',
+      z: -1.7,
+      detail: 'Detects unattended or wandering children and alerts nearby safety personnel.',
+    },
+    {
+      title: 'TRACKING AGENT',
+      sub: 'TRACKING PERSON',
+      color: '#3d8b5e',
+      z: 1.7,
+      detail: 'Performs multi-camera ReID tracking across district edge camera networks.',
+    },
+    {
+      title: 'LAW ENFORCEMENT AGENT',
+      sub: 'STOLEN VEHICLE',
+      color: '#e02870',
+      z: 5.2,
+      detail: 'Scans plate numbers against stolen vehicle databases and dispatches CAD alerts.',
+    },
   ]
 
   const agentGroups: THREE.Group[] = []
@@ -592,7 +654,12 @@ onMounted(() => {
     agGroup.position.set(-20.0, 1.0, ag.z)
 
     const agGeo = new THREE.IcosahedronGeometry(0.95, 2)
-    const agMat = new THREE.MeshStandardMaterial({ color: new THREE.Color(ag.color), emissive: new THREE.Color(ag.color), emissiveIntensity: 0.5, wireframe: true })
+    const agMat = new THREE.MeshStandardMaterial({
+      color: new THREE.Color(ag.color),
+      emissive: new THREE.Color(ag.color),
+      emissiveIntensity: 0.5,
+      wireframe: true,
+    })
     const agMesh = new THREE.Mesh(agGeo, agMat)
     agGroup.add(agMesh)
 
@@ -624,10 +691,12 @@ onMounted(() => {
     })
 
     // Conduit: GPU Server -> AI Swarm Core
-    pipelineGroup.add(new THREE.Line(
-      new THREE.BufferGeometry().setFromPoints([serverTopPos, agGroup.position]),
-      new THREE.LineBasicMaterial({ color: 0x4a7ebb, transparent: true, opacity: 0.8 })
-    ))
+    pipelineGroup.add(
+      new THREE.Line(
+        new THREE.BufferGeometry().setFromPoints([serverTopPos, agGroup.position]),
+        new THREE.LineBasicMaterial({ color: 0x4a7ebb, transparent: true, opacity: 0.8 }),
+      ),
+    )
     add3DPacket(serverTopPos, agGroup.position, 0x4a7ebb)
   })
 
@@ -645,7 +714,11 @@ onMounted(() => {
 
   // Neural Models Router at X = -20.0, Z = -12.0
   const modelsContainerGeo = new THREE.BoxGeometry(11.0, 1.5, 3.0)
-  const modelsContainerMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.9, roughness: 0.25 })
+  const modelsContainerMat = new THREE.MeshStandardMaterial({
+    color: 0x1e293b,
+    metalness: 0.9,
+    roughness: 0.25,
+  })
   const modelsContainerMesh = new THREE.Mesh(modelsContainerGeo, modelsContainerMat)
   modelsContainerMesh.position.set(-20.0, 0.75, -12.0)
   modelsContainerMesh.userData = {
@@ -653,7 +726,8 @@ onMounted(() => {
     servers: 'Pose Detection, Face Recognition, & Object/LPR Models Container',
     latency: 'DYNAMIC MODEL QUERY ROUTER',
     status: 'DYNAMIC MODEL QUERY ROUTER',
-    detail: 'Holographic neural router dynamically routing frame queries to specialized AI chips on demand.',
+    detail:
+      'Holographic neural router dynamically routing frame queries to specialized AI chips on demand.',
   }
   pipelineGroup.add(modelsContainerMesh)
   allInteractables.push(modelsContainerMesh)
@@ -678,7 +752,10 @@ onMounted(() => {
 
   aiModels.forEach((m, idx) => {
     const mGeo = new THREE.BoxGeometry(3.2, 0.9, 1.4)
-    const mMat = new THREE.MeshStandardMaterial({ color: new THREE.Color(m.color), metalness: 0.85 })
+    const mMat = new THREE.MeshStandardMaterial({
+      color: new THREE.Color(m.color),
+      metalness: 0.85,
+    })
     const mMesh = new THREE.Mesh(mGeo, mMat)
     mMesh.position.set(m.x, 0.75, -12.0)
     mMesh.userData = {
@@ -691,12 +768,15 @@ onMounted(() => {
     pipelineGroup.add(mMesh)
     allInteractables.push(mMesh)
     modelMeshes.push(mMesh)
-
   })
 
   // Action Dispatch Chassis at X = -20.0, Z = +12.0
   const actionsContainerGeo = new THREE.BoxGeometry(13.0, 1.5, 3.0)
-  const actionsContainerMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.9, roughness: 0.25 })
+  const actionsContainerMat = new THREE.MeshStandardMaterial({
+    color: 0x1e293b,
+    metalness: 0.9,
+    roughness: 0.25,
+  })
   const actionsContainerMesh = new THREE.Mesh(actionsContainerGeo, actionsContainerMat)
   actionsContainerMesh.position.set(-20.0, 0.75, 12.0)
   actionsContainerMesh.userData = {
@@ -704,7 +784,8 @@ onMounted(() => {
     servers: 'Simultaneous Dual Action Executions (Ambulance, Helpline, DB, Police Alert)',
     latency: 'REAL-TIME DISPATCH',
     status: 'REAL-TIME ACTION DISPATCH CONTAINER',
-    detail: 'Automated action execution engine dispatching emergency medical, helpline, database, and police alerts.',
+    detail:
+      'Automated action execution engine dispatching emergency medical, helpline, database, and police alerts.',
   }
   pipelineGroup.add(actionsContainerMesh)
   allInteractables.push(actionsContainerMesh)
@@ -730,7 +811,10 @@ onMounted(() => {
 
   actionsData.forEach((act, idx) => {
     const actGeo = new THREE.BoxGeometry(2.6, 0.9, 1.4)
-    const actMat = new THREE.MeshStandardMaterial({ color: new THREE.Color(act.color), metalness: 0.85 })
+    const actMat = new THREE.MeshStandardMaterial({
+      color: new THREE.Color(act.color),
+      metalness: 0.85,
+    })
     const actMesh = new THREE.Mesh(actGeo, actMat)
     actMesh.position.set(act.x, 0.75, 12.0)
     actMesh.userData = {
@@ -743,7 +827,6 @@ onMounted(() => {
     pipelineGroup.add(actMesh)
     allInteractables.push(actMesh)
     actionMeshes.push(actMesh)
-
   })
 
   // ════════ 3D FLOOR PLANE SECTOR 4: SHADOWWATCH HUB & NATIONAL SERVERS (Central Governance, X = 0.0) ════════
@@ -765,7 +848,8 @@ onMounted(() => {
     servers: 'Receives alerts from Shadowverse & writes data back into Shadowverse',
     latency: 'BIDIRECTIONAL READ/WRITE ENGINE',
     status: 'BIDIRECTIONAL READ/WRITE ENGINE ACTIVE',
-    detail: 'Central governance hexagonal server hub managing audit logs and bidirectional state write-backs.',
+    detail:
+      'Central governance hexagonal server hub managing audit logs and bidirectional state write-backs.',
   }
   shadowwatchGroup.traverse((child) => {
     if ((child as THREE.Mesh).isMesh) {
@@ -793,8 +877,9 @@ onMounted(() => {
       city: 'UIDAI National Biometric Database',
       color: 0xc49a3c,
       colorHex: '#c49a3c',
-      pos: new THREE.Vector3(-12.05, 0, -17.20),
-      detail: 'Sovereign Aadhaar biometric identity verification engine performing 1:N face & fingerprint matching.',
+      pos: new THREE.Vector3(-12.05, 0, -17.2),
+      detail:
+        'Sovereign Aadhaar biometric identity verification engine performing 1:N face & fingerprint matching.',
     },
     {
       id: 'court-srv',
@@ -803,7 +888,8 @@ onMounted(() => {
       color: 0x4a7ebb,
       colorHex: '#4a7ebb',
       pos: new THREE.Vector3(-5.79, 0, -20.19),
-      detail: 'Judicial warrant ledger & e-courts case filing server executing real-time legal status verification.',
+      detail:
+        'Judicial warrant ledger & e-courts case filing server executing real-time legal status verification.',
     },
     {
       id: 'rto-srv',
@@ -811,8 +897,9 @@ onMounted(() => {
       city: 'Vahan & Sarathi National Registry',
       color: 0x3d8b5e,
       colorHex: '#3d8b5e',
-      pos: new THREE.Vector3(1.10, 0, -20.97),
-      detail: 'National RTO vehicle registration & driving license database validating ANPR plate queries under 10ms.',
+      pos: new THREE.Vector3(1.1, 0, -20.97),
+      detail:
+        'National RTO vehicle registration & driving license database validating ANPR plate queries under 10ms.',
     },
     {
       id: 'bank-srv',
@@ -821,7 +908,8 @@ onMounted(() => {
       color: 0x10b981,
       colorHex: '#10b981',
       pos: new THREE.Vector3(7.87, 0, -19.47),
-      detail: 'Core banking transaction ledger monitoring anti-money laundering (AML) and financial fraud patterns.',
+      detail:
+        'Core banking transaction ledger monitoring anti-money laundering (AML) and financial fraud patterns.',
     },
     {
       id: 'card-srv',
@@ -830,7 +918,8 @@ onMounted(() => {
       color: 0xe02870,
       colorHex: '#e02870',
       pos: new THREE.Vector3(13.78, 0, -15.85),
-      detail: 'PCI-DSS card network intelligence engine detecting suspicious transaction locations & stolen card usage.',
+      detail:
+        'PCI-DSS card network intelligence engine detecting suspicious transaction locations & stolen card usage.',
     },
     {
       id: 'maps-srv',
@@ -838,8 +927,9 @@ onMounted(() => {
       city: 'National Spatial GIS System',
       color: 0x0284c7,
       colorHex: '#0284c7',
-      pos: new THREE.Vector3(18.19, 0, -10.50),
-      detail: 'High-precision national 3D GIS spatial mapping engine managing geofences and live officer tracking.',
+      pos: new THREE.Vector3(18.19, 0, -10.5),
+      detail:
+        'High-precision national 3D GIS spatial mapping engine managing geofences and live officer tracking.',
     },
   ]
 
@@ -867,10 +957,12 @@ onMounted(() => {
     const srvTopPos = srv.pos.clone().add(new THREE.Vector3(0, 2.5, 0))
 
     // 1. Line & Packet: ShadowWatch Hub -> National Server (Forward Stream)
-    pipelineGroup.add(new THREE.Line(
-      new THREE.BufferGeometry().setFromPoints([swCenterPos, srvTopPos]),
-      new THREE.LineBasicMaterial({ color: srv.color, transparent: true, opacity: 0.85 })
-    ))
+    pipelineGroup.add(
+      new THREE.Line(
+        new THREE.BufferGeometry().setFromPoints([swCenterPos, srvTopPos]),
+        new THREE.LineBasicMaterial({ color: srv.color, transparent: true, opacity: 0.85 }),
+      ),
+    )
     add3DPacket(swCenterPos, srvTopPos, srv.color, 0.015)
 
     // 2. Line & Packet: National Server -> ShadowWatch Hub (Return Stream)
@@ -894,8 +986,14 @@ onMounted(() => {
     const targetModelMesh = modelMeshes[map.targetModelIdx]
     if (targetModelMesh) {
       const mPos = targetModelMesh.position
-      const lineMat = new THREE.LineBasicMaterial({ color: 0x4a7ebb, transparent: true, opacity: 0.8 })
-      pipelineGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([agPos, mPos]), lineMat))
+      const lineMat = new THREE.LineBasicMaterial({
+        color: 0x4a7ebb,
+        transparent: true,
+        opacity: 0.8,
+      })
+      pipelineGroup.add(
+        new THREE.Line(new THREE.BufferGeometry().setFromPoints([agPos, mPos]), lineMat),
+      )
 
       add3DPacket(agPos, mPos, 0x4a7ebb, undefined, true, lineMat)
       add3DPacket(mPos, agPos, 0x4a7ebb, undefined, true, lineMat)
@@ -905,18 +1003,26 @@ onMounted(() => {
     const targetActionMesh = actionMeshes[map.targetActionIdx]
     if (targetActionMesh) {
       const actPos = targetActionMesh.position
-      const actLineMat = new THREE.LineBasicMaterial({ color: 0xe02870, transparent: true, opacity: 0.8 })
-      pipelineGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([agPos, actPos]), actLineMat))
+      const actLineMat = new THREE.LineBasicMaterial({
+        color: 0xe02870,
+        transparent: true,
+        opacity: 0.8,
+      })
+      pipelineGroup.add(
+        new THREE.Line(new THREE.BufferGeometry().setFromPoints([agPos, actPos]), actLineMat),
+      )
 
       add3DPacket(agPos, actPos, 0xe02870, undefined, true, actLineMat)
       add3DPacket(actPos, agPos, 0xe02870, undefined, true, actLineMat)
     }
 
     // 3. AI Agent -> ShadowWatch Hub (Connected to Unified Hub Height)
-    pipelineGroup.add(new THREE.Line(
-      new THREE.BufferGeometry().setFromPoints([agPos, swCenterPos]),
-      new THREE.LineBasicMaterial({ color: 0x3d8b5e, transparent: true, opacity: 0.7 })
-    ))
+    pipelineGroup.add(
+      new THREE.Line(
+        new THREE.BufferGeometry().setFromPoints([agPos, swCenterPos]),
+        new THREE.LineBasicMaterial({ color: 0x3d8b5e, transparent: true, opacity: 0.7 }),
+      ),
+    )
     add3DPacket(agPos, swCenterPos, 0x3d8b5e)
   })
 
@@ -940,7 +1046,8 @@ onMounted(() => {
     servers: 'Real-time Patrol Officer Alert Feed',
     latency: 'SYNCED WITH CENTRAL HUB',
     status: 'RECEIVING CENTRAL ALERTS',
-    detail: 'Mobile application for field officers displaying real-time alert notifications and map directions.',
+    detail:
+      'Mobile application for field officers displaying real-time alert notifications and map directions.',
   }
   phoneGroup.traverse((child) => {
     if ((child as THREE.Mesh).isMesh) {
@@ -952,13 +1059,14 @@ onMounted(() => {
 
   // Field Laptop Console
   const laptopGroup = create3DFieldLaptop(0x4a7ebb)
-  laptopGroup.position.set(19.40, 0.8, 8.04)
+  laptopGroup.position.set(19.4, 0.8, 8.04)
   laptopGroup.userData = {
     name: 'POLICE FIELD LAPTOP CONSOLE',
     servers: 'Rugged Patrol Vehicle Dispatch Console',
     latency: 'SYNCED WITH CENTRAL HUB',
     status: 'RECEIVING CENTRAL ALERTS',
-    detail: 'Patrol vehicle rugged laptop console displaying live CAD dispatch and suspect tracking.',
+    detail:
+      'Patrol vehicle rugged laptop console displaying live CAD dispatch and suspect tracking.',
   }
   laptopGroup.traverse((child) => {
     if ((child as THREE.Mesh).isMesh) {
@@ -970,13 +1078,14 @@ onMounted(() => {
 
   // Station Command PC Terminal
   const pcGroup = create3DStationPcTerminal(0x3d8b5e)
-  pcGroup.position.set(21.00, 0.8, 0.00)
+  pcGroup.position.set(21.0, 0.8, 0.0)
   pcGroup.userData = {
     name: 'STATION COMMAND PC TERMINAL',
     servers: 'Station Command Desktop Terminal',
     latency: 'SYNCED WITH CENTRAL HUB',
     status: 'RECEIVING CENTRAL ALERTS',
-    detail: 'Station command center desktop terminal for supervisor oversight and evidence logging.',
+    detail:
+      'Station command center desktop terminal for supervisor oversight and evidence logging.',
   }
   pcGroup.traverse((child) => {
     if ((child as THREE.Mesh).isMesh) {
@@ -989,10 +1098,12 @@ onMounted(() => {
   // Conduits: ShadowWatch Hub -> Endpoints (Unified Core Hub Anchor)
   const endpointPositions = [phoneGroup.position, laptopGroup.position, pcGroup.position]
   endpointPositions.forEach((pos) => {
-    pipelineGroup.add(new THREE.Line(
-      new THREE.BufferGeometry().setFromPoints([swCenterPos, pos]),
-      new THREE.LineBasicMaterial({ color: 0x3d8b5e, transparent: true, opacity: 0.85 })
-    ))
+    pipelineGroup.add(
+      new THREE.Line(
+        new THREE.BufferGeometry().setFromPoints([swCenterPos, pos]),
+        new THREE.LineBasicMaterial({ color: 0x3d8b5e, transparent: true, opacity: 0.85 }),
+      ),
+    )
     add3DPacket(swCenterPos, pos, 0x3d8b5e)
   })
 
@@ -1058,7 +1169,7 @@ onMounted(() => {
         // The badge is drawn above its anchor point, so test that shifted box.
         const cy = lbl.screenY - hh - 16 * sc
         const clash = placed.some(
-          (p) => Math.abs(p.x - lbl.screenX) < p.hw + hw && Math.abs(p.y - cy) < p.hh + hh
+          (p) => Math.abs(p.x - lbl.screenX) < p.hw + hw && Math.abs(p.y - cy) < p.hh + hh,
         )
         // Headers are the scene's structure and always render; only the
         // secondary node badges yield when space runs out. Hiding uses opacity,
@@ -1169,13 +1280,23 @@ onBeforeUnmount(() => {
 <template>
   <div
     ref="containerRef"
-    :class="props.minimal ? 'w-full h-full relative overflow-hidden select-none bg-transparent' : ('industrial-card p-3 sm:p-4 bg-[#09090b] border-[#e02870] relative overflow-hidden group shadow-2xl my-3 transition-all ' + (isFullscreen ? 'fixed inset-0 z-50 my-0 rounded-none border-none p-6 bg-black' : ''))"
+    :class="
+      props.minimal
+        ? 'w-full h-full relative overflow-hidden select-none bg-transparent'
+        : 'industrial-card p-3 sm:p-4 bg-[#09090b] border-[#e02870] relative overflow-hidden group shadow-2xl my-3 transition-all ' +
+          (isFullscreen ? 'fixed inset-0 z-50 my-0 rounded-none border-none p-6 bg-black' : '')
+    "
   >
     <!-- Header Control Bar (Only shown when not in minimal presentation mode) -->
-    <div v-if="!props.minimal" class="flex items-center justify-between border-b border-[#27272a] pb-2 mb-1 font-mono text-xs z-10 relative">
+    <div
+      v-if="!props.minimal"
+      class="flex items-center justify-between border-b border-[#27272a] pb-2 mb-1 font-mono text-xs z-10 relative"
+    >
       <div class="flex items-center gap-2">
         <span class="w-2 h-2 rounded-full bg-[#e02870] animate-ping"></span>
-        <span class="text-[#e02870] font-black uppercase tracking-wider">// SHADOWVERSE REAL-TIME PIPELINE FLOW (GRAPH DATA MODEL)</span>
+        <span class="text-[#e02870] font-black uppercase tracking-wider"
+          >// SHADOWVERSE REAL-TIME PIPELINE FLOW (GRAPH DATA MODEL)</span
+        >
       </div>
 
       <!-- CAMERA PRESETS & CONTROL BUTTONS -->
@@ -1219,7 +1340,9 @@ onBeforeUnmount(() => {
           @click="toggleFullscreen"
           class="px-2 py-0.5 text-[10px] font-mono font-bold uppercase border transition-colors cursor-pointer flex items-center gap-1 bg-[#121216] border-[#27272a] text-white hover:border-[#e02870]"
         >
-          <span class="material-symbols-outlined text-xs">{{ isFullscreen ? 'fullscreen_exit' : 'fullscreen' }}</span>
+          <span class="material-symbols-outlined text-xs">{{
+            isFullscreen ? 'fullscreen_exit' : 'fullscreen'
+          }}</span>
           <span>{{ isFullscreen ? 'EXIT' : 'FULLSCREEN' }}</span>
         </button>
       </div>
@@ -1233,7 +1356,9 @@ onBeforeUnmount(() => {
       @contextmenu="onContextMenu"
       @wheel="onWheel"
       class="w-full cursor-grab active:cursor-grabbing relative overflow-hidden touch-none select-none"
-      :class="props.minimal ? 'h-full' : (isFullscreen ? 'h-[calc(100vh-90px)]' : 'h-[58vh] sm:h-[65vh]')"
+      :class="
+        props.minimal ? 'h-full' : isFullscreen ? 'h-[calc(100vh-90px)]' : 'h-[58vh] sm:h-[65vh]'
+      "
     >
       <!-- Floating 3D space label overlay: GPU-composited, depth-faded, stem-anchored -->
       <div
@@ -1252,8 +1377,12 @@ onBeforeUnmount(() => {
           class="px-4 py-2 bg-[#0a0a0e]/92 backdrop-blur-sm border-2 font-mono shadow-2xl whitespace-nowrap text-center"
           :style="{ borderColor: lbl.color, boxShadow: `0 0 20px -6px ${lbl.color}` }"
         >
-          <div class="text-white font-black text-xs sm:text-sm tracking-wider uppercase">{{ lbl.text }}</div>
-          <div class="text-[10px] text-zinc-300 font-bold tracking-widest mt-0.5">{{ lbl.subtext }}</div>
+          <div class="text-white font-black text-xs sm:text-sm tracking-wider uppercase">
+            {{ lbl.text }}
+          </div>
+          <div class="text-[10px] text-zinc-300 font-bold tracking-widest mt-0.5">
+            {{ lbl.subtext }}
+          </div>
         </div>
 
         <!-- Node Badge: lighter chrome so it reads as secondary to the stage headers -->
@@ -1262,12 +1391,19 @@ onBeforeUnmount(() => {
           class="pl-2.5 pr-3 py-1.5 bg-[#0a0a0e]/88 backdrop-blur-sm border border-white/10 border-l-[3px] font-mono shadow-xl whitespace-nowrap text-left"
           :style="{ borderLeftColor: lbl.color }"
         >
-          <div class="text-white font-bold text-[11px] sm:text-xs tracking-wide">{{ lbl.text }}</div>
-          <div class="text-[9px] sm:text-[10px] text-zinc-400 font-semibold tracking-wider mt-px">{{ lbl.subtext }}</div>
+          <div class="text-white font-bold text-[11px] sm:text-xs tracking-wide">
+            {{ lbl.text }}
+          </div>
+          <div class="text-[9px] sm:text-[10px] text-zinc-400 font-semibold tracking-wider mt-px">
+            {{ lbl.subtext }}
+          </div>
         </div>
 
         <!-- Stem tying the badge to the object it names -->
-        <div class="w-px h-4" :style="{ background: `linear-gradient(to bottom, ${lbl.color}, transparent)` }"></div>
+        <div
+          class="w-px h-4"
+          :style="{ background: `linear-gradient(to bottom, ${lbl.color}, transparent)` }"
+        ></div>
       </div>
 
       <!-- SELECTED NODE TELEMETRY INSPECTION DRAWER CARD (UX) -->
@@ -1280,19 +1416,32 @@ onBeforeUnmount(() => {
             <span class="material-symbols-outlined text-sm">info</span>
             <span>PIPELINE TELEMETRY INSPECTOR</span>
           </div>
-          <button @click="selectedNode = null" class="text-zinc-400 hover:text-white cursor-pointer flex items-center"><span class="material-symbols-outlined text-base">close</span></button>
+          <button
+            @click="selectedNode = null"
+            class="text-zinc-400 hover:text-white cursor-pointer flex items-center"
+          >
+            <span class="material-symbols-outlined text-base">close</span>
+          </button>
         </div>
         <div class="font-bold text-sm text-[#e02870]">{{ selectedNode.name }}</div>
-        <div class="text-zinc-300 text-[11px] leading-relaxed">{{ selectedNode.detail || selectedNode.servers }}</div>
+        <div class="text-zinc-300 text-[11px] leading-relaxed">
+          {{ selectedNode.detail || selectedNode.servers }}
+        </div>
         <div class="flex items-center justify-between text-[10px] pt-1 border-t border-[#27272a]">
           <span class="text-emerald-400 font-bold">{{ selectedNode.latency }}</span>
-          <span class="px-2 py-0.5 bg-[#e02870]/20 text-[#e02870] font-bold border border-[#e02870]/40">{{ selectedNode.status }}</span>
+          <span
+            class="px-2 py-0.5 bg-[#e02870]/20 text-[#e02870] font-bold border border-[#e02870]/40"
+            >{{ selectedNode.status }}</span
+          >
         </div>
       </div>
     </div>
 
     <!-- Footer Legend (Only shown when not minimal) -->
-    <div v-if="!props.minimal" class="flex flex-wrap items-center justify-between border-t border-[#27272a] pt-2 font-mono text-[10px] text-zinc-400 z-10 relative gap-2">
+    <div
+      v-if="!props.minimal"
+      class="flex flex-wrap items-center justify-between border-t border-[#27272a] pt-2 font-mono text-[10px] text-zinc-400 z-10 relative gap-2"
+    >
       <div class="flex flex-wrap items-center gap-3">
         <span class="flex items-center gap-1 text-[#3d8b5e] font-bold">
           <span class="w-2 h-2 bg-[#3d8b5e]"></span>
@@ -1320,8 +1469,14 @@ onBeforeUnmount(() => {
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Fira+Code:wght@400;500;600;700&display=swap');
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: scale(0.98); }
-  to { opacity: 1; transform: scale(1); }
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 .animate-fade-in {

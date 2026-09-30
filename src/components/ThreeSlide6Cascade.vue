@@ -53,12 +53,54 @@ interface StageStat {
 }
 
 const stageStats: StageStat[] = [
-  { id: 's0', stage: 'Frames read from NVR', detail: '2,000 cameras at 30 fps', rate: '60,000 /s', share: 1, color: HEX.all },
-  { id: 's1', stage: 'Objects detected', detail: 'Stage 1 runs on every frame', rate: '7,200 /s', share: 0.12, color: HEX.all },
-  { id: 's2', stage: 'Plates read', detail: 'Vehicles only', rate: '2,300 /s', share: 0.038, color: HEX.vehicle },
-  { id: 's3', stage: 'Faces checked', detail: 'Persons only', rate: '3,100 /s', share: 0.052, color: HEX.person },
-  { id: 's4', stage: 'Appearance only', detail: 'No usable face — colour descriptor', rate: '1,900 /s', share: 0.031, color: HEX.person },
-  { id: 's5', stage: 'Face matched', detail: 'Embedding plus vector search', rate: '1,200 /s', share: 0.02, color: HEX.costly },
+  {
+    id: 's0',
+    stage: 'Frames read from NVR',
+    detail: '2,000 cameras at 30 fps',
+    rate: '60,000 /s',
+    share: 1,
+    color: HEX.all,
+  },
+  {
+    id: 's1',
+    stage: 'Objects detected',
+    detail: 'Stage 1 runs on every frame',
+    rate: '7,200 /s',
+    share: 0.12,
+    color: HEX.all,
+  },
+  {
+    id: 's2',
+    stage: 'Plates read',
+    detail: 'Vehicles only',
+    rate: '2,300 /s',
+    share: 0.038,
+    color: HEX.vehicle,
+  },
+  {
+    id: 's3',
+    stage: 'Faces checked',
+    detail: 'Persons only',
+    rate: '3,100 /s',
+    share: 0.052,
+    color: HEX.person,
+  },
+  {
+    id: 's4',
+    stage: 'Appearance only',
+    detail: 'No usable face — colour descriptor',
+    rate: '1,900 /s',
+    share: 0.031,
+    color: HEX.person,
+  },
+  {
+    id: 's5',
+    stage: 'Face matched',
+    detail: 'Embedding plus vector search',
+    rate: '1,200 /s',
+    share: 0.02,
+    color: HEX.costly,
+  },
 ]
 
 interface Inspectable {
@@ -394,14 +436,25 @@ onMounted(() => {
     })
     // Camera to recorder.
     addStream(
-      [new THREE.Vector3(-17.4, 1.2, z), new THREE.Vector3(-16, 1.4, z * 0.5), nvrPos.clone().setY(0.9)],
+      [
+        new THREE.Vector3(-17.4, 1.2, z),
+        new THREE.Vector3(-16, 1.4, z * 0.5),
+        nvrPos.clone().setY(0.9),
+      ],
       ACCENT.all,
       3,
       0.9,
     )
   }
 
-  addLabel('cctv', 'CCTV CAMERAS', '2,000 STREAMS · RTSP', HEX.all, new THREE.Vector3(-18, 3.4, 0), true)
+  addLabel(
+    'cctv',
+    'CCTV CAMERAS',
+    '2,000 STREAMS · RTSP',
+    HEX.all,
+    new THREE.Vector3(-18, 3.4, 0),
+    true,
+  )
 
   const nvrGroup = createNvrStorageUnit(ACCENT.all)
   nvrGroup.position.copy(nvrPos)
@@ -416,7 +469,14 @@ onMounted(() => {
     color: HEX.all,
   })
 
-  addLabel('nvr', 'NVR', 'ANALYTICS READS FROM HERE', HEX.all, nvrPos.clone().add(new THREE.Vector3(0, 1.6, 0)), true)
+  addLabel(
+    'nvr',
+    'NVR',
+    'ANALYTICS READS FROM HERE',
+    HEX.all,
+    nvrPos.clone().add(new THREE.Vector3(0, 1.6, 0)),
+    true,
+  )
 
   const ingest = nvrPos.clone().setY(1.2)
 
@@ -428,7 +488,13 @@ onMounted(() => {
     'IS IT A VEHICLE OR A PERSON?',
     'The first and cheapest branch. 88% of detections are neither and stop here, which is where most of the saving comes from — no further model is ever loaded for them.',
   )
-  addLabel('split-1', 'VEHICLE OR PERSON?', '88% STOP HERE', HEX.all, splitObject.clone().add(new THREE.Vector3(0, 1.5, 0)))
+  addLabel(
+    'split-1',
+    'VEHICLE OR PERSON?',
+    '88% STOP HERE',
+    HEX.all,
+    splitObject.clone().add(new THREE.Vector3(0, 1.5, 0)),
+  )
 
   const splitFace = new THREE.Vector3(2.5, 1.9, 9)
   addDecision(
@@ -437,13 +503,24 @@ onMounted(() => {
     'IS THERE A USABLE FACE?',
     'Decides which person path is worth paying for. No face means the cheap appearance descriptor; a face means the expensive embedding and a vector search.',
   )
-  addLabel('split-2', 'USABLE FACE?', 'ROUTES THE PERSON PATH', HEX.person, splitFace.clone().add(new THREE.Vector3(0, 1.5, 0)))
+  addLabel(
+    'split-2',
+    'USABLE FACE?',
+    'ROUTES THE PERSON PATH',
+    HEX.person,
+    splitFace.clone().add(new THREE.Vector3(0, 1.5, 0)),
+  )
 
   // ── Work streams. Unit counts are the throughput at each hop. ────────────
   const rackFront = (id: string, dz = 1.2) => bayPos[id]!.clone().add(new THREE.Vector3(0, 1.9, dz))
 
   // Everything ingested reaches stage 1.
-  addStream([ingest, new THREE.Vector3(-11.5, 1.9, 0), rackFront('detect').setY(3.4)], ACCENT.all, 16, 0.62)
+  addStream(
+    [ingest, new THREE.Vector3(-11.5, 1.9, 0), rackFront('detect').setY(3.4)],
+    ACCENT.all,
+    16,
+    0.62,
+  )
 
   // Stage 1 out to the first branch.
   addStream([rackFront('detect'), splitObject], ACCENT.all, 8, 0.72)
@@ -467,7 +544,12 @@ onMounted(() => {
   // Units arc over the rim and fall in, so the discard is visibly a discard.
   const dropped = binPos.clone().add(new THREE.Vector3(0, 0.5, 0))
   addStream(
-    [splitObject, new THREE.Vector3(-3, 2.4, 6), binPos.clone().add(new THREE.Vector3(0, 1.8, 0)), dropped],
+    [
+      splitObject,
+      new THREE.Vector3(-3, 2.4, 6),
+      binPos.clone().add(new THREE.Vector3(0, 1.8, 0)),
+      dropped,
+    ],
     ACCENT.discard,
     10,
     0.6,
@@ -481,22 +563,42 @@ onMounted(() => {
   )
 
   // Vehicle branch.
-  addStream([splitObject, new THREE.Vector3(-5, 1.9, -6), rackFront('plate')], ACCENT.vehicle, 4, 0.68)
+  addStream(
+    [splitObject, new THREE.Vector3(-5, 1.9, -6), rackFront('plate')],
+    ACCENT.vehicle,
+    4,
+    0.68,
+  )
 
   // Person branch.
-  addStream([splitObject, new THREE.Vector3(-5, 1.9, 5), rackFront('facecheck')], ACCENT.person, 5, 0.68)
+  addStream(
+    [splitObject, new THREE.Vector3(-5, 1.9, 5), rackFront('facecheck')],
+    ACCENT.person,
+    5,
+    0.68,
+  )
 
   // Stage 3 to the face branch.
   addStream([rackFront('facecheck'), splitFace], ACCENT.person, 4, 0.72)
 
   // No face: cheap appearance descriptor.
-  addStream([splitFace, new THREE.Vector3(5, 1.9, 10), rackFront('appearance')], ACCENT.person, 3, 0.55)
+  addStream(
+    [splitFace, new THREE.Vector3(5, 1.9, 10), rackFront('appearance')],
+    ACCENT.person,
+    3,
+    0.55,
+  )
 
   // Face present: the expensive path.
   addStream([splitFace, new THREE.Vector3(5, 1.9, 3), rackFront('match')], ACCENT.costly, 3, 0.68)
 
   // Match query against the index, and the answer coming back.
-  addStream([rackFront('match'), new THREE.Vector3(11.5, 1.9, 1), indexPos.clone().setY(3.4)], ACCENT.costly, 2, 0.8)
+  addStream(
+    [rackFront('match'), new THREE.Vector3(11.5, 1.9, 1), indexPos.clone().setY(3.4)],
+    ACCENT.costly,
+    2,
+    0.8,
+  )
 
   const resize = () => {
     stage?.resize()
@@ -672,8 +774,12 @@ function onContextMenu(event: MouseEvent) {
           class="px-4 py-2 bg-[#0a0a0e]/92 backdrop-blur-sm border-2 font-mono shadow-2xl whitespace-nowrap text-center"
           :style="{ borderColor: lbl.color, boxShadow: `0 0 20px -6px ${lbl.color}` }"
         >
-          <div class="text-white font-black text-xs sm:text-sm tracking-wider uppercase">{{ lbl.text }}</div>
-          <div class="text-[10px] text-zinc-300 font-bold tracking-widest mt-0.5">{{ lbl.subtext }}</div>
+          <div class="text-white font-black text-xs sm:text-sm tracking-wider uppercase">
+            {{ lbl.text }}
+          </div>
+          <div class="text-[10px] text-zinc-300 font-bold tracking-widest mt-0.5">
+            {{ lbl.subtext }}
+          </div>
         </div>
 
         <div
@@ -681,11 +787,18 @@ function onContextMenu(event: MouseEvent) {
           class="pl-2.5 pr-3 py-1.5 bg-[#0a0a0e]/88 backdrop-blur-sm border border-white/10 border-l-[3px] font-mono shadow-xl whitespace-nowrap text-left"
           :style="{ borderLeftColor: lbl.color }"
         >
-          <div class="text-white font-bold text-[11px] sm:text-xs tracking-wide">{{ lbl.text }}</div>
-          <div class="text-[9px] sm:text-[10px] text-zinc-400 font-semibold tracking-wider mt-px">{{ lbl.subtext }}</div>
+          <div class="text-white font-bold text-[11px] sm:text-xs tracking-wide">
+            {{ lbl.text }}
+          </div>
+          <div class="text-[9px] sm:text-[10px] text-zinc-400 font-semibold tracking-wider mt-px">
+            {{ lbl.subtext }}
+          </div>
         </div>
 
-        <div class="w-px h-4" :style="{ background: `linear-gradient(to bottom, ${lbl.color}, transparent)` }"></div>
+        <div
+          class="w-px h-4"
+          :style="{ background: `linear-gradient(to bottom, ${lbl.color}, transparent)` }"
+        ></div>
       </div>
 
       <!-- Throughput readout: the quantitative half of the cascade argument -->
@@ -694,13 +807,17 @@ function onContextMenu(event: MouseEvent) {
       >
         <div class="px-3 py-2 border-b border-white/10">
           <div class="text-white font-black text-xs tracking-wide">GPU work per second</div>
-          <div class="text-[10px] text-zinc-400 mt-0.5">Each tier is fed only what the one before it kept</div>
+          <div class="text-[10px] text-zinc-400 mt-0.5">
+            Each tier is fed only what the one before it kept
+          </div>
         </div>
         <div class="px-3 py-2 space-y-1.5">
           <div v-for="s in stageStats" :key="s.id">
             <div class="flex items-baseline justify-between gap-2">
               <span class="text-[11px] text-zinc-200 font-semibold truncate">{{ s.stage }}</span>
-              <span class="text-[11px] font-bold tabular-nums" :style="{ color: s.color }">{{ s.rate }}</span>
+              <span class="text-[11px] font-bold tabular-nums" :style="{ color: s.color }">{{
+                s.rate
+              }}</span>
             </div>
             <div class="h-1 bg-white/5 mt-1 overflow-hidden">
               <div
@@ -725,7 +842,9 @@ function onContextMenu(event: MouseEvent) {
         :style="{ borderColor: selected.color }"
       >
         <div class="flex items-start justify-between gap-3 border-b border-white/10 pb-1.5">
-          <div class="font-black uppercase text-xs" :style="{ color: selected.color }">{{ selected.title }}</div>
+          <div class="font-black uppercase text-xs" :style="{ color: selected.color }">
+            {{ selected.title }}
+          </div>
           <button
             @click="selected = null"
             class="text-zinc-400 hover:text-white cursor-pointer flex items-center shrink-0"
@@ -735,7 +854,10 @@ function onContextMenu(event: MouseEvent) {
         </div>
         <div class="text-[10px] text-zinc-400 font-semibold">{{ selected.role }}</div>
         <div class="text-zinc-300 text-[11px] leading-relaxed">{{ selected.detail }}</div>
-        <div class="text-[10px] font-bold pt-1 border-t border-white/10" :style="{ color: selected.color }">
+        <div
+          class="text-[10px] font-bold pt-1 border-t border-white/10"
+          :style="{ color: selected.color }"
+        >
           {{ selected.cost }}
         </div>
       </div>

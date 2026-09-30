@@ -8,17 +8,13 @@ import {
   createRealisticCctvCamera,
 } from '../three/hardware'
 
-
-
-
-
 const props = withDefaults(
   defineProps<{
     minimal?: boolean
   }>(),
   {
-    minimal: false
-  }
+    minimal: false,
+  },
 )
 
 interface CctvObject {
@@ -37,7 +33,7 @@ const isLoadingModels = ref(true)
 const modelLoadingProgress = ref(0)
 const loadedGlbModels = {
   core: null as THREE.Object3D | null,
-  agents: [] as THREE.Object3D[]
+  agents: [] as THREE.Object3D[],
 }
 
 interface TelemetryData {
@@ -189,7 +185,12 @@ function onGlobalPointerUp(event: PointerEvent) {
 
         // Find the top-level parent node group under topologyGroup
         let targetObj: THREE.Object3D | null = topObj
-        while (targetObj && targetObj.parent && targetObj.parent !== topologyGroup && targetObj.parent !== scene) {
+        while (
+          targetObj &&
+          targetObj.parent &&
+          targetObj.parent !== topologyGroup &&
+          targetObj.parent !== scene
+        ) {
           targetObj = targetObj.parent
         }
 
@@ -247,11 +248,14 @@ function toggleFullscreen() {
   if (!elem) return
 
   if (!document.fullscreenElement) {
-    elem.requestFullscreen().then(() => {
-      isFullscreen.value = true
-    }).catch(err => {
-      console.warn('Fullscreen error:', err)
-    })
+    elem
+      .requestFullscreen()
+      .then(() => {
+        isFullscreen.value = true
+      })
+      .catch((err) => {
+        console.warn('Fullscreen error:', err)
+      })
   } else {
     document.exitFullscreen().then(() => {
       isFullscreen.value = false
@@ -282,7 +286,11 @@ function createSovereignHqCluster(): THREE.Group {
 
   // Base Industrial Platform Plate
   const plateGeo = new THREE.BoxGeometry(7.6, 0.4, 4.0)
-  const plateMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, metalness: 0.85, roughness: 0.25 })
+  const plateMat = new THREE.MeshStandardMaterial({
+    color: 0x0f172a,
+    metalness: 0.85,
+    roughness: 0.25,
+  })
   const plateMesh = new THREE.Mesh(plateGeo, plateMat)
   plateMesh.position.y = -0.2
   group.add(plateMesh)
@@ -347,9 +355,13 @@ onMounted(() => {
   gridHelper.position.y = -0.3
   topologyGroup.add(gridHelper)
 
-
   const selRingGeo = new THREE.RingGeometry(1.5, 1.7, 32)
-  const selRingMat = new THREE.MeshBasicMaterial({ color: 0xe02870, side: THREE.DoubleSide, transparent: true, opacity: 0.85 })
+  const selRingMat = new THREE.MeshBasicMaterial({
+    color: 0xe02870,
+    side: THREE.DoubleSide,
+    transparent: true,
+    opacity: 0.85,
+  })
   selectionRingMesh = new THREE.Mesh(selRingGeo, selRingMat)
   selectionRingMesh.visible = false
   topologyGroup.add(selectionRingMesh)
@@ -360,7 +372,10 @@ onMounted(() => {
     const numPackets = 3
     const speed = 0.008 + Math.random() * 0.006
     for (let i = 0; i < numPackets; i++) {
-      const pktMesh = new THREE.Mesh(new THREE.SphereGeometry(0.18, 12, 12), new THREE.MeshBasicMaterial({ color: colorHex }))
+      const pktMesh = new THREE.Mesh(
+        new THREE.SphereGeometry(0.18, 12, 12),
+        new THREE.MeshBasicMaterial({ color: colorHex }),
+      )
       topologyGroup.add(pktMesh)
       packets.push({
         start,
@@ -380,7 +395,8 @@ onMounted(() => {
     servers: 'Global Data Sync & Cross-District Federation (Primary State HQ)',
     latency: 'Sub-1ms Mesh Routing',
     status: 'ONLINE · SOVEREIGN MASTER',
-    detail: 'Central state police command hub handling cross-district federation, global policy dispatch, and real-time incident routing.',
+    detail:
+      'Central state police command hub handling cross-district federation, global policy dispatch, and real-time incident routing.',
   }
   coreGroup.traverse((child) => {
     if ((child as THREE.Mesh).isMesh) {
@@ -404,12 +420,54 @@ onMounted(() => {
 
   // 2. 6 National Edge Data Center Blade Towers (Major Indian Metro Hubs)
   const districtNodes = [
-    { id: 'dc1', name: 'NATIONAL EDGE DATA CENTER 1', city: 'Mumbai Metro Edge', servers: 250, color: 0xe02870, colorHex: '#e02870' },
-    { id: 'dc2', name: 'NATIONAL EDGE DATA CENTER 2', city: 'Delhi NCR Edge', servers: 220, color: 0x3d8b5e, colorHex: '#3d8b5e' },
-    { id: 'dc3', name: 'NATIONAL EDGE DATA CENTER 3', city: 'Bengaluru Tech Hub', servers: 200, color: 0x4a7ebb, colorHex: '#4a7ebb' },
-    { id: 'dc4', name: 'NATIONAL EDGE DATA CENTER 4', city: 'Hyderabad Cyberabad', servers: 180, color: 0x3d8b5e, colorHex: '#3d8b5e' },
-    { id: 'dc5', name: 'NATIONAL EDGE DATA CENTER 5', city: 'Chennai Coastal Edge', servers: 160, color: 0xe02870, colorHex: '#e02870' },
-    { id: 'dc6', name: 'NATIONAL EDGE DATA CENTER 6', city: 'Kolkata Eastern Edge', servers: 140, color: 0x4a7ebb, colorHex: '#4a7ebb' },
+    {
+      id: 'dc1',
+      name: 'NATIONAL EDGE DATA CENTER 1',
+      city: 'Mumbai Metro Edge',
+      servers: 250,
+      color: 0xe02870,
+      colorHex: '#e02870',
+    },
+    {
+      id: 'dc2',
+      name: 'NATIONAL EDGE DATA CENTER 2',
+      city: 'Delhi NCR Edge',
+      servers: 220,
+      color: 0x3d8b5e,
+      colorHex: '#3d8b5e',
+    },
+    {
+      id: 'dc3',
+      name: 'NATIONAL EDGE DATA CENTER 3',
+      city: 'Bengaluru Tech Hub',
+      servers: 200,
+      color: 0x4a7ebb,
+      colorHex: '#4a7ebb',
+    },
+    {
+      id: 'dc4',
+      name: 'NATIONAL EDGE DATA CENTER 4',
+      city: 'Hyderabad Cyberabad',
+      servers: 180,
+      color: 0x3d8b5e,
+      colorHex: '#3d8b5e',
+    },
+    {
+      id: 'dc5',
+      name: 'NATIONAL EDGE DATA CENTER 5',
+      city: 'Chennai Coastal Edge',
+      servers: 160,
+      color: 0xe02870,
+      colorHex: '#e02870',
+    },
+    {
+      id: 'dc6',
+      name: 'NATIONAL EDGE DATA CENTER 6',
+      city: 'Kolkata Eastern Edge',
+      servers: 140,
+      color: 0x4a7ebb,
+      colorHex: '#4a7ebb',
+    },
   ]
 
   const RING_RADIUS = 16.0
@@ -465,7 +523,8 @@ onMounted(() => {
       servers: '4-Camera RTSP Stream Aggregator Unit',
       latency: 'INGESTING 4x 4K FEEDS',
       status: 'ACTIVE NVR',
-      detail: 'Hardware 2U NVR storage chassis aggregating 4 live 4K CCTV RTSP video streams for high-speed GPU decoding.',
+      detail:
+        'Hardware 2U NVR storage chassis aggregating 4 live 4K CCTV RTSP video streams for high-speed GPU decoding.',
     }
     nvrGroup.traverse((child) => {
       if ((child as THREE.Mesh).isMesh) {
@@ -478,7 +537,7 @@ onMounted(() => {
     // 4 4K CCTV Bullet Security Cameras Clustered Around the NVR (Fan Arc Array)
     const numCameras = 4
     for (let c = 0; c < numCameras; c++) {
-      const camArcOffset = -0.45 + c * 0.30
+      const camArcOffset = -0.45 + c * 0.3
       const camAngle = nvrAngle + camArcOffset
       const camX = nvrX + Math.cos(camAngle) * 4.8
       const camZ = nvrZ + Math.sin(camAngle) * 4.8
@@ -513,27 +572,33 @@ onMounted(() => {
       topologyGroup.add(cctvPodGroup)
 
       // 1. Line & Packet: Each CCTV Camera -> NVR Unit
-      topologyGroup.add(new THREE.Line(
-        new THREE.BufferGeometry().setFromPoints([camPos, nvrPos]),
-        new THREE.LineBasicMaterial({ color: 0x3d8b5e, opacity: 0.85, transparent: true })
-      ))
+      topologyGroup.add(
+        new THREE.Line(
+          new THREE.BufferGeometry().setFromPoints([camPos, nvrPos]),
+          new THREE.LineBasicMaterial({ color: 0x3d8b5e, opacity: 0.85, transparent: true }),
+        ),
+      )
       add3DPacket(camPos, nvrPos, 0x3d8b5e)
     }
 
     // 2. Line & Packet: NVR Unit -> District Blade Server Cabinet
     const serverTopPos = new THREE.Vector3(x, 1.7, z)
-    topologyGroup.add(new THREE.Line(
-      new THREE.BufferGeometry().setFromPoints([nvrPos, serverTopPos]),
-      new THREE.LineBasicMaterial({ color: 0x06b6d4, opacity: 0.9, transparent: true })
-    ))
+    topologyGroup.add(
+      new THREE.Line(
+        new THREE.BufferGeometry().setFromPoints([nvrPos, serverTopPos]),
+        new THREE.LineBasicMaterial({ color: 0x06b6d4, opacity: 0.9, transparent: true }),
+      ),
+    )
     add3DPacket(nvrPos, serverTopPos, 0x06b6d4)
 
     // 3. Line & Packet: District Blade Server Cabinet -> Sovereign Core HQ
     const corePos = new THREE.Vector3(0, 1.0, 0)
-    topologyGroup.add(new THREE.Line(
-      new THREE.BufferGeometry().setFromPoints([serverTopPos, corePos]),
-      new THREE.LineBasicMaterial({ color: node.color, opacity: 0.85, transparent: true })
-    ))
+    topologyGroup.add(
+      new THREE.Line(
+        new THREE.BufferGeometry().setFromPoints([serverTopPos, corePos]),
+        new THREE.LineBasicMaterial({ color: node.color, opacity: 0.85, transparent: true }),
+      ),
+    )
     add3DPacket(serverTopPos, corePos, node.color)
   })
 
@@ -552,7 +617,11 @@ onMounted(() => {
       const p2Top = new THREE.Vector3(p2.x, 1.7, p2.z)
 
       const peerLineGeo = new THREE.BufferGeometry().setFromPoints([p1Top, p2Top])
-      const peerLineMat = new THREE.LineBasicMaterial({ color: 0x3d8b5e, transparent: true, opacity: 0.85 })
+      const peerLineMat = new THREE.LineBasicMaterial({
+        color: 0x3d8b5e,
+        transparent: true,
+        opacity: 0.85,
+      })
       topologyGroup.add(new THREE.Line(peerLineGeo, peerLineMat))
 
       // Bi-directional Direct P2P Edge Packet Streams
@@ -566,7 +635,11 @@ onMounted(() => {
       const p3Top = new THREE.Vector3(p3.x, 1.7, p3.z)
 
       const crossLineGeo = new THREE.BufferGeometry().setFromPoints([p1Top, p3Top])
-      const crossLineMat = new THREE.LineBasicMaterial({ color: 0x4a7ebb, transparent: true, opacity: 0.6 })
+      const crossLineMat = new THREE.LineBasicMaterial({
+        color: 0x4a7ebb,
+        transparent: true,
+        opacity: 0.6,
+      })
       topologyGroup.add(new THREE.Line(crossLineGeo, crossLineMat))
 
       add3DPacket(p1Top, p3Top, 0x4a7ebb)
@@ -639,7 +712,7 @@ onMounted(() => {
         // The badge is drawn above its anchor point, so test that shifted box.
         const cy = lbl.screenY - hh - 16 * sc
         const clash = placed.some(
-          (p) => Math.abs(p.x - lbl.screenX) < p.hw + hw && Math.abs(p.y - cy) < p.hh + hh
+          (p) => Math.abs(p.x - lbl.screenX) < p.hw + hw && Math.abs(p.y - cy) < p.hh + hh,
         )
         // Headers are the scene's structure and always render; only the
         // secondary node badges yield when space runs out. Hiding uses opacity,
@@ -653,51 +726,49 @@ onMounted(() => {
       })
   }
 
-function animate() {
-  packets.forEach((p) => {
-    p.progress += p.speed
-    if (p.progress > 1.0) p.progress = 0
-    p.mesh.position.lerpVectors(p.start, p.end, p.progress)
-  })
+  function animate() {
+    packets.forEach((p) => {
+      p.progress += p.speed
+      if (p.progress > 1.0) p.progress = 0
+      p.mesh.position.lerpVectors(p.start, p.end, p.progress)
+    })
 
-  update3DSpaceLabels()
+    update3DSpaceLabels()
 
-  // 1. Rotate and Pulse central Sovereign Core HQ holographic Core Orb
-  if (coreGroup) {
-    const orb = coreGroup.getObjectByName('coreHqOrb') as THREE.Mesh
-    if (orb) {
-      orb.rotation.y += 0.012
-      orb.rotation.x += 0.006
-      if (orb.material) {
-        const mat = orb.material as THREE.MeshStandardMaterial
-        mat.emissiveIntensity = 0.5 + Math.sin(Date.now() * 0.003) * 0.3
+    // 1. Rotate and Pulse central Sovereign Core HQ holographic Core Orb
+    if (coreGroup) {
+      const orb = coreGroup.getObjectByName('coreHqOrb') as THREE.Mesh
+      if (orb) {
+        orb.rotation.y += 0.012
+        orb.rotation.x += 0.006
+        if (orb.material) {
+          const mat = orb.material as THREE.MeshStandardMaterial
+          mat.emissiveIntensity = 0.5 + Math.sin(Date.now() * 0.003) * 0.3
+        }
       }
     }
-  }
 
-  // 2. Wave indicator flashing server LEDs (mesh list cached at build time)
-  const flashTime = Date.now() * 0.005
-  ledMeshes.forEach((mesh) => {
-    const mat = mesh.material as THREE.MeshStandardMaterial
-    if (mat) {
-      const pulse = Math.sin(flashTime + mesh.position.y * 10 + mesh.position.x * 20)
-      mat.emissiveIntensity = pulse > 0.3 ? 0.95 : 0.15
+    // 2. Wave indicator flashing server LEDs (mesh list cached at build time)
+    const flashTime = Date.now() * 0.005
+    ledMeshes.forEach((mesh) => {
+      const mat = mesh.material as THREE.MeshStandardMaterial
+      if (mat) {
+        const pulse = Math.sin(flashTime + mesh.position.y * 10 + mesh.position.x * 20)
+        mat.emissiveIntensity = pulse > 0.3 ? 0.95 : 0.15
+      }
+    })
+
+    // 3. Pointer cursor highlight on hover — only re-raycast when the pointer moved
+    if (pointerMoved) {
+      pointerMoved = false
+      raycaster.setFromCamera(mouse, camera)
+      const intersects = raycaster.intersectObjects(allInteractables, true)
+      if (mountRef.value) mountRef.value.style.cursor = intersects.length > 0 ? 'pointer' : 'grab'
     }
-  })
 
-  // 3. Pointer cursor highlight on hover — only re-raycast when the pointer moved
-  if (pointerMoved) {
-    pointerMoved = false
-    raycaster.setFromCamera(mouse, camera)
-    const intersects = raycaster.intersectObjects(allInteractables, true)
-    if (mountRef.value) mountRef.value.style.cursor = intersects.length > 0 ? 'pointer' : 'grab'
+    renderer.render(scene, camera)
+    animId = requestAnimationFrame(animate)
   }
-
-  renderer.render(scene, camera)
-  animId = requestAnimationFrame(animate)
-}
-
-
 
   animate()
 
@@ -728,13 +799,23 @@ onBeforeUnmount(() => {
 <template>
   <div
     ref="containerRef"
-    :class="props.minimal ? 'w-full h-full relative overflow-hidden select-none bg-transparent' : ('industrial-card p-3 sm:p-4 bg-[#09090b] border-[#e02870] relative overflow-hidden group shadow-2xl my-3 transition-all ' + (isFullscreen ? 'fixed inset-0 z-50 my-0 rounded-none border-none p-6 bg-black' : ''))"
+    :class="
+      props.minimal
+        ? 'w-full h-full relative overflow-hidden select-none bg-transparent'
+        : 'industrial-card p-3 sm:p-4 bg-[#09090b] border-[#e02870] relative overflow-hidden group shadow-2xl my-3 transition-all ' +
+          (isFullscreen ? 'fixed inset-0 z-50 my-0 rounded-none border-none p-6 bg-black' : '')
+    "
   >
     <!-- Header Control Bar (Only shown when not in minimal presentation mode) -->
-    <div v-if="!props.minimal" class="flex items-center justify-between border-b border-[#27272a] pb-2 mb-1 font-mono text-xs z-10 relative">
+    <div
+      v-if="!props.minimal"
+      class="flex items-center justify-between border-b border-[#27272a] pb-2 mb-1 font-mono text-xs z-10 relative"
+    >
       <div class="flex items-center gap-2">
         <span class="w-2 h-2 rounded-full bg-[#e02870] animate-ping"></span>
-        <span class="text-[#e02870] font-black uppercase tracking-wider">// SHADOWVERSE DIST DATA CENTER DESIGN</span>
+        <span class="text-[#e02870] font-black uppercase tracking-wider"
+          >// SHADOWVERSE DIST DATA CENTER DESIGN</span
+        >
       </div>
 
       <!-- CAMERA PRESETS & CONTROL BUTTONS -->
@@ -778,7 +859,9 @@ onBeforeUnmount(() => {
           @click="toggleFullscreen"
           class="px-2 py-0.5 text-[10px] font-mono font-bold uppercase border transition-colors cursor-pointer flex items-center gap-1 bg-[#121216] border-[#27272a] text-white hover:border-[#e02870]"
         >
-          <span class="material-symbols-outlined text-xs">{{ isFullscreen ? 'fullscreen_exit' : 'fullscreen' }}</span>
+          <span class="material-symbols-outlined text-xs">{{
+            isFullscreen ? 'fullscreen_exit' : 'fullscreen'
+          }}</span>
           <span>{{ isFullscreen ? 'EXIT' : 'FULLSCREEN' }}</span>
         </button>
       </div>
@@ -792,7 +875,9 @@ onBeforeUnmount(() => {
       @contextmenu="onContextMenu"
       @wheel="onWheel"
       class="w-full cursor-grab active:cursor-grabbing relative overflow-hidden touch-none select-none"
-      :class="props.minimal ? 'h-full' : (isFullscreen ? 'h-[calc(100vh-90px)]' : 'h-[58vh] sm:h-[65vh]')"
+      :class="
+        props.minimal ? 'h-full' : isFullscreen ? 'h-[calc(100vh-90px)]' : 'h-[58vh] sm:h-[65vh]'
+      "
     >
       <!-- Floating 3D space label overlay: GPU-composited, depth-faded, stem-anchored -->
       <div
@@ -811,8 +896,12 @@ onBeforeUnmount(() => {
           class="px-4 py-2 bg-[#0a0a0e]/92 backdrop-blur-sm border-2 font-mono shadow-2xl whitespace-nowrap text-center"
           :style="{ borderColor: lbl.color, boxShadow: `0 0 20px -6px ${lbl.color}` }"
         >
-          <div class="text-white font-black text-xs sm:text-sm tracking-wider uppercase">{{ lbl.name }}</div>
-          <div class="text-[10px] text-zinc-300 font-bold tracking-widest mt-0.5">{{ lbl.subtext }}</div>
+          <div class="text-white font-black text-xs sm:text-sm tracking-wider uppercase">
+            {{ lbl.name }}
+          </div>
+          <div class="text-[10px] text-zinc-300 font-bold tracking-widest mt-0.5">
+            {{ lbl.subtext }}
+          </div>
         </div>
 
         <!-- Node Badge: lighter chrome so six of them do not fight the geometry -->
@@ -821,12 +910,19 @@ onBeforeUnmount(() => {
           class="pl-2.5 pr-3 py-1.5 bg-[#0a0a0e]/88 backdrop-blur-sm border border-white/10 border-l-[3px] font-mono shadow-xl whitespace-nowrap text-left"
           :style="{ borderLeftColor: lbl.color }"
         >
-          <div class="text-white font-bold text-[11px] sm:text-xs tracking-wide">{{ lbl.name }}</div>
-          <div class="text-[9px] sm:text-[10px] text-zinc-400 font-semibold tracking-wider mt-px">{{ lbl.subtext }}</div>
+          <div class="text-white font-bold text-[11px] sm:text-xs tracking-wide">
+            {{ lbl.name }}
+          </div>
+          <div class="text-[9px] sm:text-[10px] text-zinc-400 font-semibold tracking-wider mt-px">
+            {{ lbl.subtext }}
+          </div>
         </div>
 
         <!-- Stem tying the badge to the object it names -->
-        <div class="w-px h-4" :style="{ background: `linear-gradient(to bottom, ${lbl.color}, transparent)` }"></div>
+        <div
+          class="w-px h-4"
+          :style="{ background: `linear-gradient(to bottom, ${lbl.color}, transparent)` }"
+        ></div>
       </div>
 
       <!-- SELECTED NODE TELEMETRY INSPECTION DRAWER CARD (UX) -->
@@ -839,19 +935,32 @@ onBeforeUnmount(() => {
             <span class="material-symbols-outlined text-sm">info</span>
             <span>NODE TELEMETRY INSPECTOR</span>
           </div>
-          <button @click="selectedNode = null" class="text-zinc-400 hover:text-white cursor-pointer flex items-center"><span class="material-symbols-outlined text-base">close</span></button>
+          <button
+            @click="selectedNode = null"
+            class="text-zinc-400 hover:text-white cursor-pointer flex items-center"
+          >
+            <span class="material-symbols-outlined text-base">close</span>
+          </button>
         </div>
         <div class="font-bold text-sm text-[#e02870]">{{ selectedNode.name }}</div>
-        <div class="text-zinc-300 text-[11px] leading-relaxed">{{ selectedNode.detail || selectedNode.servers }}</div>
+        <div class="text-zinc-300 text-[11px] leading-relaxed">
+          {{ selectedNode.detail || selectedNode.servers }}
+        </div>
         <div class="flex items-center justify-between text-[10px] pt-1 border-t border-[#27272a]">
           <span class="text-emerald-400 font-bold">{{ selectedNode.latency }}</span>
-          <span class="px-2 py-0.5 bg-[#e02870]/20 text-[#e02870] font-bold border border-[#e02870]/40">{{ selectedNode.status }}</span>
+          <span
+            class="px-2 py-0.5 bg-[#e02870]/20 text-[#e02870] font-bold border border-[#e02870]/40"
+            >{{ selectedNode.status }}</span
+          >
         </div>
       </div>
     </div>
 
     <!-- Footer Legend (Only shown when not minimal) -->
-    <div v-if="!props.minimal" class="flex flex-wrap items-center justify-between border-t border-[#27272a] pt-2 font-mono text-[10px] text-zinc-400 z-10 relative gap-2">
+    <div
+      v-if="!props.minimal"
+      class="flex flex-wrap items-center justify-between border-t border-[#27272a] pt-2 font-mono text-[10px] text-zinc-400 z-10 relative gap-2"
+    >
       <div class="flex flex-wrap items-center gap-3">
         <span class="flex items-center gap-1 text-[#3d8b5e] font-bold">
           <span class="w-2 h-2 bg-[#3d8b5e]"></span>

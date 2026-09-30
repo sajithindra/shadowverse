@@ -75,24 +75,33 @@ const corePillars = [
 </script>
 
 <template>
-  <div class="w-full h-full flex flex-col justify-between p-4 sm:p-7 font-mono select-none overflow-hidden bg-[#09090c]">
-    
+  <div
+    class="w-full h-full flex flex-col justify-between p-4 sm:p-7 font-mono select-none overflow-hidden bg-[#09090c]"
+  >
     <!-- HEADER TITLE BAR -->
     <div class="flex items-center justify-between pb-3.5 border-b border-[#27272a] shrink-0">
       <div class="flex items-center gap-3.5">
-        <div class="w-12 h-12 bg-[#750d37] border-2 border-[#e02870] flex items-center justify-center text-white font-black text-2xl shadow-xl">
+        <div
+          class="w-12 h-12 bg-[#750d37] border-2 border-[#e02870] flex items-center justify-center text-white font-black text-2xl shadow-xl"
+        >
           <span class="material-symbols-outlined text-2xl">model_training</span>
         </div>
         <div>
-          <div class="text-[#e02870] font-black text-xs sm:text-sm uppercase flex items-center gap-2">
+          <div
+            class="text-[#e02870] font-black text-xs sm:text-sm uppercase flex items-center gap-2"
+          >
             <span class="w-2.5 h-2.5 rounded-full bg-[#e02870]"></span>
             <span>STATION 05 // CONTINUOUS FLYWHEEL</span>
           </div>
-          <h2 class="text-xl sm:text-3xl font-black text-white font-mono mt-0.5">Continuous City Ground-Truth Retraining</h2>
+          <h2 class="text-xl sm:text-3xl font-black text-white font-mono mt-0.5">
+            Continuous City Ground-Truth Retraining
+          </h2>
         </div>
       </div>
 
-      <div class="hidden sm:flex items-center gap-2 text-xs sm:text-sm text-zinc-300 font-bold bg-[#121216] border border-[#27272a] px-3.5 py-1.5 shadow-md">
+      <div
+        class="hidden sm:flex items-center gap-2 text-xs sm:text-sm text-zinc-300 font-bold bg-[#121216] border border-[#27272a] px-3.5 py-1.5 shadow-md"
+      >
         <span class="w-2.5 h-2.5 rounded-full bg-[#3d8b5e] animate-pulse"></span>
         <span>24-Hour Autonomous Feedback Loop</span>
       </div>
@@ -101,7 +110,9 @@ const corePillars = [
     <!-- 5-STEP CLOSED-LOOP FLYWHEEL STRIP -->
     <div class="bg-[#111116] border-2 border-[#27272a] p-4 my-3 shadow-2xl shrink-0">
       <div class="flex items-center justify-between border-b border-[#27272a] pb-2 mb-3">
-        <span class="text-xs sm:text-sm text-[#e02870] font-black uppercase flex items-center gap-2">
+        <span
+          class="text-xs sm:text-sm text-[#e02870] font-black uppercase flex items-center gap-2"
+        >
           <span class="material-symbols-outlined text-base">sync</span>
           5-Stage Autonomous Adaptation Cycle
         </span>
@@ -118,15 +129,23 @@ const corePillars = [
           <div>
             <div class="flex items-center justify-between mb-1.5">
               <span class="text-sm font-black" :style="{ color: step.color }">{{ step.step }}</span>
-              <span class="material-symbols-outlined text-lg" :style="{ color: step.color }">{{ step.icon }}</span>
+              <span class="material-symbols-outlined text-lg" :style="{ color: step.color }">{{
+                step.icon
+              }}</span>
             </div>
-            <div class="text-xs sm:text-sm font-black text-white leading-tight mb-1.5">{{ step.title }}</div>
+            <div class="text-xs sm:text-sm font-black text-white leading-tight mb-1.5">
+              {{ step.title }}
+            </div>
             <p class="text-zinc-300 text-xs leading-relaxed font-sans">{{ step.desc }}</p>
           </div>
 
-          <div class="mt-2.5 pt-2 border-t border-[#27272a] flex items-center justify-between text-xs">
+          <div
+            class="mt-2.5 pt-2 border-t border-[#27272a] flex items-center justify-between text-xs"
+          >
             <span class="text-zinc-400">Metric:</span>
-            <strong class="font-black text-white" :style="{ color: step.color }">{{ step.metric }}</strong>
+            <strong class="font-black text-white" :style="{ color: step.color }">{{
+              step.metric
+            }}</strong>
           </div>
 
           <!-- ARROW CONNECTOR BETWEEN STEPS -->
@@ -142,7 +161,6 @@ const corePillars = [
 
     <!-- 4 PERFORMANCE PILLARS + ACCURACY PROGRESSION GRID -->
     <div class="grid grid-cols-12 gap-3.5 flex-1 min-h-0 items-stretch">
-      
       <!-- 4 KEY PILLARS -->
       <div class="col-span-12 lg:col-span-8 grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div
@@ -154,10 +172,15 @@ const corePillars = [
           <div>
             <div class="flex items-center justify-between mb-2">
               <div class="flex items-center gap-2">
-                <span class="material-symbols-outlined text-xl" :style="{ color: p.color }">{{ p.icon }}</span>
+                <span class="material-symbols-outlined text-xl" :style="{ color: p.color }">{{
+                  p.icon
+                }}</span>
                 <h3 class="text-sm sm:text-base font-black text-white font-mono">{{ p.title }}</h3>
               </div>
-              <span class="text-[10px] sm:text-xs px-2 py-0.5 bg-black/60 border font-black" :style="{ borderColor: p.color, color: p.color }">
+              <span
+                class="text-[10px] sm:text-xs px-2 py-0.5 bg-black/60 border font-black"
+                :style="{ borderColor: p.color, color: p.color }"
+              >
                 {{ p.tag }}
               </span>
             </div>
@@ -169,10 +192,14 @@ const corePillars = [
       </div>
 
       <!-- ACCURACY TIMELINE COMPARISON -->
-      <div class="col-span-12 lg:col-span-4 bg-[#121216] border-2 border-[#27272a] p-3.5 flex flex-col justify-between shadow-xl">
+      <div
+        class="col-span-12 lg:col-span-4 bg-[#121216] border-2 border-[#27272a] p-3.5 flex flex-col justify-between shadow-xl"
+      >
         <div>
           <div class="flex items-center justify-between border-b border-[#27272a] pb-2 mb-2.5">
-            <span class="text-xs sm:text-sm font-black text-white uppercase">Ahmedabad Accuracy Timeline</span>
+            <span class="text-xs sm:text-sm font-black text-white uppercase"
+              >Ahmedabad Accuracy Timeline</span
+            >
             <span class="text-sm font-black text-[#3d8b5e]">96.4% PEAK</span>
           </div>
 
@@ -213,11 +240,12 @@ const corePillars = [
           +26.4% Accuracy Gain through Local Retraining
         </div>
       </div>
-
     </div>
 
     <!-- FOOTER SUMMARY STRIP -->
-    <div class="flex flex-wrap items-center justify-between border-t border-[#27272a] pt-2.5 text-xs text-zinc-300 shrink-0 gap-2">
+    <div
+      class="flex flex-wrap items-center justify-between border-t border-[#27272a] pt-2.5 text-xs text-zinc-300 shrink-0 gap-2"
+    >
       <div class="flex items-center gap-4">
         <span class="text-[#3d8b5e] font-black flex items-center gap-1.5">
           <span class="w-2.5 h-2.5 bg-[#3d8b5e]"></span>
@@ -234,6 +262,5 @@ const corePillars = [
       </div>
       <span class="text-[#e02870] font-black">100% ON-PREMISE GPU CLUSTER TRAINING</span>
     </div>
-
   </div>
 </template>
