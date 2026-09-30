@@ -399,11 +399,11 @@ onMounted(() => {
   coreGroup.position.set(0, 0, 0)
   coreGroup.userData = {
     name: 'SHADOWVERSE SOVEREIGN CORE (HQ)',
-    servers: 'Global Data Sync & Cross-District Federation (Primary State HQ)',
+    servers: 'State Data Sync & Cross-District Federation (Gujarat State HQ)',
     latency: 'Sub-1ms Mesh Routing',
     status: 'ONLINE · SOVEREIGN MASTER',
     detail:
-      'Central state police command hub handling cross-district federation, global policy dispatch, and real-time incident routing.',
+      'Gujarat State Police command hub handling cross-district federation, state-wide policy dispatch, and real-time incident routing between district data centres.',
   }
   coreGroup.traverse((child) => {
     if ((child as THREE.Mesh).isMesh) {
@@ -417,7 +417,7 @@ onMounted(() => {
   labelsList.push({
     id: 'core-label',
     name: 'SHADOWVERSE SOVEREIGN CORE',
-    subtext: 'STATE POLICE HQ FEDERATION',
+    subtext: 'GUJARAT STATE POLICE HQ',
     color: '#750d37',
     worldPos: new THREE.Vector3(0, 6.4, 0),
     screenX: 0,
@@ -425,52 +425,53 @@ onMounted(() => {
     isHeader: true,
   })
 
-  // 2. 6 National Edge Data Center Blade Towers (Major Indian Metro Hubs)
+  // 2. Six district data centres across Gujarat. The deployment is a state
+  //    rollout, not a national one: one cabinet per district, each autonomous.
   const districtNodes = [
     {
       id: 'dc1',
-      name: 'NATIONAL EDGE DATA CENTER 1',
-      city: 'Mumbai Metro Edge',
+      district: 'Ahmedabad',
+      region: 'Central Gujarat',
       servers: 250,
       color: 0xe02870,
       colorHex: '#e02870',
     },
     {
       id: 'dc2',
-      name: 'NATIONAL EDGE DATA CENTER 2',
-      city: 'Delhi NCR Edge',
+      district: 'Surat',
+      region: 'South Gujarat',
       servers: 220,
       color: 0x3d8b5e,
       colorHex: '#3d8b5e',
     },
     {
       id: 'dc3',
-      name: 'NATIONAL EDGE DATA CENTER 3',
-      city: 'Bengaluru Tech Hub',
+      district: 'Rajkot',
+      region: 'Saurashtra',
       servers: 200,
       color: 0x4a7ebb,
       colorHex: '#4a7ebb',
     },
     {
       id: 'dc4',
-      name: 'NATIONAL EDGE DATA CENTER 4',
-      city: 'Hyderabad Cyberabad',
+      district: 'Vadodara',
+      region: 'Central Gujarat',
       servers: 180,
       color: 0x3d8b5e,
       colorHex: '#3d8b5e',
     },
     {
       id: 'dc5',
-      name: 'NATIONAL EDGE DATA CENTER 5',
-      city: 'Chennai Coastal Edge',
+      district: 'Gandhinagar',
+      region: 'Capital Region',
       servers: 160,
       color: 0xe02870,
       colorHex: '#e02870',
     },
     {
       id: 'dc6',
-      name: 'NATIONAL EDGE DATA CENTER 6',
-      city: 'Kolkata Eastern Edge',
+      district: 'Kutch',
+      region: 'Kutch Region',
       servers: 140,
       color: 0x4a7ebb,
       colorHex: '#4a7ebb',
@@ -493,11 +494,11 @@ onMounted(() => {
     ledMeshes.push(...towerLeds)
     towerGroup.position.copy(edgePos)
     towerGroup.userData = {
-      name: `${node.name} (${node.city})`,
+      name: `${node.district.toUpperCase()} DISTRICT DATA CENTER`,
       servers: `${node.servers} Edge Compute Nodes · Dedicated CCTV & NVR Ingestion`,
       latency: `Sub-5ms Local Processing`,
       status: 'AUTONOMOUS OPERATIONAL EDGE',
-      detail: `Local autonomous district blade server cabinet processing ${node.servers} compute nodes, 2,000+ CCTV camera streams, and sub-5ms local AI inference.`,
+      detail: `Autonomous blade server cabinet for ${node.district} district, ${node.region}. Processes ${node.servers} compute nodes, 2,000+ CCTV camera streams and sub-5ms local AI inference, with no dependency on any other district.`,
     }
     towerGroup.traverse((child) => {
       if ((child as THREE.Mesh).isMesh) {
@@ -509,8 +510,8 @@ onMounted(() => {
 
     labelsList.push({
       id: `label-${node.id}`,
-      name: node.name,
-      subtext: `${node.city.toUpperCase()} · ${node.servers} NODES`,
+      name: `${node.district.toUpperCase()} DISTRICT`,
+      subtext: `DATA CENTER · ${node.servers} NODES`,
       color: node.colorHex,
       worldPos: new THREE.Vector3(x, y + 4.8, z),
       screenX: 0,
@@ -526,7 +527,7 @@ onMounted(() => {
     const nvrGroup = createNvrStorageUnit(0x3d8b5e)
     nvrGroup.position.copy(nvrPos)
     nvrGroup.userData = {
-      name: `NVR AGGREGATOR UNIT (${node.city})`,
+      name: `NVR AGGREGATOR UNIT (${node.district})`,
       servers: '4-Camera RTSP Stream Aggregator Unit',
       latency: 'INGESTING 4x 4K FEEDS',
       status: 'ACTIVE NVR',
@@ -564,7 +565,7 @@ onMounted(() => {
       })
 
       cctvPodGroup.userData = {
-        name: `4K CCTV CAMERA ${c + 1} (${node.city})`,
+        name: `4K CCTV CAMERA ${c + 1} (${node.district})`,
         servers: `RTSP 60FPS Video Channel ${c + 1} Stream`,
         latency: 'SUB-20ms VISION AI INGESTION',
         status: `CAM-${c + 1} STREAMING`,

@@ -59,7 +59,7 @@ const stationMeta = [
     id: 3,
     icon: 'account_tree',
     title: 'Cascaded Inference Topology',
-    subtitle: 'Five GPU Tiers & Early-Exit Routing',
+    subtitle: 'Three Detection Servers & Class Routing',
   },
   {
     id: 4,

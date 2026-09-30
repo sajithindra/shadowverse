@@ -19,12 +19,12 @@ const labels = ref<SceneLabel[]>([])
 /**
  * Cascaded inference topology.
  *
- * The argument the plane has to make is that tiering the models collapses GPU
- * work: every frame hits cheap detection, but only a shrinking fraction ever
- * reaches plate reading, face embedding or a vector search. So the hardware is
- * neutral graphite and colour is reserved for data state — magenta is
- * unclassified traffic, blue the vehicle branch, green the person branch, amber
- * the expensive terminal stage.
+ * The argument the plane has to make is that filtering by class collapses GPU
+ * work: every frame hits cheap detection across three servers, but only the
+ * small fraction carrying a person or a vehicle ever reaches a recognition
+ * model. So the hardware is neutral graphite and colour is reserved for data
+ * state — magenta is unclassified traffic, blue the vehicle branch, green the
+ * person branch, amber the watchlist query the person branch ends in.
  */
 
 const ACCENT = {
@@ -64,39 +64,31 @@ const stageStats: StageStat[] = [
   {
     id: 's1',
     stage: 'Objects detected',
-    detail: 'Stage 1 runs on every frame',
+    detail: 'Three detection servers, every frame',
     rate: '7,200 /s',
     share: 0.12,
     color: HEX.all,
   },
   {
     id: 's2',
-    stage: 'Plates read',
-    detail: 'Vehicles only',
+    stage: 'Vehicles routed',
+    detail: 'Plate, make, model and colour',
     rate: '2,300 /s',
     share: 0.038,
     color: HEX.vehicle,
   },
   {
     id: 's3',
-    stage: 'Faces checked',
-    detail: 'Persons only',
+    stage: 'Persons routed',
+    detail: 'Face detection on the crop',
     rate: '3,100 /s',
     share: 0.052,
     color: HEX.person,
   },
   {
     id: 's4',
-    stage: 'Appearance only',
-    detail: 'No usable face — colour descriptor',
-    rate: '1,900 /s',
-    share: 0.031,
-    color: HEX.person,
-  },
-  {
-    id: 's5',
-    stage: 'Face matched',
-    detail: 'Embedding plus vector search',
+    stage: 'Faces recognised',
+    detail: 'Embedding plus watchlist search',
     rate: '1,200 /s',
     share: 0.02,
     color: HEX.costly,
@@ -230,8 +222,7 @@ onMounted(() => {
   stage = createStage(mount, { fov: 45, fogDensity: 0.018, exposure: 1.2, shadowExtent: 24 })
   const { scene, camera, renderer } = stage
 
-  camera.position.set(0, 9, 38)
-  camera.lookAt(-1, 2, 2)
+  frameCamera()
 
   world = new THREE.Group()
   scene.add(world)
@@ -242,79 +233,89 @@ onMounted(() => {
   gridHelper.position.y = -0.3
   world.add(gridHelper)
 
-  // ── Five inference stages ────────────────────────────────────────────────
-  // Card counts encode the silicon each stage needs. Stage 1 sees everything
-  // and is the widest; every stage after it is fed a shrinking subset.
+  // ── Detection tier, then one server per class ────────────────────────────
+  // Ingest fans out across three identical detection servers — no single box
+  // can carry 60,000 frames a second. What they agree on is then filtered: a
+  // person goes to the person server, a vehicle to the vehicle server, and
+  // everything else stops. Card counts encode the silicon each server needs.
   const bays = [
     {
-      id: 'detect',
-      pos: new THREE.Vector3(-9, 0, 0),
-      cards: 10,
+      id: 'detect1',
+      pos: new THREE.Vector3(-12, 0, -5),
+      scale: 0.78,
+      cards: 4,
       load: 0.95,
       accent: ACCENT.all,
       hex: HEX.all,
-      title: 'SERVER 1 — OBJECT DETECTION',
-      sub: 'EVERY FRAME · 10 GPUs',
-      role: 'Stage 1 of 5',
-      cost: '10 GPUs at 95% — the full camera load',
+      title: 'DETECTION NODE 01',
+      sub: 'EVERY FRAME · 4 GPUs',
+      header: false,
+      role: 'Detection tier · 1 of 3',
+      cost: '4 GPUs at 95% — a third of the camera load',
       detail:
-        'A single lightweight detector runs on all 60,000 frames per second and answers one question: is there a vehicle or a person here? 88% of frames contain neither and are dropped before any expensive model is ever loaded.',
+        'One of three identical detection servers. The 2,000 camera streams are split evenly across them, because 60,000 frames a second is more than any single box decodes. Each runs the same lightweight detector and answers one question: is there a vehicle or a person in this frame?',
     },
     {
-      id: 'plate',
-      pos: new THREE.Vector3(-3.5, 0, -11),
+      id: 'detect2',
+      pos: new THREE.Vector3(-8, 0, 0),
+      scale: 0.78,
       cards: 4,
+      load: 0.93,
+      accent: ACCENT.all,
+      hex: HEX.all,
+      title: 'DETECTION NODE 02',
+      sub: 'EVERY FRAME · 4 GPUs',
+      header: false,
+      role: 'Detection tier · 2 of 3',
+      cost: '4 GPUs at 93% — a third of the camera load',
+      detail:
+        'The second detection server. The tier scales by adding boxes, not by buying a bigger one: another 700 cameras is another node, and the servers behind the filter are untouched.',
+    },
+    {
+      id: 'detect3',
+      pos: new THREE.Vector3(-4, 0, 5),
+      scale: 0.78,
+      cards: 4,
+      load: 0.9,
+      accent: ACCENT.all,
+      hex: HEX.all,
+      title: 'DETECTION NODE 03',
+      sub: 'EVERY FRAME · 4 GPUs',
+      header: false,
+      role: 'Detection tier · 3 of 3',
+      cost: '4 GPUs at 90% — a third of the camera load',
+      detail:
+        'The third detection server. All three write their detections into the same filter, so a camera can be moved between nodes without anything downstream knowing.',
+    },
+    {
+      id: 'vehicle',
+      pos: new THREE.Vector3(10, 0, -7),
+      cards: 6,
       load: 0.55,
       accent: ACCENT.vehicle,
       hex: HEX.vehicle,
-      title: 'SERVER 2 — PLATE RECOGNITION',
-      sub: 'VEHICLES ONLY · 4 GPUs',
-      role: 'Stage 2 of 5 · vehicle branch',
-      cost: '4 GPUs at 55% — 3.8% of ingested frames',
+      title: 'VEHICLE SERVER',
+      sub: 'PLATE · MAKE · MODEL · COLOUR · 6 GPUs',
+      header: true,
+      role: 'Vehicle branch',
+      cost: '6 GPUs at 55% — 3.8% of ingested frames',
       detail:
-        'Only crops the detector labelled as a vehicle reach ANPR. The plate is read and checked against the stolen-vehicle and warrant registries. Nothing here ever runs on a frame of empty street.',
+        'Every crop the filter labelled a vehicle lands here, and two models run on it. ANPR reads the number plate and checks it against the stolen-vehicle and warrant registries. A second classifier reads make, model and colour, so a vehicle is still identifiable when the plate is fake, obscured or simply unreadable at that angle.',
     },
     {
-      id: 'facecheck',
-      pos: new THREE.Vector3(-3.5, 0, 9),
-      cards: 5,
+      id: 'person',
+      pos: new THREE.Vector3(9.5, 0, 7),
+      cards: 6,
       load: 0.62,
       accent: ACCENT.person,
       hex: HEX.person,
-      title: 'SERVER 3 — FACE DETECTION',
-      sub: 'PERSONS ONLY · 5 GPUs',
-      role: 'Stage 3 of 5 · person branch',
-      cost: '5 GPUs at 62% — 5.2% of ingested frames',
+      title: 'PERSON SERVER',
+      sub: 'FACE DETECTION + RECOGNITION · 6 GPUs',
+      header: true,
+      role: 'Person branch',
+      cost: '6 GPUs at 62% — 5.2% of ingested frames',
       detail:
-        'Person crops are checked for a usable face. This is deliberately a cheap detector, not recognition: its only job is to decide which of the two downstream paths a person takes.',
-    },
-    {
-      id: 'appearance',
-      pos: new THREE.Vector3(8, 0, 12),
-      cards: 2,
-      load: 0.3,
-      accent: ACCENT.person,
-      hex: HEX.person,
-      title: 'SERVER 4 — APPEARANCE DESCRIPTOR',
-      sub: 'NO USABLE FACE · 2 GPUs',
-      role: 'Stage 4 of 5 · person branch, no face',
-      cost: '2 GPUs at 30% — the cheap fallback',
-      detail:
-        'Someone facing away or too far from the camera still has to be tracked. Rather than force a face model that would fail, this stage takes clothing colour, build and gait into a compact descriptor good enough to follow a person between cameras.',
-    },
-    {
-      id: 'match',
-      pos: new THREE.Vector3(8, 0, 1),
-      cards: 3,
-      load: 0.45,
-      accent: ACCENT.costly,
-      hex: HEX.costly,
-      title: 'SERVER 5 — FACE RECOGNITION',
-      sub: 'FACE PRESENT · 3 GPUs',
-      role: 'Stage 5 of 5 · person branch, face present',
-      cost: '3 GPUs at 45% — 2% of ingested frames',
-      detail:
-        'The most expensive model in the stack runs on one frame in fifty. It turns a face into a 512-dimension embedding, which is then matched against the watchlist index. Running this on every frame would need roughly 500 GPUs instead of 3.',
+        'Every crop the filter labelled a person lands here. Face detection runs first and is deliberately cheap: it only finds the face in the crop. Recognition then turns that face into a 512-dimension embedding and queries the watchlist index. Running recognition on every frame instead of on this 5% would need roughly 500 GPUs.',
     },
   ]
 
@@ -325,6 +326,7 @@ onMounted(() => {
     // carries the real GPU count for the tier.
     const rack = createBladeServerTower(bay.accent, Math.min(bay.cards, 6))
     rack.group.position.copy(bay.pos)
+    if (bay.scale) rack.group.scale.setScalar(bay.scale)
     world.add(rack.group)
     ledMeshes.push(...rack.leds)
     bayPos[bay.id] = bay.pos
@@ -342,19 +344,31 @@ onMounted(() => {
       color: bay.hex,
     })
 
-    addLabel(
-      `bay-${bay.id}`,
-      bay.title,
-      bay.sub,
-      bay.hex,
-      bay.pos.clone().add(new THREE.Vector3(0, 5.2, 0)),
-      true,
-    )
+    if (bay.header) {
+      addLabel(
+        `bay-${bay.id}`,
+        bay.title,
+        bay.sub,
+        bay.hex,
+        bay.pos.clone().add(new THREE.Vector3(0, 5.2, 0)),
+        true,
+      )
+    }
   }
+
+  // One header for the tier, so three node badges do not read as three tiers.
+  addLabel(
+    'detect-tier',
+    'OBJECT DETECTION',
+    '3 SERVERS · EVERY FRAME · 12 GPUs',
+    HEX.all,
+    new THREE.Vector3(-8, 7.4, 0),
+    true,
+  )
 
   // ── Watchlist vector index ───────────────────────────────────────────────
   // Not a sixth server: a database the last stage queries.
-  const indexPos = new THREE.Vector3(14, 0, 1)
+  const indexPos = new THREE.Vector3(15, 0, 10)
   const indexGroup = new THREE.Group()
   indexGroup.position.copy(indexPos)
   indexGroup.scale.setScalar(0.5)
@@ -420,12 +434,12 @@ onMounted(() => {
   )
 
   // ── Ingest: cameras record to the NVR; the detector reads from the NVR ───
-  const nvrPos = new THREE.Vector3(-14, 0.8, 0)
-  const camZ = [-4.5, 0, 4.5]
+  const nvrPos = new THREE.Vector3(-16.5, 0.8, 7)
+  const camZ = [3.5, 7, 10.5]
 
   for (const z of camZ) {
     const cam = createRealisticCctvCamera(ACCENT.all)
-    cam.position.set(-18, 1.2, z)
+    cam.position.set(-20, 1.2, z)
     world.add(cam)
     makeInspectable(cam, {
       title: '4K CCTV CAMERA',
@@ -438,8 +452,8 @@ onMounted(() => {
     // Camera to recorder.
     addStream(
       [
-        new THREE.Vector3(-17.4, 1.2, z),
-        new THREE.Vector3(-16, 1.4, z * 0.5),
+        new THREE.Vector3(-19.4, 1.2, z),
+        new THREE.Vector3(-18, 1.4, (z + 7) * 0.5),
         nvrPos.clone().setY(0.9),
       ],
       ACCENT.all,
@@ -448,14 +462,8 @@ onMounted(() => {
     )
   }
 
-  addLabel(
-    'cctv',
-    'CCTV CAMERAS',
-    '2,000 STREAMS · RTSP',
-    HEX.all,
-    new THREE.Vector3(-18, 3.4, 0),
-    true,
-  )
+  // A prop, not a stage: it yields to the badges that carry the argument.
+  addLabel('cctv', 'CCTV CAMERAS', '2,000 STREAMS · RTSP', HEX.all, new THREE.Vector3(-20, 4.2, 7))
 
   const nvrGroup = createNvrStorageUnit(ACCENT.all)
   nvrGroup.position.copy(nvrPos)
@@ -475,61 +483,55 @@ onMounted(() => {
     'NVR',
     'ANALYTICS READS FROM HERE',
     HEX.all,
-    nvrPos.clone().add(new THREE.Vector3(0, 1.6, 0)),
+    nvrPos.clone().add(new THREE.Vector3(0, 2.6, 0)),
     true,
   )
 
   const ingest = nvrPos.clone().setY(1.2)
 
-  // ── Branches ─────────────────────────────────────────────────────────────
-  const splitObject = new THREE.Vector3(-6, 1.9, 0)
+  // ── The filter ───────────────────────────────────────────────────────────
+  // All three detection servers feed one decision: what class is this, and is
+  // it worth paying for? Everything downstream hangs off the answer.
+  const filter = new THREE.Vector3(2.5, 1.9, 0)
   addDecision(
-    splitObject,
+    filter,
     ACCENT.all,
-    'IS IT A VEHICLE OR A PERSON?',
-    'The first and cheapest branch. 88% of detections are neither and stop here, which is where most of the saving comes from — no further model is ever loaded for them.',
+    'PERSON, VEHICLE, OR NEITHER?',
+    'The only branch in the pipeline. The three detection servers hand their detections here and the class decides the route: a person to the person server, a vehicle to the vehicle server, and the 88% that is neither stops. That 88% is where almost all of the saving comes from — no recognition model is ever loaded for it.',
   )
   addLabel(
-    'split-1',
-    'VEHICLE OR PERSON?',
+    'filter',
+    'FILTER BY CLASS',
     '88% STOP HERE',
     HEX.all,
-    splitObject.clone().add(new THREE.Vector3(0, 1.5, 0)),
-  )
-
-  const splitFace = new THREE.Vector3(2.5, 1.9, 9)
-  addDecision(
-    splitFace,
-    ACCENT.person,
-    'IS THERE A USABLE FACE?',
-    'Decides which person path is worth paying for. No face means the cheap appearance descriptor; a face means the expensive embedding and a vector search.',
-  )
-  addLabel(
-    'split-2',
-    'USABLE FACE?',
-    'ROUTES THE PERSON PATH',
-    HEX.person,
-    splitFace.clone().add(new THREE.Vector3(0, 1.5, 0)),
+    filter.clone().add(new THREE.Vector3(0, 1.7, 0)),
   )
 
   // ── Work streams. Unit counts are the throughput at each hop. ────────────
   const rackFront = (id: string, dz = 1.2) => bayPos[id]!.clone().add(new THREE.Vector3(0, 1.9, dz))
 
-  // Everything ingested reaches stage 1.
-  addStream(
-    [ingest, new THREE.Vector3(-11.5, 1.9, 0), rackFront('detect').setY(3.4)],
-    ACCENT.all,
-    16,
-    0.62,
-  )
-
-  // Stage 1 out to the first branch.
-  addStream([rackFront('detect'), splitObject], ACCENT.all, 8, 0.72)
+  // Ingest fans out from the recorder to all three detection servers.
+  for (const id of ['detect1', 'detect2', 'detect3']) {
+    const front = bayPos[id]!.clone().add(new THREE.Vector3(0, 3.4, 0))
+    addStream(
+      [ingest, new THREE.Vector3(-14.5, 2.2, (front.z + 7) * 0.5), front],
+      ACCENT.all,
+      5,
+      0.62,
+    )
+    // And each hands its detections to the filter.
+    addStream(
+      [rackFront(id), new THREE.Vector3(-1, 1.9, front.z * 0.5), filter],
+      ACCENT.all,
+      4,
+      0.72,
+    )
+  }
 
   // The discarded majority. Drawn deliberately: it is the work not done, and
   // it is where almost all of the saving comes from.
   const bin = createDiscardBin()
-  const binPos = new THREE.Vector3(0, 0, 15)
+  const binPos = new THREE.Vector3(3.5, 0, 12)
   bin.position.copy(binPos)
   bin.scale.setScalar(0.72)
   world.add(bin)
@@ -538,7 +540,7 @@ onMounted(() => {
     role: 'Early exit',
     cost: 'The saving',
     detail:
-      'Frames with no vehicle and no person are dropped the moment the first detector has looked at them. Nothing downstream ever sees them — no plate model, no face model, no vector search. This is where 88% of the potential GPU bill goes away.',
+      'Frames with no vehicle and no person are dropped the moment the detection tier has looked at them. Nothing downstream ever sees them — no plate model, no face model, no vector search. This is where 88% of the potential GPU bill goes away.',
     color: '#8b919b',
   })
 
@@ -546,8 +548,8 @@ onMounted(() => {
   const dropped = binPos.clone().add(new THREE.Vector3(0, 0.5, 0))
   addStream(
     [
-      splitObject,
-      new THREE.Vector3(-3, 2.4, 6),
+      filter,
+      new THREE.Vector3(3.2, 2.8, 6),
       binPos.clone().add(new THREE.Vector3(0, 1.8, 0)),
       dropped,
     ],
@@ -563,39 +565,20 @@ onMounted(() => {
     binPos.clone().add(new THREE.Vector3(0, 2.4, 0)),
   )
 
-  // Vehicle branch.
+  // Vehicle branch: plate, make, model and colour on one server.
   addStream(
-    [splitObject, new THREE.Vector3(-5, 1.9, -6), rackFront('plate')],
+    [filter, new THREE.Vector3(6, 1.9, -4.5), rackFront('vehicle')],
     ACCENT.vehicle,
-    4,
-    0.68,
-  )
-
-  // Person branch.
-  addStream(
-    [splitObject, new THREE.Vector3(-5, 1.9, 5), rackFront('facecheck')],
-    ACCENT.person,
     5,
     0.68,
   )
 
-  // Stage 3 to the face branch.
-  addStream([rackFront('facecheck'), splitFace], ACCENT.person, 4, 0.72)
+  // Person branch: face detection and recognition on one server.
+  addStream([filter, new THREE.Vector3(6, 1.9, 4.5), rackFront('person')], ACCENT.person, 6, 0.68)
 
-  // No face: cheap appearance descriptor.
+  // The person server's recognition step queries the watchlist index.
   addStream(
-    [splitFace, new THREE.Vector3(5, 1.9, 10), rackFront('appearance')],
-    ACCENT.person,
-    3,
-    0.55,
-  )
-
-  // Face present: the expensive path.
-  addStream([splitFace, new THREE.Vector3(5, 1.9, 3), rackFront('match')], ACCENT.costly, 3, 0.68)
-
-  // Match query against the index, and the answer coming back.
-  addStream(
-    [rackFront('match'), new THREE.Vector3(11.5, 1.9, 1), indexPos.clone().setY(3.4)],
+    [rackFront('person'), new THREE.Vector3(12.5, 1.9, 9), indexPos.clone().setY(3.4)],
     ACCENT.costly,
     2,
     0.8,
@@ -603,6 +586,7 @@ onMounted(() => {
 
   const resize = () => {
     stage?.resize()
+    frameCamera()
   }
 
   if (typeof ResizeObserver !== 'undefined') {
@@ -737,6 +721,34 @@ function onPointerUp(event: PointerEvent) {
   raycaster.setFromCamera(pointer, stage.camera)
   const hit = raycaster.intersectObjects(interactables, false)[0]
   selected.value = hit ? (hit.object.userData as Inspectable) : null
+}
+
+/** Distance the plane was composed at, on a wide screen. */
+const DESIGN_DISTANCE = 42
+/** Elevation held constant as the distance changes, so the plane keeps the
+ *  near-eye-level view the rest of the deck uses. */
+const CAMERA_PITCH = 10 / 42
+/** Half-width of the part that carries the argument: the detection row, the
+ *  filter and the two branch servers. */
+const CORE_HALF_WIDTH = 15
+
+/**
+ * A phone cannot hold this whole pipeline at a readable size — fitting all of
+ * it shrinks the racks to specks. So on a narrow viewport the frame is built
+ * around the core instead, and the ingest chain and the watchlist index sit
+ * just outside it, one drag away.
+ */
+function frameCamera() {
+  if (!stage) return
+  const camera = stage.camera
+  const narrow = camera.aspect < 1
+  const tanHalfH = Math.max(Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2) * camera.aspect, 0.1)
+  const distance = narrow
+    ? Math.max(DESIGN_DISTANCE - 2, CORE_HALF_WIDTH / tanHalfH)
+    : DESIGN_DISTANCE
+  const centre = narrow ? 2 : -2
+  camera.position.set(centre, distance * CAMERA_PITCH, distance)
+  camera.lookAt(centre, 3.4, 3)
 }
 
 function zoomBy(deltaY: number) {
