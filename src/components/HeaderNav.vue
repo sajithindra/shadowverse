@@ -17,7 +17,7 @@ const navLinks = [
   { id: 'problem', label: '// PROBLEM', accent: '#750d37' },
   { id: 'facts', label: '// HUMAN VS AI', accent: '#3d8b5e' },
   { id: 'architecture', label: '// ECOSYSTEM', accent: '#4a7ebb' },
-  { id: 'shadowwatch', label: '// SHADOWWATCH', accent: '#750d37' },
+  { id: 'shadowwatch', label: '// SHADOWWATCH', accent: '#750d37', to: '/shadowwatch' },
   { id: 'logiclock', label: '// INTEGRATIONS', accent: '#4a7ebb' },
   { id: 'scenarios', label: '// AI SAFETY', accent: '#3d8b5e' },
 ]
@@ -61,9 +61,18 @@ watch(mobileMenuOpen, (isOpen) => {
   }
 })
 
-function handleNav(hash: string) {
+function handleNav(dest: string) {
   closeMobileMenu()
-  const sectionId = hash.replace('/#', '').replace('#', '')
+  if (dest === '/shadowwatch' || dest === '/#shadowwatch') {
+    if (route.path !== '/shadowwatch') {
+      router.push('/shadowwatch')
+    } else {
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    }
+    return
+  }
+
+  const sectionId = dest.replace('/#', '').replace('#', '')
   if (route.path === '/' || route.path === '') {
     const el = document.getElementById(sectionId)
     if (el) {
@@ -71,7 +80,13 @@ function handleNav(hash: string) {
       return
     }
   }
-  router.push(hash)
+  router.push(dest.startsWith('/') ? dest : `/${dest}`)
+}
+
+function isLinkActive(link: (typeof navLinks)[number]) {
+  if (link.to && route.path === link.to) return true
+  if (route.path === '/' && activeSection.value === link.id && !link.to) return true
+  return false
 }
 
 function handleSignIn() {
@@ -138,49 +153,62 @@ onBeforeUnmount(() => {
     <div class="absolute top-0 left-0 right-0 h-[2px] bg-[#750d37]"></div>
 
     <!-- Brand Logo & Title -->
-    <div class="flex items-center gap-2 sm:gap-3 cursor-pointer group shrink-0" @click="router.push('/')" title="ShadowVerse Sovereign Cloud">
+    <div
+      class="flex items-center gap-2 sm:gap-3 cursor-pointer group shrink-0"
+      @click="router.push('/')"
+      title="ShadowVerse Sovereign Cloud"
+    >
       <div class="relative flex items-center justify-center shrink-0">
         <svg class="absolute w-0 h-0 pointer-events-none opacity-0" aria-hidden="true">
           <defs>
             <filter id="nav-logo-filter" color-interpolation-filters="sRGB">
-              <feColorMatrix type="matrix" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 1 0 0 0 0"/>
+              <feColorMatrix type="matrix" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 1 0 0 0 0" />
             </filter>
           </defs>
         </svg>
         <div
           ref="navLogoRef"
           class="w-7 h-7 sm:w-9 sm:h-9 transition-transform duration-300 group-hover:scale-110"
-          style="filter: url(#nav-logo-filter);"
+          style="filter: url(#nav-logo-filter)"
         ></div>
       </div>
 
       <div class="flex flex-col shrink-0">
         <div class="flex items-center gap-1.5 sm:gap-2">
-          <span class="font-black tracking-[2px] sm:tracking-[4px] text-sm sm:text-base text-white uppercase leading-none group-hover:text-[#e8e8ea] transition-colors whitespace-nowrap shrink-0">
+          <span
+            class="font-black tracking-[2px] sm:tracking-[4px] text-sm sm:text-base text-white uppercase leading-none group-hover:text-[#e8e8ea] transition-colors whitespace-nowrap shrink-0"
+          >
             SHADOWVERSE
           </span>
-          <span class="px-1.5 py-0.5 bg-[#750d37]/20 border border-[#750d37] text-[8px] font-mono text-[#9a1a4e] tracking-widest font-bold hidden md:inline-block shadow-sm shrink-0">
+          <span
+            class="px-1.5 py-0.5 bg-[#750d37]/20 border border-[#750d37] text-[8px] font-mono text-[#9a1a4e] tracking-widest font-bold hidden md:inline-block shadow-sm shrink-0"
+          >
             SOVEREIGN CLOUD
           </span>
         </div>
-        <span class="text-[8px] md:text-[9px] font-mono text-[#88888c] tracking-[1.5px] uppercase mt-0.5 hidden md:block">
+        <span
+          class="text-[8px] md:text-[9px] font-mono text-[#88888c] tracking-[1.5px] uppercase mt-0.5 hidden md:block"
+        >
           SMART PRIVATE VISION AI
         </span>
       </div>
     </div>
 
     <!-- Desktop Navigation Links -->
-    <nav class="hidden xl:flex items-center gap-4 2xl:gap-7 whitespace-nowrap font-mono text-[11px] tracking-[1.5px] uppercase">
+    <nav
+      class="hidden xl:flex items-center gap-4 2xl:gap-7 whitespace-nowrap font-mono text-[11px] tracking-[1.5px] uppercase"
+    >
       <a
         v-for="link in navLinks"
         :key="link.id"
-        :href="`/#${link.id}`"
-        @click.prevent="handleNav(`/#${link.id}`)"
-        class="pb-1 border-b-2 transition-[color,border-color] duration-200"
-        :class="activeSection === link.id ? 'text-white' : 'text-[#a0a0a4] hover:text-white'"
-        :style="{ borderBottomColor: activeSection === link.id ? link.accent : 'transparent' }"
-        :aria-current="activeSection === link.id ? 'true' : undefined"
-      >{{ link.label }}</a>
+        :href="link.to || `/#${link.id}`"
+        @click.prevent="handleNav(link.to || `/#${link.id}`)"
+        class="pb-1 border-b-2 transition-[color,border-color] duration-200 cursor-pointer"
+        :class="isLinkActive(link) ? 'text-white' : 'text-[#a0a0a4] hover:text-white'"
+        :style="{ borderBottomColor: isLinkActive(link) ? link.accent : 'transparent' }"
+        :aria-current="isLinkActive(link) ? 'true' : undefined"
+        >{{ link.label }}</a
+      >
     </nav>
 
     <!-- Action Buttons & Mobile Hamburger Button -->
@@ -218,7 +246,9 @@ onBeforeUnmount(() => {
         class="xl:hidden p-2 text-white border border-[#1e1e20] bg-[#111113] hover:border-[#750d37] transition-[border-color,transform] duration-200 cursor-pointer focus:outline-none flex items-center justify-center min-w-[38px] min-h-[38px] active:scale-95"
         aria-label="Toggle Navigation Menu"
       >
-        <span v-if="!mobileMenuOpen" class="material-symbols-outlined text-xl text-white">menu</span>
+        <span v-if="!mobileMenuOpen" class="material-symbols-outlined text-xl text-white"
+          >menu</span
+        >
         <span v-else class="material-symbols-outlined text-xl text-[#750d37]">close</span>
       </button>
     </div>
@@ -253,8 +283,13 @@ onBeforeUnmount(() => {
         class="xl:hidden absolute top-full left-0 right-0 z-50 bg-[#0a0a0c] border-b border-[#750d37]/40 shadow-2xl px-4 sm:px-6 py-5 flex flex-col gap-3.5 font-mono text-xs max-h-[calc(100vh-4.5rem)] overflow-y-auto"
       >
         <div class="flex items-center justify-between pb-2.5 border-b border-[#1e1e20]">
-          <span class="text-[10px] text-[#750d37] font-bold tracking-widest">// NAVIGATION MENU</span>
-          <span class="text-[9px] text-[#3d8b5e] bg-[#3d8b5e]/10 px-2 py-0.5 border border-[#3d8b5e]/30 font-bold">100% PRIVATE LOCAL SERVER</span>
+          <span class="text-[10px] text-[#750d37] font-bold tracking-widest"
+            >// NAVIGATION MENU</span
+          >
+          <span
+            class="text-[9px] text-[#3d8b5e] bg-[#3d8b5e]/10 px-2 py-0.5 border border-[#3d8b5e]/30 font-bold"
+            >100% PRIVATE LOCAL SERVER</span
+          >
         </div>
 
         <nav class="flex flex-col gap-2 uppercase tracking-wider">
@@ -283,11 +318,14 @@ onBeforeUnmount(() => {
           </a>
 
           <a
-            @click="handleNav('/#shadowwatch')"
+            @click="handleNav('/shadowwatch')"
             class="p-3 bg-[#111113] border border-[#1e1e20] text-[#c8c8cc] hover:text-white hover:border-[#750d37] transition-all flex items-center justify-between cursor-pointer active:bg-[#750d37]/10"
+            :class="{
+              '!border-[#750d37] !text-white bg-[#750d37]/15': route.path === '/shadowwatch',
+            }"
           >
             <span class="font-bold">// 04. SHADOWWATCH</span>
-            <span class="text-[10px] text-[#750d37]">12,000 CAMERAS</span>
+            <span class="text-[10px] text-[#750d37]">SURVEILLANCE & COMPLIANCE</span>
           </a>
 
           <a
@@ -360,4 +398,3 @@ onBeforeUnmount(() => {
     <span class="material-symbols-outlined text-xl">arrow_upward</span>
   </button>
 </template>
-

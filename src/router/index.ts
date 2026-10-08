@@ -24,6 +24,12 @@ const router = createRouter({
       meta: { title: 'Shadowverse — DPDP Privacy & Grievance Redressal Portal' },
     },
     {
+      path: '/shadowwatch',
+      name: 'shadowwatch',
+      component: () => import('../views/ShadowWatchView.vue'),
+      meta: { title: 'Shadowverse — ShadowWatch Surveillance & Compliance Platform' },
+    },
+    {
       path: '/scalability/:slide?',
       name: 'scalability',
       component: () => import('../views/LandingView.vue'),
